@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Stellar network to deploy contracts to"
+        type: choice
+        options: [testnet, public]
+        default: testnet
+
+jobs:
+  contracts:
+    name: Deploy Soroban contracts
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Install stellar-cli
+        run: |
+          curl -fsSL https://github.com/stellar/stellar-cli/releases/latest/download/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build contract wasm
+        working-directory: src/contracts
+        run: cargo build --workspace --target wasm32v1-none --release
+
+      - name: Deploy + initialize contracts
+        working-directory: src/contracts
+        env:
+          STELLAR_NETWORK: ${{ inputs.network }}
+          STELLAR_SOURCE_ACCOUNT: ${{ secrets.STELLAR_SOURCE_ACCOUNT }}
+        run: bash ../../scripts/deploy-contracts.sh
+
+  # Frontend CD is intentionally a template: wire your preferred host here
+  # (Vercel / Netlify / Fly.io) and add the required secrets to the repo.
+  frontend:
+    name: Deploy frontend (template)
+    runs-on: ubuntu-latest
+    if: false # enable after configuring a hosting provider
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+      - name: Deploy
+        run: echo "Add your hosting deploy step (vercel/netlify/fly) here"
