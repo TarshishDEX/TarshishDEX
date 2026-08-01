@@ -10,6 +10,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCompact, truncateAddress } from "@/lib/utils";
+import { explorerAccountUrl } from "@/lib/stellar/config";
 
 const EXAMPLE_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
@@ -85,7 +86,20 @@ export function PortfolioWidget() {
               label="Account"
               value={portfolio ? truncateAddress(portfolio.address) : "—"}
               loading={isLoading}
-              hint="Watched address"
+              hint={
+                portfolio ? (
+                  <a
+                    href={explorerAccountUrl(portfolio.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary-hover transition-colors"
+                  >
+                    View on explorer ↗
+                  </a>
+                ) : (
+                  "Watched address"
+                )
+              }
             />
           </div>
 

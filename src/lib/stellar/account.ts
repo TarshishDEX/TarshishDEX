@@ -28,34 +28,38 @@ const XLM_TOKEN: Token = { code: "XLM", name: "Lumen", decimals: 7, isNative: tr
 export async function fetchPortfolioSummary(address: string): Promise<PortfolioSummary> {
   const server = getHorizonServer();
   const account = await server.accounts().accountId(address).call();
-
-  const balances: AccountBalance[] = [];
-
-  for (const record of account.balances) {
+  const rawBalances = account.balances.filter(
     // Liquidity pool share balances are not tradeable tokens — skip them
-    if (record.asset_type === "liquidity_pool_shares") continue;
+    (record) => record.asset_type !== "liquidity_pool_shares"
+  );
 
-    const token =
-      record.asset_type === "native" ? XLM_TOKEN : toToken(record.asset_code, record.asset_issuer);
-    const trustline = record.asset_type !== "native";
+  const balances = (
+    await Promise.all(
+      rawBalances.map(async (record) => {
+        const token =
+          record.asset_type === "native"
+            ? XLM_TOKEN
+            : toToken(record.asset_code, record.asset_issuer);
+        const trustline = record.asset_type !== "native";
+        const balance = Number(record.balance);
+        if (balance <= 0) return null;
 
-    const balance = Number(record.balance);
-    if (balance <= 0) continue;
+        let valueInXlm: number | null = null;
+        if (token.isNative) {
+          valueInXlm = balance;
+        } else {
+          try {
+            const ob = await fetchOrderbook(token, XLM_TOKEN, 5);
+            valueInXlm = ob.midPrice !== null ? balance * ob.midPrice : null;
+          } catch {
+            valueInXlm = null;
+          }
+        }
 
-    let valueInXlm: number | null = null;
-    if (token.isNative) {
-      valueInXlm = balance;
-    } else {
-      try {
-        const ob = await fetchOrderbook(token, XLM_TOKEN, 5);
-        valueInXlm = ob.midPrice !== null ? balance * ob.midPrice : null;
-      } catch {
-        valueInXlm = null;
-      }
-    }
-
-    balances.push({ token, balance, trustline, valueInXlm });
-  }
+        return { token, balance, trustline, valueInXlm };
+      })
+    )
+  ).filter((b): b is AccountBalance => b !== null);
 
   const totalValueXlm = balances.reduce((sum, b) => sum + (b.valueInXlm ?? 0), 0);
 

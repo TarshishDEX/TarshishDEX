@@ -5,7 +5,7 @@ interface StatCardProps {
   label: string;
   value: string;
   delta?: number;
-  hint?: string;
+  hint?: React.ReactNode;
   loading?: boolean;
   className?: string;
 }

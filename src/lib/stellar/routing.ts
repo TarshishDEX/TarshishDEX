@@ -170,9 +170,15 @@ export async function findBestRoute(
     .map((c) => buildRoute(c, input, output, amountIn, slippagePct))
     .filter((r): r is SwapRoute => r !== null);
 
-  if (routes.length === 0) return null;
+  return selectBestRoute(routes);
+}
 
-  // Prefer the highest output; tie-break by fewer hops.
+/**
+ * Pure route selection: prefer the highest output, tie-break by fewer hops.
+ * Extracted for unit testing.
+ */
+export function selectBestRoute(routes: SwapRoute[]): SwapRoute | null {
+  if (routes.length === 0) return null;
   return routes.sort((a, b) => {
     const diff = Number(b.outputAmount) - Number(a.outputAmount);
     if (Math.abs(diff) > 1e-12) return diff;
