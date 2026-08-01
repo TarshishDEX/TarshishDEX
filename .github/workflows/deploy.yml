@@ -8,47 +8,121 @@ on:
         type: choice
         options: [testnet, public]
         default: testnet
+      deploy_frontend:
+        description: "Also deploy the frontend to Vercel (requires Vercel secrets)"
+        type: boolean
+        default: false
+
+# GitHub Actions supports expressions in `concurrency` group names.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   contracts:
     name: Deploy Soroban contracts
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    outputs:
+      trading_preferences_id: ${{ steps.deploy.outputs.TRADING_PREFS_ID }}
+      market_oracle_id: ${{ steps.deploy.outputs.ORACLE_ID }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          # Soroban SDK v27 requires the wasm32v1-none target on Rust 1.82+
           targets: wasm32v1-none
 
-      - name: Install stellar-cli
+      - name: Cache Cargo registry & target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      # stellar-cli releases ship a prebuilt tarball; there is no install.sh
+      # on the release assets, so download + extract it explicitly.
+      - name: Install stellar-cli v27.1.0
         run: |
-          curl -fsSL https://github.com/stellar/stellar-cli/releases/latest/download/install.sh | bash
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          curl -fsSL -o /tmp/stellar-cli.tar.gz \
+            https://github.com/stellar/stellar-cli/releases/download/v27.1.0/stellar-cli-27.1.0-x86_64-unknown-linux-gnu.tar.gz
+          tar xzf /tmp/stellar-cli.tar.gz -C /tmp
+          chmod +x /tmp/stellar
+          echo "/tmp" >> "$GITHUB_PATH"
+          stellar --version
 
       - name: Build contract wasm
         working-directory: src/contracts
         run: cargo build --workspace --target wasm32v1-none --release
 
       - name: Deploy + initialize contracts
+        id: deploy
         working-directory: src/contracts
         env:
           STELLAR_NETWORK: ${{ inputs.network }}
           STELLAR_SOURCE_ACCOUNT: ${{ secrets.STELLAR_SOURCE_ACCOUNT }}
-        run: bash ../../scripts/deploy-contracts.sh
+          CONTRACT_IDS_FILE: /tmp/contract-ids.env
+        run: |
+          # pipefail so a failing deploy script fails this step (not tee's exit code).
+          set -o pipefail
+          bash ../../scripts/deploy-contracts.sh 2>&1 | tee /tmp/deploy.log
+          # Expose the machine-readable contract IDs for the frontend job.
+          source /tmp/contract-ids.env
+          echo "TRADING_PREFS_ID=${TRADING_PREFS_ID}" >> "$GITHUB_OUTPUT"
+          echo "ORACLE_ID=${ORACLE_ID}" >> "$GITHUB_OUTPUT"
 
-  # Frontend CD is intentionally a template: wire your preferred host here
-  # (Vercel / Netlify / Fly.io) and add the required secrets to the repo.
+      - name: Upload deployment manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-ids
+          path: |
+            /tmp/deploy.log
+            /tmp/contract-ids.env
+          retention-days: 30
+
+      - name: Summarize deployment
+        if: always()
+        run: |
+          cat /tmp/deploy.log | tail -n 12
+
   frontend:
-    name: Deploy frontend (template)
+    name: Deploy frontend (Vercel)
     runs-on: ubuntu-latest
-    if: false # enable after configuring a hosting provider
+    needs: contracts
+    # Enable by adding the VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID
+    # secrets and flipping this to a real condition, or pass
+    # `deploy_frontend: true` on manual dispatch.
+    if: ${{ inputs.deploy_frontend && github.ref == 'refs/heads/main' }}
+    env:
+      NEXT_PUBLIC_STELLAR_NETWORK: ${{ inputs.network }}
+      NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID: ${{ needs.contracts.outputs.trading_preferences_id }}
+      NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID: ${{ needs.contracts.outputs.market_oracle_id }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `vercel build` runs the project build itself with the injected
+      # NEXT_PUBLIC_* env vars — a separate `npm run build` is redundant.
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          npm ci
-          npm run build
-      - name: Deploy
-        run: echo "Add your hosting deploy step (vercel/netlify/fly) here"
+          npx vercel@58 pull --yes --environment=production --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+          npx vercel@58 build --prod --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+          npx vercel@58 deploy --prebuilt --prod --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
