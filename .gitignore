@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# demo video intermediates (the assembled MP4 is the tracked deliverable)
+docs/videos/*.webm
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

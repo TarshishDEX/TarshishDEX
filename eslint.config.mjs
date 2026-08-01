@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local tooling artifacts (never linted):
+    ".vercel/**", // `vercel link`/`vercel build` output (generated launchers)
+    "coverage/**",
   ]),
 ]);
 

@@ -1,0 +1,13 @@
+# Generated / tooling artifacts (never formatted)
+.vercel/
+coverage/
+.next/
+out/
+build/
+
+# Shell scripts have no prettier parser
+scripts/*.sh
+
+# Binary media
+docs/videos/*.webm
+docs/videos/*.mp4
