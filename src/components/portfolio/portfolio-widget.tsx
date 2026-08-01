@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { usePortfolioSummary, useTradeHistory } from "@/lib/stellar/queries";
+import { useWallet } from "@/lib/stellar/wallet-store";
+import { useLiveAccountStream } from "@/components/providers/live-sync-hooks";
 import { isValidPublicKey } from "@/lib/stellar/account";
 import { BalanceTable } from "@/components/portfolio/balance-table";
 import { TradeHistory } from "@/components/portfolio/trade-history";
@@ -9,18 +11,26 @@ import { AllocationDonut } from "@/components/charts/allocation-donut";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { formatCompact, truncateAddress } from "@/lib/utils";
 import { explorerAccountUrl } from "@/lib/stellar/config";
 
 const EXAMPLE_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
 export function PortfolioWidget() {
+  const { address: walletAddress } = useWallet();
   const [address, setAddress] = useState("");
-  const [activeAddress, setActiveAddress] = useState("");
+  const [manualAddress, setManualAddress] = useState("");
+
+  // Prefer the connected wallet; a manually-entered address takes precedence.
+  const activeAddress = manualAddress || walletAddress || "";
 
   const valid = isValidPublicKey(address);
   const { data: portfolio, isLoading, isError } = usePortfolioSummary(activeAddress);
   const { data: history, isLoading: historyLoading } = useTradeHistory(activeAddress);
+
+  // Real-time sync: stream operations and auto-refresh balances + history.
+  useLiveAccountStream(activeAddress);
 
   const allocationData =
     portfolio?.balances
@@ -29,7 +39,7 @@ export function PortfolioWidget() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (valid) setActiveAddress(address.trim());
+    if (valid) setManualAddress(address.trim());
   }
 
   return (
@@ -40,16 +50,23 @@ export function PortfolioWidget() {
           <div>
             <h1 className="font-display text-3xl font-bold tracking-tight">Portfolio</h1>
             <p className="text-foreground-muted mt-2">
-              Track any Stellar account&apos;s balances, allocation, and trade history. Wallet
-              connection arrives in Phase 4 — for now, paste a public key to watch.
+              Track balances, allocation, and trade history — live-synced for your connected wallet,
+              or watch any Stellar account by public key.
             </p>
           </div>
+          <span className="border-border bg-surface text-foreground-muted rounded-full border px-3 py-1.5 text-xs font-medium">
+            Network: Testnet
+          </span>
         </div>
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
           <input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder={EXAMPLE_ADDRESS}
+            placeholder={
+              walletAddress
+                ? `Connected: ${truncateAddress(walletAddress)} — type to watch another`
+                : EXAMPLE_ADDRESS
+            }
             aria-label="Stellar public key"
             spellCheck={false}
             className="border-border bg-surface placeholder:text-foreground-faint focus:border-primary/60 focus:ring-primary/20 h-11 flex-1 rounded-xl border px-4 font-mono text-sm focus:ring-2"
@@ -67,6 +84,13 @@ export function PortfolioWidget() {
 
       {activeAddress && (
         <div className="animate-fade-in-up space-y-6">
+          {/* Live badge */}
+          <div className="flex items-center justify-end">
+            <Badge tone="success" dot>
+              Live · streaming account operations
+            </Badge>
+          </div>
+
           {/* Stats */}
           <div className="grid gap-4 sm:grid-cols-3">
             {" "}

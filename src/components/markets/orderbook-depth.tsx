@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useOrderbook } from "@/lib/stellar/queries";
+import { useLiveOrderbookStream } from "@/components/providers/live-sync-hooks";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,7 @@ export function OrderbookDepth({
   height?: number;
 }) {
   const { data: orderbook, isLoading, isError } = useOrderbook(base, counter);
+  useLiveOrderbookStream(base, counter);
 
   const { bids, asks, maxValue } = useMemo(() => {
     if (!orderbook) return { bids: [], asks: [], maxValue: 0 };
