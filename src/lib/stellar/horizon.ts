@@ -12,8 +12,3 @@ export function getHorizonServer(): Horizon.Server {
   }
   return server;
 }
-
-/** Convenience: create a fresh Horizon client (useful for tests). */
-export function createHorizonServer(url: string): Horizon.Server {
-  return new Horizon.Server(url, { allowHttp: true });
-}

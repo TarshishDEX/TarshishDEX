@@ -147,7 +147,7 @@ export function SwapWidget() {
           <div className="mt-2 flex items-center gap-2">
             <input
               value={slippagePct}
-              onChange={(e) => setSlippagePct(Number(e.target.value))}
+              onChange={(e) => setSlippagePct(e.target.value === "" ? 1 : Number(e.target.value))}
               type="number"
               min={0}
               max={50}

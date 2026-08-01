@@ -36,7 +36,6 @@ export function useOrderbook(selling: StellarAsset, buying: StellarAsset) {
   return useQuery({
     queryKey: ["orderbook", selling.code, selling.issuer ?? "", buying.code, buying.issuer ?? ""],
     queryFn: () => fetchOrderbook(selling, buying, 20),
-    enabled: Boolean(selling && buying),
   });
 }
 
