@@ -1,14 +1,26 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { AssetBrowser } from "@/components/assets/asset-browser";
 
 export const metadata: Metadata = { title: "Assets" };
 
 export default function AssetsPage() {
   return (
-    <PagePlaceholder
-      title="Assets"
-      description="Discover Stellar assets — search, filter, and inspect issuers, trustlines, and market data across the ecosystem."
-      phase="3"
-    />
+    <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Assets</h1>
+          <p className="text-foreground-muted mt-2">
+            Discover Stellar assets — browse issuers, trustline counts, supply, and authorization
+            flags across the ecosystem.
+          </p>
+        </div>
+        <span className="border-border bg-surface text-foreground-muted rounded-full border px-3 py-1.5 text-xs font-medium">
+          Live on Testnet
+        </span>
+      </div>
+      <div className="mt-8">
+        <AssetBrowser />
+      </div>
+    </section>
   );
 }
