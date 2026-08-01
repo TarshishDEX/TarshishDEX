@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { findBestRoute } from "@/lib/stellar/routing";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { getMarketStatsForTokens, fetchTopAssets, fetchCandles } from "@/lib/stellar/prices";
-import { fetchPortfolioSummary, isValidPublicKey } from "@/lib/stellar/account";
+import { fetchPortfolioSummary, fetchXlmBalance, isValidPublicKey } from "@/lib/stellar/account";
 import { fetchTradeHistory } from "@/lib/stellar/history";
 import type { StellarAsset, SwapRoute, Token } from "@/lib/stellar/types";
 
@@ -58,6 +58,17 @@ export function usePortfolioSummary(address: string) {
     queryFn: () => fetchPortfolioSummary(address),
     enabled: Boolean(address && isValidPublicKey(address)),
     staleTime: 20_000,
+  });
+}
+
+/** Native XLM balance for a connected wallet (refreshed on invalidation). */
+export function useXlmBalance(address: string) {
+  return useQuery({
+    queryKey: ["xlm-balance", address],
+    queryFn: () => fetchXlmBalance(address),
+    enabled: Boolean(address && isValidPublicKey(address)),
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 }
 

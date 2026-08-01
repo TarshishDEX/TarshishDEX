@@ -75,3 +75,15 @@ export async function fetchPortfolioSummary(address: string): Promise<PortfolioS
 export function isValidPublicKey(address: string): boolean {
   return /^G[A-Z2-7]{55}$/.test(address.trim());
 }
+
+/** Fetch the native XLM balance for an account (raw string), or null on error. */
+export async function fetchXlmBalance(address: string): Promise<string | null> {
+  const server = getHorizonServer();
+  try {
+    const account = await server.accounts().accountId(address).call();
+    const native = account.balances.find((record) => record.asset_type === "native");
+    return native ? native.balance : "0";
+  } catch {
+    return null;
+  }
+}

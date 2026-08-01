@@ -2,8 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useWallet } from "@/lib/stellar/wallet-store";
+import { useXlmBalance } from "@/lib/stellar/queries";
+import { isWalletAvailable } from "@/lib/stellar/wallet-kit";
 import { explorerAccountUrl } from "@/lib/stellar/config";
-import { cn, truncateAddress } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
+import { cn, formatCompact, truncateAddress } from "@/lib/utils";
+
+const FREIGHTER_INSTALL_URL = "https://www.freighter.app/";
 
 /**
  * Header wallet control. Disconnected: renders the primary "Connect Wallet"
@@ -13,7 +18,9 @@ import { cn, truncateAddress } from "@/lib/utils";
  */
 export function ConnectWalletButton() {
   const { address, status, connect, disconnect } = useWallet();
+  const { data: xlmBalance } = useXlmBalance(address ?? "");
   const [open, setOpen] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close the dropdown on outside click / Escape.
@@ -36,20 +43,44 @@ export function ConnectWalletButton() {
   }, [open]);
 
   async function handleConnect() {
-    await connect();
+    // If no wallet extension is present, surface an onboarding hint instead of
+    // opening an empty picker.
+    if (!(await isWalletAvailable())) {
+      setShowInstallHint(true);
+      toast.error("No wallet extension detected — install Freighter to continue.");
+      return;
+    }
+    const ok = await connect();
     setOpen(false);
+    if (ok) {
+      toast.success("Wallet connected");
+    } else {
+      toast.error("Wallet connection failed or was rejected.");
+    }
   }
 
   if (!address) {
     return (
-      <button
-        type="button"
-        onClick={handleConnect}
-        disabled={status === "connecting"}
-        className="bg-primary shadow-primary/25 hover:bg-primary-hover hover:shadow-primary/40 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
-      >
-        {status === "connecting" ? "Connecting…" : "Connect Wallet"}
-      </button>
+      <div className="flex flex-col items-end gap-1.5">
+        <button
+          type="button"
+          onClick={handleConnect}
+          disabled={status === "connecting"}
+          className="bg-primary shadow-primary/25 hover:bg-primary-hover hover:shadow-primary/40 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
+        >
+          {status === "connecting" ? "Connecting…" : "Connect Wallet"}
+        </button>
+        {showInstallHint && (
+          <a
+            href={FREIGHTER_INSTALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary-hover text-xs font-medium underline-offset-2 hover:underline"
+          >
+            Install Freighter →
+          </a>
+        )}
+      </div>
     );
   }
 
@@ -92,6 +123,12 @@ export function ConnectWalletButton() {
               Connected account
             </p>
             <p className="mt-1 font-mono text-sm break-all">{address}</p>
+            <p className="text-foreground-muted mt-1 text-sm">
+              Balance:{" "}
+              <span className="font-semibold tabular-nums">
+                {xlmBalance != null ? `${formatCompact(Number(xlmBalance))} XLM` : "—"}
+              </span>
+            </p>
             <a
               href={explorerAccountUrl(address)}
               target="_blank"
@@ -138,6 +175,7 @@ export function ConnectWalletButton() {
             onClick={() => {
               setOpen(false);
               void disconnect();
+              toast.info("Wallet disconnected");
             }}
             className="hover:bg-danger-soft text-danger flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
           >
