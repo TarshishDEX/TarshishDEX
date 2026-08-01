@@ -47,10 +47,18 @@ export function MarketTable() {
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
-      ) : isError || sorted.length === 0 ? (
+      ) : isError ? (
         <p className="text-foreground-muted p-6 text-sm">
           Market data is temporarily unavailable. Please try again shortly.
         </p>
+      ) : sorted.length === 0 ? (
+        <div className="p-10 text-center">
+          <p className="font-display text-base font-semibold">No active XLM markets</p>
+          <p className="text-foreground-muted mx-auto mt-2 max-w-md text-sm">
+            The top assets on this network don&apos;t currently have a live orderbook against XLM.
+            This is common on testnet where markets are sparse.
+          </p>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
