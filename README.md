@@ -189,7 +189,18 @@ stellar contract invoke \
 
 ## Screenshots
 
-Captures for the submission checklist live in [`docs/screenshots/`](docs/screenshots) with a capture guide. Placeholders: wallet options, wallet connected, balance display, successful Testnet transaction, transaction result, mobile responsive UI, CI pipeline, test output.
+Captures for the submission checklist live in [`docs/screenshots/`](docs/screenshots). Captured against the live deploy with `scripts/capture-screenshots.mjs` (stubbed Freighter extension + real funded Testnet account, verified on-chain transactions):
+
+| #   | Screenshot                                                                                  | Shows                                                       |
+| --- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | [`wallet-options.png`](docs/screenshots/wallet-options.png)                                 | Wallet picker modal (Freighter + StellarWalletsKit options) |
+| 2   | [`wallet-connected.png`](docs/screenshots/wallet-connected.png)                             | Connected address chip in the header                        |
+| 3   | [`balance-displayed.png`](docs/screenshots/balance-displayed.png)                           | Connected dropdown with the live XLM balance                |
+| 4   | [`successful-testnet-transaction.png`](docs/screenshots/successful-testnet-transaction.png) | Real contract-call tx on stellar.expert (Testnet)           |
+| 5   | [`transaction-result.png`](docs/screenshots/transaction-result.png)                         | Second real on-chain transaction (publish → PricePublished) |
+| 6   | [`mobile-responsive.png`](docs/screenshots/mobile-responsive.png)                           | Swap page at 390×844 viewport                               |
+| 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
+| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 70 tests passing (9 files)                |
 
 ## Deployment
 
@@ -214,7 +225,9 @@ The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or
 ### Frontend
 
 - **Docker**: `docker compose up --build` serves on `http://localhost:3000`.
-- **Vercel (recommended)**: add the `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets, link the project with `npx vercel link`, then run the `Deploy` workflow with **deploy_frontend: true**. The frontend job builds with the freshly deployed contract IDs and ships a production build. Live demo link to be added here once deployed: `https://tarshishdex.vercel.app` (pending).
+- **Vercel (recommended)**: add the `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets, link the project with `npx vercel link`, then run the `Deploy` workflow with **deploy_frontend: true**. The frontend job builds with the freshly deployed contract IDs and ships a production build.
+
+**🔗 Live demo: [https://tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — production build on Stellar **Testnet** with the deployed contract IDs baked in as build-time env vars. Verify the service with `curl https://tarshishdex.vercel.app/api/health`.
 
 ## Development Principles
 
@@ -232,4 +245,8 @@ Licensed under the [MIT License](LICENSE). TarshishDEX is a demonstration projec
 - **SDF StellarWalletsKit** ecosystem — wallet abstraction (`@creit.tech/stellar-wallets-kit`) and Freighter.
 - Open-source libraries: Next.js, React, TanStack Query, zustand, Recharts, lightweight-charts, Tailwind CSS.
 
-A 2-minute demo video link will be added here once recorded.
+## Demo Video
+
+**🎬 [TarshishDEX demo (2 minutes)](docs/videos/tarshishdex-demo.mp4)** — walkthrough of the live app: wallet connect → balance → live swap quote → portfolio → analytics → markets → assets → mobile viewport.
+
+Recorded against the live deploy with `scripts/capture-demo-video.mjs` (Playwright `recordVideo`) and assembled with `scripts/assemble-demo-video.sh` (ffmpeg title card + outro, trimmed to exactly 2:00).
