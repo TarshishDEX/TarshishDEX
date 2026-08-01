@@ -19,6 +19,28 @@ STELLAR_IDENTITY=alice bash ../../scripts/deploy-contracts.sh   # identity
 STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh  # secret key
 ```
 
+### CI deployment (GitHub Actions)
+
+The `Deploy` workflow automates the same flow: it installs the pinned
+`stellar-cli v27.1.0` tarball, builds the wasm artifacts, deploys +
+initializes both contracts, and uploads a manifest artifact.
+
+Required repository secrets:
+
+| Secret                   | Purpose                                                   |
+| ------------------------ | --------------------------------------------------------- |
+| `STELLAR_SOURCE_ACCOUNT` | Deployer `S...` secret key (funded on the target network) |
+| `VERCEL_TOKEN`           | Vercel access token (frontend job only)                   |
+| `VERCEL_ORG_ID`          | Vercel team/org id (frontend job only)                    |
+| `VERCEL_PROJECT_ID`      | Vercel project id (frontend job only)                     |
+
+The script (and workflow) optionally writes machine-readable contract IDs to
+`$CONTRACT_IDS_FILE` (`TRADING_PREFS_ID` / `ORACLE_ID` / `NETWORK` lines) for
+CI consumers, right after deployment.
+
+Run **Actions → Deploy → Run workflow**, choosing the network and whether to
+also deploy the frontend.
+
 ### Deployed addresses
 
 | Contract            | Address                                                    | Network |
@@ -65,7 +87,10 @@ Contract explorer:
 ## Frontend
 
 - **Docker**: `docker compose up --build` → http://localhost:3000
-- **Hosting**: wire the `Deploy` workflow template (Vercel/Netlify/Fly.io) and add secrets.
+- **Vercel**: add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secrets,
+  link the project (`npx vercel link`), then run the `Deploy` workflow with
+  `deploy_frontend: true` — it builds with the freshly deployed contract IDs
+  and ships a production build.
 
 ### Live demo
 

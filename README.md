@@ -201,12 +201,20 @@ cargo build --workspace --target wasm32v1-none --release
 STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
 ```
 
-The script deploys and initializes both contracts, then prints their IDs. **Both contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md). Alternatively, trigger the `Deploy` GitHub Actions workflow (manual dispatch) with the `STELLAR_SOURCE_ACCOUNT` secret.
+The script deploys and initializes both contracts, then prints their IDs. **Both contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md).
+
+### Contracts via CI (GitHub Actions)
+
+The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or Mainnet) from CI:
+
+1. Add the **`STELLAR_SOURCE_ACCOUNT`** repository secret (the deployer's `S...` secret key — must be funded on the target network).
+2. Run **Actions → Deploy → Run workflow**, pick the network (default `testnet`).
+3. The job builds the wasm, deploys + initializes both contracts, uploads a deployment manifest artifact, and prints the fresh contract IDs in the summary.
 
 ### Frontend
 
 - **Docker**: `docker compose up --build` serves on `http://localhost:3000`.
-- **Hosting (Vercel/Netlify/Fly.io)**: the `Deploy` workflow contains a template — wire your provider and add secrets. Live demo link to be added here once deployed: `https://tarshishdex.vercel.app` (pending).
+- **Vercel (recommended)**: add the `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets, link the project with `npx vercel link`, then run the `Deploy` workflow with **deploy_frontend: true**. The frontend job builds with the freshly deployed contract IDs and ships a production build. Live demo link to be added here once deployed: `https://tarshishdex.vercel.app` (pending).
 
 ## Development Principles
 
