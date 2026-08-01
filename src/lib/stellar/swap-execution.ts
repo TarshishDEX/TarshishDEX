@@ -43,10 +43,8 @@ export function needsTrustline(
 /** Intermediate hops for a path payment — excludes the input and output assets. */
 export function intermediatePath(path: StellarAsset[]): StellarAsset[] {
   return path.length > 2 ? path.slice(1, -1) : [];
-}
-
-/** Build the path-payment strict-send operations for a swap. */
-export function buildSwapTransaction(
+} /** Build the path-payment strict-send operations for a swap. */
+export function buildSwapOperations(
   params: SwapExecutionParams
 ): ReturnType<typeof Operation.pathPaymentStrictSend>[] {
   const { address, input, output, amountIn, minReceived, path } = params;
@@ -90,7 +88,7 @@ export async function executeSwap(
     if (needTrustline) {
       builder.addOperation(Operation.changeTrust({ asset: toSdkAsset(params.output) }));
     }
-    for (const operation of buildSwapTransaction(params)) {
+    for (const operation of buildSwapOperations(params)) {
       builder.addOperation(operation);
     }
     const transaction = builder.setTimeout(180).build();

@@ -28,6 +28,29 @@ export function useLiveAccountStream(address: string) {
   }, [address, queryClient]);
 }
 
+// The XLM/USDC pair acts as a reference stream: its trades refresh the whole
+// market-stats query rather than subscribing to every pair on the network.
+const DEFAULT_MARKET_PAIR: { base: StellarAsset; counter: StellarAsset } = {
+  base: { code: "XLM", isNative: true },
+  counter: {
+    code: "USDC",
+    issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+  },
+};
+
+/** Keep top-market stats fresh by streaming the most active reference pair. */
+export function useLiveMarketStream() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const close = streamTrades(DEFAULT_MARKET_PAIR.base, DEFAULT_MARKET_PAIR.counter, () => {
+      void queryClient.invalidateQueries({ queryKey: ["market-stats"] });
+    });
+
+    return close;
+  }, [queryClient]);
+}
+
 /** Keep an orderbook fresh by streaming trades for the pair. */
 export function useLiveOrderbookStream(base: StellarAsset, counter: StellarAsset) {
   const queryClient = useQueryClient();

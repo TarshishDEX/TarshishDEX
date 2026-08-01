@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildSwapTransaction,
+  buildSwapOperations,
   intermediatePath,
   needsTrustline,
 } from "@/lib/stellar/swap-execution";
@@ -46,9 +46,9 @@ describe("intermediatePath", () => {
   });
 });
 
-describe("buildSwapTransaction", () => {
+describe("buildSwapOperations", () => {
   it("builds a single path-payment operation for a direct swap", () => {
-    const operations = buildSwapTransaction({
+    const operations = buildSwapOperations({
       address: DESTINATION,
       input: XLM,
       output: USDC,
@@ -61,7 +61,7 @@ describe("buildSwapTransaction", () => {
   });
 
   it("accepts multi-hop routes", () => {
-    const operations = buildSwapTransaction({
+    const operations = buildSwapOperations({
       address: DESTINATION,
       input: XLM,
       output: XLM,

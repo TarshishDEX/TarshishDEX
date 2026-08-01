@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMarketStats } from "@/lib/stellar/queries";
+import { useLiveMarketStream } from "@/components/providers/live-sync-hooks";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, formatCompact, formatPrice } from "@/lib/utils";
@@ -10,6 +11,7 @@ type SortKey = "price" | "change" | "volume";
 
 export function MarketTable() {
   const { data: stats, isLoading, isError } = useMarketStats();
+  useLiveMarketStream();
   const [sortKey, setSortKey] = useState<SortKey>("volume");
   const [asc, setAsc] = useState(false);
 
