@@ -1,53 +1,59 @@
-# TarshishDEX
+<div align="center">
 
-<p align="center">
-  <a href="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml">
-    <img src="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg" alt="CI">
-  </a>
-  <a href="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml">
-    <img src="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg" alt="Deploy">
-  </a>
-  <img src="https://img.shields.io/badge/tests-70%20passing-2ea44f" alt="70 tests passing">
-  <img src="https://img.shields.io/badge/coverage-new%20modules%20100%25-2ea44f" alt="100% coverage on new modules">
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT">
-  <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js&amp;logoColor=white" alt="Next.js 16">
-  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript (strict)">
-  <img src="https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&amp;logoColor=white" alt="Stellar Testnet">
-  <a href="https://tarshishdex.vercel.app">
-    <img src="https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9" alt="Live demo">
-  </a>
-</p>
+<img src="docs/tarshishdex-logo.svg" alt="TarshishDEX" width="360" />
 
 **A decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.**
 
-TarshishDEX is a complete decentralized trading platform for the Stellar network — intelligent trade execution, liquidity insights, portfolio management, market analytics, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
+[![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
+[![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
+![Tests](https://img.shields.io/badge/tests-70%20passing-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-new%20modules%20100%25-2ea44f)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
+[![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
 
-## Why TarshishDEX
+[**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Demo Video**](#demo-video)
 
-Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem:
+</div>
 
-- **Native DEX trades** — executed directly on Stellar's orderbook. No bridges, no wrapping.
-- **Intelligent routing** — path-finding picks the most efficient execution route across the orderbook.
-- **Full transparency** — every quote shows expected output, price impact, minimum received, and fees _before_ you sign.
-- **Pre-execution simulation** — detect failed transactions before they hit the network.
-- **Multi-account portfolios** — connect multiple wallets, switch accounts, compare performance.
+---
 
-## Tech Stack
+TarshishDEX is a complete decentralized trading platform for the **Stellar network** — intelligent trade execution, liquidity insights, portfolio management, market analytics, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
+
+Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem.
+
+## ✨ Highlights
+
+|                                 |                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| ⚡ **Native DEX trades**        | Executed directly on Stellar's orderbook — no bridges, no wrapping.                            |
+| 🧭 **Intelligent routing**      | Path-finding picks the most efficient execution route across the orderbook.                    |
+| 🔍 **Full transparency**        | Every quote shows expected output, price impact, minimum received, and fees _before_ you sign. |
+| 🧪 **Pre-execution simulation** | Detect failed transactions before they hit the network.                                        |
+| 👥 **Multi-account portfolios** | Connect multiple wallets, switch accounts, compare performance.                                |
+| 📡 **Live market data**         | Real-time orderbook depth and trades via Horizon SSE streams.                                  |
+| 🧩 **On-chain preferences**     | Per-account slippage, routing mode, and asset allow-lists stored in Soroban contracts.         |
+| 📦 **Developer API**            | Read-only REST + SSE endpoints for builders on Stellar's native DEX.                           |
+
+## 🧰 Tech Stack
 
 | Layer           | Technology                                                                   |
 | --------------- | ---------------------------------------------------------------------------- |
-| Framework       | Next.js 16 (App Router), React 19, TypeScript                                |
+| Framework       | Next.js 16 (App Router), React 19, TypeScript (strict)                       |
 | Styling         | Tailwind CSS v4 (custom dark DeFi design system)                             |
-| Blockchain      | @stellar/stellar-sdk, @creit.tech/stellar-wallets-kit (Freighter + more)     |
-| Smart contracts | Soroban SDK (Rust)                                                           |
+| Blockchain      | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
+| Smart contracts | Soroban SDK (Rust, `#![no_std]`, `wasm32v1-none`)                            |
 | Data fetching   | TanStack Query + Horizon SSE streams                                         |
+| State           | zustand                                                                      |
 | Charts          | Recharts / lightweight-charts                                                |
 | Testing         | Vitest + React Testing Library; Rust `cargo test` for contracts              |
-| Quality         | ESLint, Prettier (with Tailwind plugin), strict TypeScript, rustfmt + clippy |
+| Quality         | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy      |
 | CI/CD           | GitHub Actions (frontend gates + Soroban contract gates)                     |
-| Deployment      | Docker (multi-stage standalone image) + docker-compose                       |
+| Deployment      | Docker (multi-stage standalone image) + docker-compose + Vercel              |
 
-## Getting Started
+## 🚀 Getting Started
 
 ```bash
 # Install dependencies
@@ -55,16 +61,16 @@ npm install
 
 # Run the development server
 npm run dev
-# Open http://localhost:3000
+# → Open http://localhost:3000
 
 # Quality gates
-npm run lint        # ESLint
-npm run typecheck   # strict TypeScript
-npm test            # Vitest suite
-npm run format:check
+npm run lint          # ESLint
+npm run typecheck     # strict TypeScript
+npm test              # Vitest suite
+npm run format:check  # Prettier
 ```
 
-## Project Structure
+## 🗂 Project Structure
 
 ```
 src/
@@ -78,52 +84,121 @@ src/
 │   ├── layout/           # Header, footer, navigation shell
 │   ├── ui/               # Design-system primitives (Button, Card, Badge…)
 │   └── brand/            # Logo & brand marks
-├── lib/                  # Utilities, formatting, shared helpers
+├── lib/                  # Stellar services, Soroban clients, utilities
 └── contracts/            # Soroban smart contracts (Rust workspace)
 ```
 
-## Developer API
+## 🏗 Architecture
 
-TarshishDEX exposes a read-only REST + SSE API for developers building on Stellar's native DEX. All endpoints are server-side and honour the configured network.
+TarshishDEX is organized as a clean, layered system — the UI consumes a framework-agnostic **Stellar services layer** that encapsulates all Horizon, wallet, and Soroban interaction, so pages and components never talk to the network directly.
 
-| Endpoint                                                                                 | Description                                                         |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `GET /api/health`                                                                        | Service health, active network, Horizon URL                         |
-| `GET /api/market/stats?limit=10`                                                         | Market stats for the most traded assets (price, volume, 24h change) |
-| `GET /api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20`                      | Orderbook depth for a pair                                          |
-| `GET /api/market/candles?base=XLM&counter=USDC:ISSUER&resolution=3600000&range=86400000` | OHLCV candles from trade aggregations                               |
-| `GET /api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1`                 | Best-route quote: execution price, price impact, min received, fees |
-| `GET /api/portfolio/:address`                                                            | Portfolio valuation, allocation, and balances for an account        |
-| `GET /api/trades/:address?limit=40`                                                      | Recent trade history for an account                                 |
-| `GET /api/assets?limit=24&code=&issuer=`                                                 | Asset discovery with issuer, supply, and trustline stats            |
-| `GET /api/events?base=XLM&counter=USDC:ISSUER`                                           | SSE stream of live trades for a pair (`event: trade`)               |
+```
+┌─────────────────────────────────────────────────────────────┐
+│  UI — pages (app/) + components (components/)                │
+│  · TanStack Query hooks (lib/stellar/queries.ts)             │
+├─────────────────────────────────────────────────────────────┤
+│  Stellar services layer (lib/stellar/)                       │
+│  · orderbook · simulation · routing · swap-execution         │
+│  · prices · history · live (SSE) · account · asset           │
+│  · wallet-kit / wallet-store · horizon · config              │
+├─────────────────────────────────────────────────────────────┤
+│  Soroban clients (lib/soroban/) — trading-preferences,       │
+│  market-oracle (Rust contracts in src/contracts/)            │
+└─────────────────────────────────────────────────────────────┘
+                       │
+                       ▼
+        Stellar network — Horizon REST + SSE, wallets
+```
+
+### Swap pipeline (the core flow)
+
+Every swap follows the same transparent, simulated pipeline — **quote → route → simulate → sign → submit** — before a single transaction touches the network.
+
+```
+findBestRoute(input, output, amount, slippage)
+  │
+  ├─ simulateDirectRoute    → direct orderbook fill (walks ask levels)
+  ├─ simulateBridgeRoute    → multi-hop via XLM / USDC bridges
+  └─ simulateHorizonPath    → Horizon strict-send path finding
+  │
+  ▼
+selectBestRoute  (pure, unit-tested — highest output, fewest hops)
+  │
+  ▼
+buildRoute  → execution price · price impact · min received · fee · warnings
+  │
+  ▼
+executeSwap  (phase machine: checking → building → signing → submitting → success | failed)
+  │
+  ├─ needsTrustline?  → adds a changeTrust op for new destination assets
+  ├─ pathPaymentStrictSend along the chosen path
+  ├─ signTransactionXdr via the wallet (Freighter / StellarWalletsKit)
+  └─ submitTransaction → Horizon · explorer URL on success
+```
+
+The three route strategies are evaluated concurrently (`Promise.all`), and `selectBestRoute` picks the winner by highest output, tie-breaking on fewer hops.
+
+| Module                              | Responsibility                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `orderbook.ts`                      | Fetch + normalize orderbook depth (bids/asks, mid price, spread)           |
+| `simulation.ts`                     | Pure fill simulation, price impact, min received, fee & warning derivation |
+| `routing.ts`                        | Route discovery — direct, multi-hop, and Horizon path-finding              |
+| `swap-execution.ts`                 | Build/sign/submit path payments, trustline handling, error classification  |
+| `prices.ts`                         | OHLCV candles, 24h market stats, top-asset discovery                       |
+| `history.ts`                        | Account trade history                                                      |
+| `live.ts`                           | Horizon SSE streams (trades, operations) returning cleanup functions       |
+| `account.ts` / `asset.ts`           | Account loading, balance helpers, asset identity & conversion              |
+| `wallet-kit.ts` / `wallet-store.ts` | Wallet connection, session persistence, XDR signing                        |
+| `horizon.ts` / `config.ts`          | Horizon server factory, network config, base fee, explorer URLs            |
+| `tokens.ts` / `catalog.ts`          | Token metadata, discovery catalog, issuer info                             |
+| `queries.ts`                        | TanStack Query hooks wiring services to the UI                             |
+
+Pure logic (routing, simulation, swap execution, assets) is extracted for unit testing — see the `*.test.ts` files alongside the modules.
+
+## 📡 Developer API
+
+TarshishDEX exposes a **read-only REST + SSE API** for developers building on Stellar's native DEX. All endpoints are server-side and honour the configured network.
+
+| Method | Endpoint                                                                             | Description                                                         |
+| ------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `GET`  | `/api/health`                                                                        | Service health, active network, Horizon URL                         |
+| `GET`  | `/api/market/stats?limit=10`                                                         | Market stats for the most traded assets (price, volume, 24h change) |
+| `GET`  | `/api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20`                      | Orderbook depth for a pair                                          |
+| `GET`  | `/api/market/candles?base=XLM&counter=USDC:ISSUER&resolution=3600000&range=86400000` | OHLCV candles from trade aggregations                               |
+| `GET`  | `/api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1`                 | Best-route quote: execution price, price impact, min received, fees |
+| `GET`  | `/api/portfolio/:address`                                                            | Portfolio valuation, allocation, and balances for an account        |
+| `GET`  | `/api/trades/:address?limit=40`                                                      | Recent trade history for an account                                 |
+| `GET`  | `/api/assets?limit=24&code=&issuer=`                                                 | Asset discovery with issuer, supply, and trustline stats            |
+| `GET`  | `/api/events?base=XLM&counter=USDC:ISSUER` _(SSE)_                                   | Live stream of trades for a pair (`event: trade`)                   |
 
 ```bash
 curl "http://localhost:3000/api/swap/quote?input=XLM&output=USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN&amount=100"
 ```
 
-### Environment variables
+## ⚙️ Environment Variables
 
 See [`.env.example`](.env.example) for the full set:
 
-| Variable                      | Default         | Purpose                                                       |
-| ----------------------------- | --------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_STELLAR_NETWORK` | `testnet`       | Active network (`testnet` \| `public`)                        |
-| `HORIZON_URL`                 | network default | Server-side Horizon URL override                              |
-| `LOG_LEVEL`                   | `info`          | Server log threshold (`debug` \| `info` \| `warn` \| `error`) |
-| `NEXT_PUBLIC_APP_URL`         | —               | Public base URL of the deployed app                           |
+| Variable                                      | Default         | Purpose                                                       |
+| --------------------------------------------- | --------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_STELLAR_NETWORK`                 | `testnet`       | Active network (`testnet` \| `public`)                        |
+| `HORIZON_URL`                                 | network default | Server-side Horizon URL override                              |
+| `LOG_LEVEL`                                   | `info`          | Server log threshold (`debug` \| `info` \| `warn` \| `error`) |
+| `NEXT_PUBLIC_APP_URL`                         | —               | Public base URL of the deployed app                           |
+| `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID      | Deployed `trading-preferences` Soroban contract               |
+| `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID`       | Testnet ID      | Deployed `market-oracle` Soroban contract                     |
 
-### Docker
+## 🐳 Docker
 
 ```bash
 docker compose up --build   # serves on http://localhost:3000
 ```
 
-The image is multi-stage with `output: "standalone"`, runs as a non-root user, and serves the minimal `server.js`. Configure the network via the `NEXT_PUBLIC_STELLAR_NETWORK` environment variable.
+The image is multi-stage with `output: "standalone"`, runs as a **non-root user**, and serves the minimal `server.js`. Configure the network via the `NEXT_PUBLIC_STELLAR_NETWORK` environment variable.
 
-## Soroban Smart Contracts
+## 🔗 Soroban Smart Contracts
 
-The [`src/contracts/`](src/contracts) directory is a Cargo workspace of Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events.
+The [`src/contracts/`](src/contracts) directory is a Cargo workspace of Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events — **both are live on Stellar Testnet**.
 
 | Contract                                                   | Purpose                                                            | Storage                                               |
 | ---------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
@@ -142,14 +217,14 @@ Both contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
 
 ```bash
 cd src/contracts
-cargo build --workspace                 # native (dev)
-cargo build --target wasm32v1-none --release           # wasm artifacts (Soroban v27 target)
-cargo test --workspace                  # 11 unit tests
-cargo fmt --all -- --check              # formatting gate
+cargo build --workspace                       # native (dev)
+cargo build --target wasm32v1-none --release  # wasm artifacts (Soroban v27 target)
+cargo test --workspace                        # 11 unit tests
+cargo fmt --all -- --check                    # formatting gate
 cargo clippy --all-targets -- -D warnings
 ```
 
-## Wallet Usage
+## 👛 Wallet Usage
 
 TarshishDEX connects through **Freighter** (and any other wallet in the StellarWalletsKit picker).
 
@@ -159,7 +234,7 @@ TarshishDEX connects through **Freighter** (and any other wallet in the StellarW
 4. **Switch / disconnect** — click the address chip in the header to switch accounts or disconnect.
 5. **Sign** — swaps and on-chain preference writes are signed in Freighter with the network passphrase for the active network.
 
-## Contract Interaction
+## 🔌 Contract Interaction
 
 Both contracts are **live on Stellar Testnet** (see [Deployment](#deployment) below). Set the contract IDs in `.env.local`:
 
@@ -193,19 +268,7 @@ stellar contract invoke \
   publish --publisher G... --base USDC --counter XLM --price 10000000
 ```
 
-## Roadmap
-
-| Phase | Scope                                                                | Status  |
-| ----- | -------------------------------------------------------------------- | ------- |
-| 1     | Scaffold, design system, layout shell, UI primitives                 | ✅ Done |
-| 2     | Stellar services layer, swap engine, routing, simulation             | ✅ Done |
-| 3     | Portfolio dashboard, trade history, market analytics                 | ✅ Done |
-| 4     | Wallet integration (Freighter/StellarWalletsKit), live sync          | ✅ Done |
-| 5     | Soroban contracts, CI/CD hardening, documentation                    | ✅ Done |
-| 6     | Developer API (REST + SSE), server logging, Docker deployment        | ✅ Done |
-| 7     | Audit hardening: persistence, contract calls, toasts, deploy tooling | ✅ Done |
-
-## Screenshots
+## 📸 Screenshots
 
 Captures for the submission checklist live in [`docs/screenshots/`](docs/screenshots). Captured against the live deploy with `scripts/capture-screenshots.mjs` (stubbed Freighter extension + real funded Testnet account, verified on-chain transactions):
 
@@ -220,7 +283,19 @@ Captures for the submission checklist live in [`docs/screenshots/`](docs/screens
 | 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
 | 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 70 tests passing (9 files)                |
 
-## Deployment
+## 🗺 Roadmap
+
+| Phase | Scope                                                                | Status  |
+| ----- | -------------------------------------------------------------------- | ------- |
+| 1     | Scaffold, design system, layout shell, UI primitives                 | ✅ Done |
+| 2     | Stellar services layer, swap engine, routing, simulation             | ✅ Done |
+| 3     | Portfolio dashboard, trade history, market analytics                 | ✅ Done |
+| 4     | Wallet integration (Freighter/StellarWalletsKit), live sync          | ✅ Done |
+| 5     | Soroban contracts, CI/CD hardening, documentation                    | ✅ Done |
+| 6     | Developer API (REST + SSE), server logging, Docker deployment        | ✅ Done |
+| 7     | Audit hardening: persistence, contract calls, toasts, deploy tooling | ✅ Done |
+
+## 🚢 Deployment
 
 ### Contracts (Stellar Testnet)
 
@@ -247,24 +322,28 @@ The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or
 
 **🔗 Live demo: [https://tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — production build on Stellar **Testnet** with the deployed contract IDs baked in as build-time env vars. Verify the service with `curl https://tarshishdex.vercel.app/api/health`.
 
-## Development Principles
+## 🎬 Demo Video
+
+**▶️ [TarshishDEX demo (2 minutes)](docs/videos/tarshishdex-demo.mp4)** — walkthrough of the live app: wallet connect → balance → live swap quote → portfolio → analytics → markets → assets → mobile viewport.
+
+Recorded against the live deploy with `scripts/capture-demo-video.mjs` (Playwright `recordVideo`) and assembled with `scripts/assemble-demo-video.sh` (ffmpeg title card + outro, trimmed to exactly 2:00).
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, quality gates, and pull-request workflow — and note that all contributors are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## 🧭 Development Principles
 
 - **Production-ready architecture** — modular blockchain services, secure configuration, comprehensive error handling.
 - **Tested by default** — unit tests for pure logic and components; CI gates every merge.
 - **Professional open-source standards** — conventional commits, documented modules, accessibility-minded UI.
 
-## License
+## 📄 License
 
 Licensed under the [MIT License](LICENSE). TarshishDEX is a demonstration project built for the Stellar ecosystem.
 
-## Credits
+## 🙏 Credits
 
 - **Stellar Development Foundation** — the Stellar network, Horizon, Soroban, and tooling.
-- **SDF StellarWalletsKit** ecosystem — wallet abstraction (`@creit.tech/stellar-wallets-kit`) and Freighter.
+- **SDF StellarWalletsKit ecosystem** — wallet abstraction (`@creit.tech/stellar-wallets-kit`) and Freighter.
 - Open-source libraries: Next.js, React, TanStack Query, zustand, Recharts, lightweight-charts, Tailwind CSS.
-
-## Demo Video
-
-**🎬 [TarshishDEX demo (2 minutes)](docs/videos/tarshishdex-demo.mp4)** — walkthrough of the live app: wallet connect → balance → live swap quote → portfolio → analytics → markets → assets → mobile viewport.
-
-Recorded against the live deploy with `scripts/capture-demo-video.mjs` (Playwright `recordVideo`) and assembled with `scripts/assemble-demo-video.sh` (ffmpeg title card + outro, trimmed to exactly 2:00).
