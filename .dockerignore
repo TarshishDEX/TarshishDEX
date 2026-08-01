@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+coverage
+# The Soroban Rust workspace is not needed in the frontend image.
+src/contracts
+.git
+.gitignore
+.env*
+*.md
+Dockerfile
+.dockerignore
+docker-compose.yml

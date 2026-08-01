@@ -1,0 +1,16 @@
+services:
+  tarshishdex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tarshishdex:latest
+    container_name: tarshishdex
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # NOTE: NEXT_PUBLIC_* vars are inlined into the client bundle at build
+      # time; this runtime value only affects server-side reads (API routes).
+      NEXT_PUBLIC_STELLAR_NETWORK: testnet
+      LOG_LEVEL: info
+    restart: unless-stopped
