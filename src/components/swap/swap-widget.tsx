@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useSwapQuote } from "@/lib/stellar/queries";
+import { useWallet } from "@/lib/stellar/wallet-store";
 import { TokenSelector } from "@/components/swap/token-selector";
+import { SwapExecutionPanel } from "@/components/swap/swap-execution-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,6 +15,7 @@ import type { StellarAsset } from "@/lib/stellar/types";
 const SLIPPAGE_OPTIONS = [0.1, 0.5, 1, 3];
 
 export function SwapWidget() {
+  const { address, connect } = useWallet();
   const [inputAsset, setInputAsset] = useState<StellarAsset | null>({
     code: "XLM",
     isNative: true,
@@ -24,6 +27,7 @@ export function SwapWidget() {
   const [amountIn, setAmountIn] = useState("");
   const [slippagePct, setSlippagePct] = useState(1);
   const [customSlippage, setCustomSlippage] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
 
   const {
     data: quote,
@@ -240,7 +244,7 @@ export function SwapWidget() {
       )}
 
       {/* Warnings */}
-      {quote && quote.warnings.length > 0 && (
+      {!reviewing && quote && quote.warnings.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {quote.warnings.map((warning, i) => (
             <p key={i} className="bg-warning-soft text-warning rounded-lg px-3 py-2 text-xs">
@@ -250,25 +254,60 @@ export function SwapWidget() {
         </div>
       )}
 
-      {isError && (
+      {!reviewing && isError && (
         <p className="bg-danger-soft text-danger mt-3 rounded-lg px-3 py-2 text-xs">
           Could not fetch a quote. The market may be unavailable.
         </p>
       )}
 
       {/* Action */}
-      <Button
-        size="lg"
-        fullWidth
-        className="mt-4"
-        disabled={disabled}
-        isLoading={isLoading && !!amountIn}
-      >
-        {sameAsset ? "Select different assets" : "Review Swap"}
-      </Button>
-      <p className="text-foreground-faint mt-3 text-center text-xs">
-        Wallet integration arrives in Phase 4 — quotes are simulated against live orderbook depth.
-      </p>
+      {reviewing ? (
+        quote && inputAsset && outputAsset && address ? (
+          <div className="animate-fade-in-up mt-4">
+            <SwapExecutionPanel
+              address={address}
+              input={inputAsset}
+              output={outputAsset}
+              amountIn={amountIn}
+              quote={quote}
+              onReset={() => setReviewing(false)}
+            />
+          </div>
+        ) : (
+          // Quote or wallet became unavailable while reviewing — fall back to the form.
+          <Button size="lg" fullWidth className="mt-4" onClick={() => setReviewing(false)}>
+            Back to Swap
+          </Button>
+        )
+      ) : (
+        <>
+          <Button
+            size="lg"
+            fullWidth
+            className="mt-4"
+            disabled={disabled}
+            isLoading={isLoading && !!amountIn}
+            onClick={() => {
+              if (!address) {
+                void connect();
+              } else if (quote && !sameAsset) {
+                setReviewing(true);
+              }
+            }}
+          >
+            {sameAsset
+              ? "Select different assets"
+              : !address
+                ? "Connect Wallet to Swap"
+                : "Review Swap"}
+          </Button>
+          <p className="text-foreground-faint mt-3 text-center text-xs">
+            {address
+              ? "Quotes are simulated against live orderbook depth; execution uses Stellar's native DEX."
+              : "Connect a wallet to execute swaps on Stellar Testnet."}
+          </p>
+        </>
+      )}
     </Card>
   );
 }
