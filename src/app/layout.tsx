@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { WalletProvider } from "@/components/providers/wallet-provider";
+import { ToastViewport } from "@/components/ui/toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -59,6 +60,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
+            <ToastViewport />
           </WalletProvider>
         </QueryProvider>
       </body>
