@@ -78,6 +78,34 @@ export async function subscribeWalletEvents(callbacks: {
   };
 }
 
+/**
+ * Detect whether a wallet extension is installed and reachable.
+ *
+ * Presence of the Freighter browser global is the primary signal — an
+ * installed-but-not-yet-approved extension is still "available" (the user can
+ * approve from the picker), so we must not conflate it with "not installed".
+ * When the global is absent we fall back to the freighter-api handshake, and
+ * only resolve `false` when the extension truly isn't present.
+ */
+export async function isWalletAvailable(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+
+  // @ts-expect-error — Freighter injects a `window.freighter` global.
+  if (typeof window.freighter !== "undefined") {
+    return true;
+  }
+
+  // Fallback: ask the freighter-api module directly. The handshake rejects
+  // only when the extension is genuinely missing.
+  try {
+    const { isConnected } = await import("@stellar/freighter-api");
+    await isConnected();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Sign a transaction XDR string with the connected wallet. */
 export async function signTransactionXdr(
   transactionXdr: string,
