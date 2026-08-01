@@ -2,31 +2,65 @@
 
 ## Soroban contracts — Stellar Testnet
 
-Status: **pending** (requires a funded Testnet deployer account).
+Status: **live** — both contracts deployed, initialized, and exercised on Stellar
+Testnet (ledger 3918793+, August 2026).
 
-Run the deploy script (or the `Deploy` GitHub Actions workflow with the
-`STELLAR_SOURCE_ACCOUNT` secret):
+The deployer account is `GC7J7IBB6FY55R4ZFA2UNCBNEF466CHD2R7RQRH2NHC2YPY6M355XURR`,
+created and funded via the Testnet friendbot (10,000 XLM).
+
+To redeploy (or deploy to Mainnet), run the deploy script (or the `Deploy`
+GitHub Actions workflow with the `STELLAR_SOURCE_ACCOUNT` secret):
 
 ```bash
 cd src/contracts
 cargo build --workspace --target wasm32v1-none --release
-STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
+STELLAR_IDENTITY=alice bash ../../scripts/deploy-contracts.sh   # identity
+# or
+STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh  # secret key
 ```
 
 ### Deployed addresses
 
-| Contract            | Address                            | Network |
-| ------------------- | ---------------------------------- | ------- |
-| trading-preferences | `C...` (to be filled after deploy) | Testnet |
-| market-oracle       | `C...` (to be filled after deploy) | Testnet |
+| Contract            | Address                                                    | Network |
+| ------------------- | ---------------------------------------------------------- | ------- |
+| trading-preferences | `CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM` | Testnet |
+| market-oracle       | `CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V` | Testnet |
 
-### Contract-call transaction
+Copy the IDs into `.env.local`:
 
-| Purpose                            | Transaction hash     | Explorer link                                  |
-| ---------------------------------- | -------------------- | ---------------------------------------------- |
-| `initialize` (trading-preferences) | `...` (to be filled) | https://stellar.expert/explorer/testnet/tx/... |
-| `set_preferences` (via UI)         | `...` (to be filled) | https://stellar.expert/explorer/testnet/tx/... |
-| `publish` (market-oracle)          | `...` (to be filled) | https://stellar.expert/explorer/testnet/tx/... |
+```bash
+NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
+NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
+```
+
+### Contract-call transactions
+
+Every hash below is verifiable on [Stellar Expert](https://stellar.expert/explorer/testnet).
+
+| Purpose                                    | Transaction hash (prefix) | Full hash                                                          |
+| ------------------------------------------ | ------------------------- | ------------------------------------------------------------------ |
+| Deploy `trading-preferences`               | `d593be2c…`               | `d593be2c34381723cb6170b8136f337211dadeab36705c5cf6fd87cf8c4b3c79` |
+| `initialize` (trading-preferences)         | `0e3fcae3…`               | `0e3fcae310d2690627394235b83250a62720bc4b4e64c9d3db95b582193351e2` |
+| `set_preferences` (contract call, UI flow) | `42bb9d5f…`               | `42bb9d5f218174b837a4db3007463fc80a009b76a3c43080c11194e205e47e6d` |
+| Deploy `market-oracle`                     | `71135c57…`               | `71135c5704729b17ece315ac80ce4b05c272714911cc57876fa098cbe36428cf` |
+| `initialize` (market-oracle)               | `beddffc3…`               | `beddffc39187adc1dbd31febdd6ba465770eae47b78110962971c7c8b0c536d8` |
+| `set_publisher` (market-oracle)            | `991d2b30…`               | `991d2b30e68d0ed3b1b13f044274e70b7c3ce88418dd2c6967dedfacd16ee179` |
+| `publish` observation (market-oracle)      | `b975861d…`               | `b975861d1b0a8ac70eb95e2040b55b97a5e5ae516227dc434d830ea4133671b6` |
+
+Explorer links:
+
+- https://stellar.expert/explorer/testnet/tx/d593be2c34381723cb6170b8136f337211dadeab36705c5cf6fd87cf8c4b3c79
+- https://stellar.expert/explorer/testnet/tx/0e3fcae310d2690627394235b83250a62720bc4b4e64c9d3db95b582193351e2
+- https://stellar.expert/explorer/testnet/tx/42bb9d5f218174b837a4db3007463fc80a009b76a3c43080c11194e205e47e6d
+- https://stellar.expert/explorer/testnet/tx/71135c5704729b17ece315ac80ce4b05c272714911cc57876fa098cbe36428cf
+- https://stellar.expert/explorer/testnet/tx/beddffc39187adc1dbd31febdd6ba465770eae47b78110962971c7c8b0c536d8
+- https://stellar.expert/explorer/testnet/tx/991d2b30e68d0ed3b1b13f044274e70b7c3ce88418dd2c6967dedfacd16ee179
+- https://stellar.expert/explorer/testnet/tx/b975861d1b0a8ac70eb95e2040b55b97a5e5ae516227dc434d830ea4133671b6
+
+Contract explorer:
+
+- https://lab.stellar.org/r/testnet/contract/CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
+- https://lab.stellar.org/r/testnet/contract/CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
 
 ## Frontend
 

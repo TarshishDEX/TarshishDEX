@@ -143,24 +143,36 @@ TarshishDEX connects through **Freighter** (and any other wallet in the StellarW
 
 ## Contract Interaction
 
-Once deployed (see [Deployment](#deployment) below), set the contract IDs in `.env.local`:
+Both contracts are **live on Stellar Testnet** (see [Deployment](#deployment) below). Set the contract IDs in `.env.local`:
 
 ```bash
-NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=C...
-NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=C...
+NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
+NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
 ```
 
 - **Swap page → On-chain preferences** — reads the connected account's stored slippage/routing from the `trading-preferences` contract and writes updates via the wallet (`set_preferences`), showing the transaction hash on success.
 - **API / analytics** — market analytics can consume `market-oracle` observations through the Soroban client in `src/lib/soroban/`.
-- **CLI examples** (after `scripts/deploy-contracts.sh`):
+- **CLI examples** (live contract IDs on Testnet):
 
 ```bash
 # Read an account's preferences
-stellar contract invoke --id C... --network testnet -- get_preferences --account G...
+stellar contract invoke \
+  --id CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM \
+  --network testnet --source-account alice -- \
+  get_preferences --account G...
+
+# Write preferences (authorized via require_auth)
+stellar contract invoke \
+  --id CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM \
+  --network testnet --source-account alice --send=yes -- \
+  set_preferences --account G... \
+  --prefs '{"max_slippage_bps": 250, "routing_mode": "auto", "allowed_assets": []}'
 
 # Publish a price observation (authorized publisher)
-stellar contract invoke --id C... --network testnet --source-account alice --send=yes \
-  -- publish --publisher G... --base XLM --counter USDC --price 10000000
+stellar contract invoke \
+  --id CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V \
+  --network testnet --source-account alice --send=yes -- \
+  publish --publisher G... --base USDC --counter XLM --price 10000000
 ```
 
 ## Roadmap
@@ -189,7 +201,7 @@ cargo build --workspace --target wasm32v1-none --release
 STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
 ```
 
-The script deploys and initializes both contracts, then prints their IDs. Deployed addresses and a contract-call transaction hash are documented in [`docs/deployment.md`](docs/deployment.md) once live. Alternatively, trigger the `Deploy` GitHub Actions workflow (manual dispatch) with the `STELLAR_SOURCE_ACCOUNT` secret.
+The script deploys and initializes both contracts, then prints their IDs. **Both contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md). Alternatively, trigger the `Deploy` GitHub Actions workflow (manual dispatch) with the `STELLAR_SOURCE_ACCOUNT` secret.
 
 ### Frontend
 
