@@ -17,6 +17,7 @@
 #   STELLAR_NETWORK   testnet (default) | public
 #   STELLAR_IDENTITY  stellar keys identity name (mutually exclusive with secret)
 #   STELLAR_SOURCE_ACCOUNT  secret key for the deployer (mutually exclusive with identity)
+#   CONTRACT_IDS_FILE path to write machine-readable contract IDs (for CI)
 
 set -euo pipefail
 
@@ -51,6 +52,17 @@ echo "  contract id: $TRADING_ID"
 echo "▶ Deploying market-oracle to $NETWORK"
 ORACLE_ID="$(stellar contract deploy --wasm "$ORACLE_WASM" "${SOURCE_FLAG[@]}" --network "$NETWORK" | tr -d '[:space:]')"
 echo "  contract id: $ORACLE_ID"
+
+# Persist the IDs immediately after deploy (before initialize), so CI can
+# capture them even if a later step fails — and a retry won't silently
+# orphan deployed-but-unrecorded contracts.
+if [[ -n "${CONTRACT_IDS_FILE:-}" ]]; then
+  cat > "$CONTRACT_IDS_FILE" <<EOF
+TRADING_PREFS_ID=$TRADING_ID
+ORACLE_ID=$ORACLE_ID
+NETWORK=$NETWORK
+EOF
+fi
 
 # Initialize both contracts (admin = deployer's public key).
 # Deriving the public address from a raw secret key via the Stellar SDK avoids
