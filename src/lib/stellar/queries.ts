@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { findBestRoute } from "@/lib/stellar/routing";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
-import { getMarketStatsForTokens, fetchTopAssets } from "@/lib/stellar/prices";
-import type { StellarAsset, SwapRoute } from "@/lib/stellar/types";
+import { getMarketStatsForTokens, fetchTopAssets, fetchCandles } from "@/lib/stellar/prices";
+import { fetchPortfolioSummary, isValidPublicKey } from "@/lib/stellar/account";
+import { fetchTradeHistory } from "@/lib/stellar/history";
+import type { StellarAsset, SwapRoute, Token } from "@/lib/stellar/types";
 
 /** Live quote for a swap via the routing engine. */
 export function useSwapQuote(
@@ -48,5 +50,46 @@ export function useMarketStats() {
       return getMarketStatsForTokens(tokens);
     },
     staleTime: 30_000,
+  });
+} /** Portfolio summary for a Stellar address (watch mode). */
+export function usePortfolioSummary(address: string) {
+  return useQuery({
+    queryKey: ["portfolio", address],
+    queryFn: () => fetchPortfolioSummary(address),
+    enabled: Boolean(address && isValidPublicKey(address)),
+    staleTime: 20_000,
+  });
+}
+
+/** Trade history for a Stellar address. */
+export function useTradeHistory(address: string) {
+  return useQuery({
+    queryKey: ["trade-history", address],
+    queryFn: () => fetchTradeHistory(address),
+    enabled: Boolean(address && isValidPublicKey(address)),
+    staleTime: 20_000,
+  });
+}
+
+/** OHLCV price history for a pair over a given lookback range, used by the analytics charts. */
+export function usePriceHistory(
+  base: Token,
+  counter: Token,
+  resolutionMs: number,
+  rangeMs: number
+) {
+  return useQuery({
+    queryKey: [
+      "price-history",
+      base.code,
+      base.issuer ?? "",
+      counter.code,
+      counter.issuer ?? "",
+      resolutionMs,
+      rangeMs,
+    ],
+    queryFn: () => fetchCandles(base, counter, Date.now() - rangeMs, Date.now(), resolutionMs),
+    enabled: Boolean(base && counter && base.code !== counter.code),
+    staleTime: 60_000,
   });
 }
