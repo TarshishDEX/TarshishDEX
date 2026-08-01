@@ -1,5 +1,23 @@
 # TarshishDEX
 
+<p align="center">
+  <a href="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml">
+    <img src="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml">
+    <img src="https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg" alt="Deploy">
+  </a>
+  <img src="https://img.shields.io/badge/tests-70%20passing-2ea44f" alt="70 tests passing">
+  <img src="https://img.shields.io/badge/coverage-new%20modules%20100%25-2ea44f" alt="100% coverage on new modules">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT">
+  <img src="https://img.shields.io/badge/Next.js-16-000000?logo=next.js&amp;logoColor=white" alt="Next.js 16">
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript (strict)">
+  <img src="https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&amp;logoColor=white" alt="Stellar Testnet">
+  <a href="https://tarshishdex.vercel.app">
+    <img src="https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9" alt="Live demo">
+  </a>
+</p>
+
 **A decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.**
 
 TarshishDEX is a complete decentralized trading platform for the Stellar network — intelligent trade execution, liquidity insights, portfolio management, market analytics, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
