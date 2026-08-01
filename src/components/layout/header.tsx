@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
+import { ConnectWalletButton } from "@/components/wallet/connect-wallet-button";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -51,13 +52,7 @@ export function Header() {
             </span>
             Testnet
           </span>
-          {/* Wallet button — wired up in Phase 4 */}
-          <button
-            type="button"
-            className="bg-primary shadow-primary/25 hover:bg-primary-hover hover:shadow-primary/40 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98]"
-          >
-            Connect Wallet
-          </button>
+          <ConnectWalletButton />
         </div>
       </div>
 
