@@ -1,0 +1,24 @@
+[workspace]
+members = ["trading-preferences", "market-oracle"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.81"
+repository = "https://github.com/TarshishDEX/TarshishDEX"
+
+[workspace.dependencies]
+soroban-sdk = "27.0.4"
+
+# Soroban contracts are compiled to WASM — tune the release profile for
+# minimal, deterministic wasm binaries.
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug-assertions = false
+strip = "symbols"
+debug = 0
+lto = true
+codegen-units = 1
+panic = "abort"

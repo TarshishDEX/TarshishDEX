@@ -1,0 +1,16 @@
+[package]
+name = "trading-preferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Per-account trading preferences for TarshishDEX (slippage, routing, asset allow-list)"
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk.workspace = true
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
