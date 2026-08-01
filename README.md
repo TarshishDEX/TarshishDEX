@@ -24,9 +24,9 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | Smart contracts | Soroban SDK (Rust) |
 | Data fetching | TanStack Query + Horizon SSE streams |
 | Charts | Recharts / lightweight-charts |
-| Testing | Vitest + React Testing Library + Testing Library jest-dom |
-| Quality | ESLint, Prettier (with Tailwind plugin), strict TypeScript |
-| CI/CD | GitHub Actions (lint → typecheck → format → test → build) |
+| Testing | Vitest + React Testing Library; Rust `cargo test` for contracts |
+| Quality | ESLint, Prettier (with Tailwind plugin), strict TypeScript, rustfmt + clippy |
+| CI/CD | GitHub Actions (frontend gates + Soroban contract gates) |
 
 ## Getting Started
 
@@ -60,8 +60,46 @@ src/
 │   ├── ui/               # Design-system primitives (Button, Card, Badge…)
 │   └── brand/            # Logo & brand marks
 ├── lib/                  # Utilities, formatting, shared helpers
-└── contracts/            # Soroban smart contracts (Rust workspace) — Phase 5
+└── contracts/            # Soroban smart contracts (Rust workspace)
 ```
+
+## Soroban Smart Contracts
+
+The [`src/contracts/`](src/contracts) directory is a Cargo workspace of Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events.
+
+| Contract | Purpose | Storage |
+| --- | --- | --- |
+| [`trading-preferences`](src/contracts/trading-preferences) | Per-account slippage tolerance, routing mode, and asset allow-list | Persistent per-account (TTL-managed) |
+| [`market-oracle`](src/contracts/market-oracle) | Admin-gated price observation feed for analytics | Persistent pair observations + instance pair registry |
+
+Both contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
+
+- `#[contract]` / `#[contractimpl]` / `#[contracttype]` / `#[contracterror]` macros
+- `#[contractevent]` typed events published via the generated `Event::publish(&env)` method
+- Authorization via `Address::require_auth` (per-account writes; admin-gated publisher grants)
+- TTL-managed persistent storage (`extend_ttl`) and instance storage for configuration
+- Unit tests with `Env::default()` + `mock_all_auths()` + generated clients (`try_*` variants for error assertions)
+
+### Build & test contracts
+
+```bash
+cd src/contracts
+cargo build --workspace                 # native (dev)
+cargo build --target wasm32v1-none --release           # wasm artifacts (Soroban v27 target)
+cargo test --workspace                  # 11 unit tests
+cargo fmt --all -- --check              # formatting gate
+cargo clippy --all-targets -- -D warnings
+```
+
+## Roadmap
+
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 1 | Scaffold, design system, layout shell, UI primitives | ✅ Done |
+| 2 | Stellar services layer, swap engine, routing, simulation | ✅ Done |
+| 3 | Portfolio dashboard, trade history, market analytics | ✅ Done |
+| 4 | Wallet integration (Freighter/StellarWalletsKit), live sync | ✅ Done |
+| 5 | Soroban contracts, CI/CD hardening, documentation | 🔨 In progress |
 
 ## Roadmap
 

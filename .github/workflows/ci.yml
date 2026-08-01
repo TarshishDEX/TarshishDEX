@@ -36,3 +36,36 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  contracts:
+    name: Soroban Contracts (fmt, clippy, test, wasm)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Soroban SDK v27 requires the wasm32v1-none target on Rust 1.82+
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry & target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Build wasm
+        run: cargo build --workspace --target wasm32v1-none --release
