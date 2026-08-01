@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { SwapWidget } from "@/components/swap/swap-widget";
 
 export const metadata: Metadata = { title: "Swap" };
 
 export default function SwapPage() {
   return (
-    <PagePlaceholder
-      title="Swap"
-      description="Swap Stellar assets through the native DEX with intelligent routing, slippage protection, and pre-execution simulation."
-      phase="2"
-    />
+    <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <SwapWidget />
+      </div>
+    </section>
   );
 }
