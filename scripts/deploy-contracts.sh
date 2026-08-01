@@ -29,6 +29,9 @@ ORACLE_WASM="$WASM_DIR/market_oracle.wasm"
 if [[ -n "${STELLAR_IDENTITY:-}" ]]; then
   SOURCE_FLAG=(--source-account "$STELLAR_IDENTITY")
 elif [[ -n "${STELLAR_SOURCE_ACCOUNT:-}" ]]; then
+  # stellar-cli accepts a raw secret key (S...) directly as --source-account,
+  # so there is no need to import an identity (CLI v27's `keys add` is
+  # interactive-only and would otherwise hang in scripts).
   SOURCE_FLAG=(--source-account "$STELLAR_SOURCE_ACCOUNT")
 else
   echo "ERROR: set STELLAR_IDENTITY or STELLAR_SOURCE_ACCOUNT" >&2
@@ -50,14 +53,15 @@ ORACLE_ID="$(stellar contract deploy --wasm "$ORACLE_WASM" "${SOURCE_FLAG[@]}" -
 echo "  contract id: $ORACLE_ID"
 
 # Initialize both contracts (admin = deployer's public key).
-# For a secret key, register a temporary identity so the CLI can derive the
-# public address: `stellar keys add <name> --secret S...`.
+# Deriving the public address from a raw secret key via the Stellar SDK avoids
+# the interactive `stellar keys add` prompt (which hangs in non-TTY scripts).
 if [[ -n "${STELLAR_SOURCE_ACCOUNT:-}" ]]; then
-  DEPLOYER_IDENTITY="tarshishdex-deployer"
-  stellar keys add "$DEPLOYER_IDENTITY" --secret "$STELLAR_SOURCE_ACCOUNT" --network "$NETWORK" 2>/dev/null || true
-  ADMIN_ADDR="$(stellar keys address "$DEPLOYER_IDENTITY" --network "$NETWORK")"
+  # Run from $ROOT so the SDK resolves regardless of the caller's cwd.
+  ADMIN_ADDR="$(cd "$ROOT" && node -e "const { Keypair } = require('@stellar/stellar-sdk'); \
+    process.stdout.write(Keypair.fromSecret(process.argv[1]).publicKey())" \
+    "$STELLAR_SOURCE_ACCOUNT")"
 else
-  ADMIN_ADDR="$(stellar keys address "$STELLAR_IDENTITY" --network "$NETWORK")"
+  ADMIN_ADDR="$(stellar keys address "$STELLAR_IDENTITY")"
 fi
 
 echo "▶ Initializing trading-preferences (admin: $ADMIN_ADDR)"
