@@ -22,6 +22,8 @@ export function useLiveAccountStream(address: string) {
     const close = streamAccountOperations(address, () => {
       void queryClient.invalidateQueries({ queryKey: ["portfolio", address] });
       void queryClient.invalidateQueries({ queryKey: ["trade-history", address] });
+      // Keep the header XLM balance fresh after any on-chain activity.
+      void queryClient.invalidateQueries({ queryKey: ["xlm-balance", address] });
     });
 
     return close;
