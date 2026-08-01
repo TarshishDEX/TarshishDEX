@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { PortfolioWidget } from "@/components/portfolio/portfolio-widget";
 
 export const metadata: Metadata = { title: "Portfolio" };
 
 export default function PortfolioPage() {
   return (
-    <PagePlaceholder
-      title="Portfolio"
-      description="Multi-account portfolio management — balances, allocation, valuation, performance, and complete trade history."
-      phase="3"
-    />
+    <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <PortfolioWidget />
+    </section>
   );
 }
