@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatNumber } from "@/lib/utils";
-import { executeSwap, type SwapExecutionPhase } from "@/lib/stellar/swap-execution";
+import {
+  executeSwap,
+  type SwapErrorKind,
+  type SwapExecutionPhase,
+} from "@/lib/stellar/swap-execution";
 import type { StellarAsset, SwapRoute } from "@/lib/stellar/types";
 
 const PHASE_LABELS: Record<SwapExecutionPhase, string> = {
@@ -18,6 +22,15 @@ const PHASE_LABELS: Record<SwapExecutionPhase, string> = {
 };
 
 const PHASE_STEPS: Array<SwapExecutionPhase> = ["checking", "building", "signing", "submitting"];
+
+/** User-facing message per error kind (requirement #7: distinct handling). */
+const ERROR_MESSAGES: Record<SwapErrorKind, string> = {
+  "insufficient-balance": "Insufficient balance for this swap — check your XLM and token balances.",
+  "user-cancelled": "Transaction cancelled in your wallet.",
+  network: "Network error while submitting — check your connection and try again.",
+  "invalid-transaction": "The transaction was rejected as invalid.",
+  unknown: "The swap could not be completed.",
+};
 
 /**
  * Review + execute panel for the swap widget. Shows the finalized quote and
@@ -43,6 +56,7 @@ export function SwapExecutionPanel({
   const [hash, setHash] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SwapErrorKind | null>(null);
 
   const busy = phase !== "idle" && phase !== "success" && phase !== "failed";
   const success = phase === "success";
@@ -65,7 +79,8 @@ export function SwapExecutionPanel({
       setHash(result.hash ?? null);
       setExplorerUrl(result.explorerUrl ?? null);
     } else {
-      setError(result.error ?? "The swap could not be completed.");
+      setErrorKind(result.errorKind ?? "unknown");
+      setError(result.error ?? ERROR_MESSAGES.unknown);
     }
   }
 
@@ -181,11 +196,17 @@ export function SwapExecutionPanel({
         </div>
       )}
 
-      {/* Error */}
+      {/* Error — kind-specific message plus the raw detail */}
       {phase === "failed" && error && (
         <div className="bg-danger-soft text-danger rounded-xl px-4 py-3 text-sm">
-          <p className="font-semibold">Swap failed</p>
-          <p className="mt-1 text-xs break-words">{error}</p>
+          <p className="font-semibold">Swap failed</p>{" "}
+          <p className="mt-1 text-xs">
+            {errorKind ? ERROR_MESSAGES[errorKind] : ERROR_MESSAGES.unknown}
+          </p>
+          {/* Raw detail is most useful for unexpected (unknown) errors — always show it. */}
+          {error && error !== ERROR_MESSAGES[errorKind ?? "unknown"] && (
+            <p className="text-foreground-faint mt-1 font-mono text-[11px] break-words">{error}</p>
+          )}
         </div>
       )}
 

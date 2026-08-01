@@ -8,11 +8,16 @@ import type { StellarAsset } from "@/lib/stellar/types";
 export type SwapExecutionPhase =
   "idle" | "checking" | "building" | "signing" | "submitting" | "success" | "failed";
 
+/** Error category for a failed swap — surfaced distinctly in the UI. */
+export type SwapErrorKind =
+  "insufficient-balance" | "user-cancelled" | "network" | "invalid-transaction" | "unknown";
+
 export interface SwapExecutionState {
   phase: SwapExecutionPhase;
   hash?: string;
   explorerUrl?: string;
   error?: string;
+  errorKind?: SwapErrorKind;
 }
 
 export interface SwapExecutionParams {
@@ -111,9 +116,40 @@ export async function executeSwap(
     };
   } catch (error) {
     report("failed");
+    const message = error instanceof Error ? error.message : "Transaction failed.";
     return {
       phase: "failed",
-      error: error instanceof Error ? error.message : "Transaction failed.",
+      error: message,
+      errorKind: classifySwapError(error),
     };
   }
+}
+
+/** Map an execution error to a user-facing category for distinct messaging. */
+export function classifySwapError(error: unknown): SwapErrorKind {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    if (
+      msg.includes("op_underfunded") ||
+      msg.includes("insufficient") ||
+      msg.includes("underfunded")
+    ) {
+      return "insufficient-balance";
+    }
+    if (msg.includes("cancel") || msg.includes("reject") || msg.includes("decline")) {
+      return "user-cancelled";
+    }
+    if (msg.includes("network") || msg.includes("timeout") || msg.includes("fetch")) {
+      return "network";
+    }
+    if (
+      msg.includes("invalid") ||
+      msg.includes("malformed") ||
+      msg.includes("bad") ||
+      msg.includes("no_source")
+    ) {
+      return "invalid-transaction";
+    }
+  }
+  return "unknown";
 }
