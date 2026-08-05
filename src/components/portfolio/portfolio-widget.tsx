@@ -12,6 +12,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AddressDisplay } from "@/components/ui/address-display";
 import { formatCompact, truncateAddress } from "@/lib/utils";
 import { explorerAccountUrl } from "@/lib/stellar/config";
 
@@ -108,7 +109,13 @@ export function PortfolioWidget() {
             />
             <StatCard
               label="Account"
-              value={portfolio ? truncateAddress(portfolio.address) : "—"}
+              value={
+                portfolio ? (
+                  <AddressDisplay address={portfolio.address} />
+                ) : (
+                  "—"
+                )
+              }
               loading={isLoading}
               hint={
                 portfolio ? (
