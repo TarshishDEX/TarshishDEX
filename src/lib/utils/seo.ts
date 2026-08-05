@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tarshishdex.vercel.app";
-const OG_IMAGE = `${BASE_URL}/og-image.png`;
+const OG_IMAGE = `${BASE_URL}/og-image.svg`;
 
 interface PageSeoOptions {
   title: string;
