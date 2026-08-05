@@ -1,9 +1,9 @@
-import { cloneElement, isValidElement } from "react";
+import { cloneElement, isValidElement, type ReactElement } from "react";
 import { cn } from "@/lib/utils";
 
 interface AccessibleIconProps {
   label: string;
-  children: React.ReactElement;
+  children: ReactElement<{ className?: string; "aria-hidden"?: boolean }>;
   className?: string;
 }
 
@@ -16,7 +16,7 @@ export function AccessibleIcon({ label, children, className }: AccessibleIconPro
 
   return (
     <>
-      {cloneElement(children as React.ReactElement<{ className?: string; "aria-hidden"?: boolean }>, {
+      {cloneElement(children, {
         "aria-hidden": true,
         className: cn(children.props.className, className),
       })}
