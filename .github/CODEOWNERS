@@ -1,0 +1,16 @@
+# ── TarshishDEX CODEOWNERS ──────────────────────────────────────────────
+# Automatically requests review from the listed owners when files in a
+# directory are modified.
+#
+# Last match wins, so put broad rules first and specific rules last.
+
+*                       @TarshishDEX/maintainers
+
+# Smart contracts — require contract-experienced review.
+src/contracts/          @TarshishDEX/maintainers
+
+# CI/CD and deployment — require ops review.
+.github/                @TarshishDEX/maintainers
+scripts/                @TarshishDEX/maintainers
+Dockerfile              @TarshishDEX/maintainers
+docker-compose.yml      @TarshishDEX/maintainers
