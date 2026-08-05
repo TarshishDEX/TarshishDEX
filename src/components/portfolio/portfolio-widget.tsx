@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCompact, truncateAddress } from "@/lib/utils";
-import { explorerAccountUrl } from "@/lib/stellar/config";
+import { explorerAccountUrl, getActiveNetwork } from "@/lib/stellar/config";
 
 const EXAMPLE_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
@@ -55,7 +55,7 @@ export function PortfolioWidget() {
             </p>
           </div>
           <span className="border-border bg-surface text-foreground-muted rounded-full border px-3 py-1.5 text-xs font-medium">
-            Network: Testnet
+            Network: {getActiveNetwork().label}
           </span>
         </div>
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
