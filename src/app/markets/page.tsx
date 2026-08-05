@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketTable } from "@/components/markets/market-table";
 import { OrderbookDepth } from "@/components/markets/orderbook-depth";
+import { getActiveNetwork } from "@/lib/stellar/config";
 
 export const metadata: Metadata = { title: "Markets" };
 
@@ -21,7 +22,7 @@ export default function MarketsPage() {
           </p>
         </div>
         <span className="border-border bg-surface text-foreground-muted rounded-full border px-3 py-1.5 text-xs font-medium">
-          Network: Testnet
+          Network: {getActiveNetwork().label}
         </span>
       </div>
 
