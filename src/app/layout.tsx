@@ -10,6 +10,7 @@ import { SkipLink } from "@/components/ui/skip-link";
 import { ToastViewport } from "@/components/ui/toast";
 import { ThemeProvider } from "@/lib/theme";
 import { Analytics } from "@/lib/analytics";
+import { SWRegistrar } from "@/components/ui/sw-registrar";
 import "./globals.css";
 
 const inter = Inter({
@@ -82,6 +83,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-screen flex-col font-sans">
         <ThemeProvider>
+          <SWRegistrar />
           <QueryProvider>
             <WalletProvider>
               <ErrorBoundary>
