@@ -23,6 +23,10 @@ pub enum Error {
     NotInitialized = 1,
     AlreadyInitialized = 2,
     InvalidSlippage = 3,
+    NotAuthorized = 4,
+    PreferenceNotFound = 5,
+    InvalidRoutingMode = 6,
+    TooManyAssets = 7,
 }
 
 #[contracttype]
@@ -53,6 +57,8 @@ impl Preferences {
 pub enum DataKey {
     Initialized,
     Admin,
+    Version,
+    PreferenceCount,
     Preferences(Address),
 }
 
@@ -71,6 +77,22 @@ pub struct PreferencesChanged {
     #[topic]
     pub action: Symbol, // "set" | "rm"
     pub preferences: Preferences,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AdminTransferred {
+    #[topic]
+    pub previous_admin: Address,
+    #[topic]
+    pub new_admin: Address,
+}
+
+/// Contract version for migration tracking.
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VersionSet {
+    pub version: u32,
 }
 
 #[contract]
@@ -100,9 +122,33 @@ impl TradingPreferences {
         if prefs.max_slippage_bps > 10_000 {
             return Err(Error::InvalidSlippage);
         }
+        // Validate routing mode against known values.
+        let mode = prefs.routing_mode.clone();
+        if mode != symbol_short!("auto")
+            && mode != symbol_short!("direct")
+            && mode != symbol_short!("bridge")
+        {
+            return Err(Error::InvalidRoutingMode);
+        }
+        // Enforce a reasonable cap on the allow-list size.
+        if prefs.allowed_assets.len() > 50 {
+            return Err(Error::TooManyAssets);
+        }
         let key = DataKey::Preferences(account.clone());
+        let is_new = !env.storage().persistent().has(&key);
         env.storage().persistent().set(&key, &prefs);
         env.storage().persistent().extend_ttl(&key, 0, TTL_LEDGERS);
+        // Increment count for new entries only.
+        if is_new {
+            let count: u32 = env
+                .storage()
+                .instance()
+                .get(&DataKey::PreferenceCount)
+                .unwrap_or(0);
+            env.storage()
+                .instance()
+                .set(&DataKey::PreferenceCount, &(count + 1));
+        }
         PreferencesChanged {
             account,
             action: symbol_short!("set"),
@@ -128,6 +174,17 @@ impl TradingPreferences {
             return Err(Error::NotInitialized);
         }
         env.storage().persistent().remove(&key);
+        // Decrement preference count when removing an existing entry.
+        let count: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::PreferenceCount)
+            .unwrap_or(0);
+        if count > 0 {
+            env.storage()
+                .instance()
+                .set(&DataKey::PreferenceCount, &(count - 1));
+        }
         PreferencesChanged {
             account,
             action: symbol_short!("rm"),
@@ -135,6 +192,74 @@ impl TradingPreferences {
         }
         .publish(&env);
         Ok(())
+    }
+
+    /// Transfer admin ownership. Only the current admin may call this.
+    pub fn transfer_admin(env: Env, new_admin: Address) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        let previous_admin = admin.clone();
+        env.storage().instance().set(&DataKey::Admin, &new_admin);
+        env.storage()
+            .persistent()
+            .extend_ttl(&DataKey::Admin, 0, TTL_LEDGERS);
+        AdminTransferred {
+            previous_admin: previous_admin.clone(),
+            new_admin: new_admin.clone(),
+        }
+        .publish(&env);
+        Ok(())
+    }
+
+    /// Read preferences for multiple accounts in a single call.
+    /// Reduces round-trips for UI dashboards that show many accounts.
+    pub fn batch_get_preferences(
+        env: Env,
+        accounts: Vec<Address>,
+    ) -> Vec<(Address, Preferences)> {
+        let mut results = Vec::new(&env);
+        for account in accounts.iter() {
+            let prefs = env
+                .storage()
+                .persistent()
+                .get(&DataKey::Preferences(account.clone()))
+                .unwrap_or_else(|| Preferences::defaults(&env));
+            results.push_back((account.clone(), prefs));
+        }
+        results
+    }
+
+    /// Return the total count of accounts that have set preferences.
+    pub fn get_preference_count(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::PreferenceCount)
+            .unwrap_or(0)
+    }
+
+    /// Set the contract version for migration tracking. Admin only.
+    pub fn set_version(env: Env, version: u32) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Version, &version);
+        VersionSet { version }.publish(&env);
+        Ok(())
+    }
+
+    /// Read the current contract version. Returns 0 if unset.
+    pub fn get_version(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::Version)
+            .unwrap_or(0)
     }
 }
 
@@ -234,6 +359,93 @@ mod test {
         assert_eq!(
             client.try_set_preferences(&account, &prefs),
             Err(Ok(Error::InvalidSlippage))
+        );
+    }
+
+    #[test]
+    fn transfer_admin_succeeds() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let new_admin = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert!(client.try_transfer_admin(&new_admin).is_ok());
+    }
+
+    #[test]
+    fn batch_get_returns_multiple_accounts() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account1 = Address::generate(&env);
+        let account2 = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let prefs1 = default_prefs(&env);
+        client.set_preferences(&account1, &prefs1);
+
+        let accounts = Vec::from_array(&env, [account1.clone(), account2.clone()]);
+        let batch = client.batch_get_preferences(&accounts);
+        assert_eq!(batch.len(), 2);
+        assert_eq!(batch.get(0).unwrap().0, account1);
+        assert_eq!(batch.get(0).unwrap().1, prefs1);
+        // account2 should return defaults
+        assert_eq!(batch.get(1).unwrap().1, Preferences::defaults(&env));
+    }
+
+    #[test]
+    fn preference_count_tracks_entries() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(client.get_preference_count(), 0);
+
+        client.set_preferences(&account, &default_prefs(&env));
+        assert_eq!(client.get_preference_count(), 1);
+
+        client.remove_preferences(&account);
+        assert_eq!(client.get_preference_count(), 0);
+    }
+
+    #[test]
+    fn version_get_set_roundtrip() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(client.get_version(), 0);
+        assert!(client.try_set_version(&2).is_ok());
+        assert_eq!(client.get_version(), 2);
+    }
+
+    #[test]
+    fn rejects_invalid_routing_mode() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let mut prefs = default_prefs(&env);
+        prefs.routing_mode = symbol_short!("invalid");
+        assert_eq!(
+            client.try_set_preferences(&account, &prefs),
+            Err(Ok(Error::InvalidRoutingMode))
         );
     }
 }
