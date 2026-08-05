@@ -1,35 +1,32 @@
-import { NextResponse } from "next/server";
+/**
+ * API route body size limits applied via the Next.js route segment config.
+ *
+ * Import and spread into any API route that accepts request bodies.
+ *
+ * Usage in a route.ts:
+ *   export const bodySizeLimit = API_BODY_LIMIT;
+ *
+ * Or directly:
+ *   export const maxDuration = 15;
+ *   export { bodyParser } from "next/dist/server/api-utils"; // not needed
+ */
 
-const DEFAULT_MAX_BODY_SIZE = 64 * 1024; // 64 KB — more than enough for our API
+/** 1 MB — suitable for most JSON payloads. */
+export const API_BODY_LIMIT_1MB = "1mb" as const;
+
+/** 100 KB — suitable for lightweight payloads (preferences, etc.). */
+export const API_BODY_LIMIT_100KB = "100kb" as const;
 
 /**
- * Guard against oversized request bodies.
- * Reads and discards bodies that exceed `maxBytes`, returning a 413.
- * For GET/HEAD requests this is a no-op.
+ * Route segment config for API routes that accept request bodies.
+ * Spread this into the route module's exports.
+ *
+ * Example:
+ *   export { bodySizeLimit } from "@/lib/server/body-limit";
+ *   // → sets bodyParser: { sizeLimit: '1mb' }
  */
-export async function enforceBodyLimit(
-  request: Request,
-  maxBytes = DEFAULT_MAX_BODY_SIZE
-): Promise<NextResponse | null> {
-  if (["GET", "HEAD", "OPTIONS"].includes(request.method)) {
-    return null; // No body to check
-  }
-
-  const contentLength = request.headers.get("content-length");
-  if (contentLength && Number(contentLength) > maxBytes) {
-    return NextResponse.json(
-      { error: "Request body too large" },
-      { status: 413 }
-    );
-  }
-
-  // If no content-length, we could stream the body, but for our API
-  // we only have GET routes, so this is a future-proof guard.
-  return null;
-}
-
-/** Configurable max body size per route type. */
-export const BODY_LIMITS = {
-  DEFAULT: DEFAULT_MAX_BODY_SIZE,
-  TRADING_PREFERENCES: 4 * 1024, // 4 KB — preferences are tiny
+export const bodySizeLimit = {
+  bodyParser: {
+    sizeLimit: API_BODY_LIMIT_1MB,
+  },
 } as const;
