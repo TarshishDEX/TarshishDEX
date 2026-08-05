@@ -81,6 +81,15 @@
       opacity: 1;
     }
   }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
 }
 
 @layer base {
@@ -167,5 +176,28 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .shimmer-line {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-elevated) 25%,
+      var(--color-surface-overlay) 50%,
+      var(--color-surface-elevated) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+
+  /* Focus-visible keyboard navigation ring */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Row hover transition utility */
+  .hover-row {
+    transition: background-color 150ms ease;
   }
 }
