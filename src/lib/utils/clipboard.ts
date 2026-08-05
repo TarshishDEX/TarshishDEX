@@ -1,0 +1,32 @@
+/**
+ * Generic clipboard utility for programmatic copy operations.
+ * Used by hooks and components, but also callable from non-React code.
+ */
+
+/**
+ * Copy text to the system clipboard.
+ * Returns true on success, false on failure.
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fallback for older browsers
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      return true;
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+}
