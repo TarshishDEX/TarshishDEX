@@ -9,6 +9,7 @@ import {
   estimateSwapFeeXlm,
   simulateOrderbookFill,
 } from "@/lib/stellar/simulation";
+import { logger } from "@/lib/server/logger";
 import type { OrderbookFill, StellarAsset, SwapRoute } from "@/lib/stellar/types";
 
 /** Bridge assets tried for multi-hop routing. */
@@ -40,7 +41,7 @@ async function simulateDirectRoute(
       midPrice: orderbook.midPrice,
     };
   } catch (error) {
-    console.warn("[routing] direct orderbook failed", error);
+    logger.warn("routing: direct orderbook fetch failed", { error: String(error) });
     return { path: [input, output], fill: null, method: "direct", midPrice: null };
   }
 }
@@ -77,7 +78,7 @@ async function simulateBridgeRoute(
       midPrice: combinedMid,
     };
   } catch (error) {
-    console.warn("[routing] bridge route failed", error);
+    logger.warn("routing: bridge route fetch failed", { error: String(error) });
     return { path: [input, bridge, output], fill: null, method: "multi-hop", midPrice: null };
   }
 } /** Query Horizon's strict-send path finding as a routing enhancement. */
@@ -116,7 +117,7 @@ async function simulateHorizonPath(
       midPrice: null,
     };
   } catch (error) {
-    console.warn("[routing] horizon path finding unavailable", error);
+    logger.warn("routing: Horizon path-finding unavailable", { error: String(error) });
     return { path: [input, output], fill: null, method: "path-finding", midPrice: null };
   }
 }
