@@ -1,0 +1,25 @@
+# ── TarshishDEX — EditorConfig ──────────────────────────────────────────
+# Standardized editor settings for all contributors. Supported by most
+# editors natively or via plugin.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.rs]
+indent_size = 4
+
+[Makefile]
+indent_style = tab
+
+[*.json]
+indent_size = 2
