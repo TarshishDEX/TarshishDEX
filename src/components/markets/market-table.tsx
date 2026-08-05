@@ -5,6 +5,7 @@ import { useMarketStats } from "@/lib/stellar/queries";
 import { useLiveMarketStream } from "@/components/providers/live-sync-hooks";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SortIndicator } from "@/components/ui/sort-indicator";
 import { cn, formatCompact, formatPrice } from "@/lib/utils";
 
 type SortKey = "price" | "change" | "volume";
@@ -70,16 +71,19 @@ export function MarketTable() {
                 <SortableHeader
                   label="Price (XLM)"
                   active={sortKey === "price"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("price")}
                 />
                 <SortableHeader
                   label="24h Change"
                   active={sortKey === "change"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("change")}
                 />
                 <SortableHeader
                   label="24h Volume (XLM)"
                   active={sortKey === "volume"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("volume")}
                 />
                 <th className="px-6 py-3 text-right font-medium">Best Bid / Ask</th>
@@ -142,10 +146,12 @@ export function MarketTable() {
 function SortableHeader({
   label,
   active,
+  direction,
   onClick,
 }: {
   label: string;
   active: boolean;
+  direction: "asc" | "desc";
   onClick: () => void;
 }) {
   return (
@@ -159,16 +165,7 @@ function SortableHeader({
         )}
       >
         {label}
-        <svg
-          className="h-3 w-3"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <path d="M5 8l5-4 5 4M5 12l5 4 5-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <SortIndicator active={active} direction={direction} />
       </button>
     </th>
   );
