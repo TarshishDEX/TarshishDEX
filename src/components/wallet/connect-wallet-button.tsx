@@ -6,6 +6,7 @@ import { useXlmBalance } from "@/lib/stellar/queries";
 import { isWalletAvailable } from "@/lib/stellar/wallet-kit";
 import { explorerAccountUrl } from "@/lib/stellar/config";
 import { toast } from "@/components/ui/toast";
+import { DisconnectDialog } from "@/components/wallet/disconnect-dialog";
 import { cn, formatCompact, truncateAddress } from "@/lib/utils";
 
 const FREIGHTER_INSTALL_URL = "https://www.freighter.app/";
@@ -21,6 +22,7 @@ export function ConnectWalletButton() {
   const { data: xlmBalance } = useXlmBalance(address ?? "");
   const [open, setOpen] = useState(false);
   const [showInstallHint, setShowInstallHint] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close the dropdown on outside click / Escape.
@@ -174,8 +176,7 @@ export function ConnectWalletButton() {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              void disconnect();
-              toast.info("Wallet disconnected");
+              setConfirmDisconnect(true);
             }}
             className="hover:bg-danger-soft text-danger flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"
           >
@@ -194,6 +195,18 @@ export function ConnectWalletButton() {
             <span className="font-medium">Disconnect</span>
           </button>
         </div>
+      )}
+
+      {confirmDisconnect && address && (
+        <DisconnectDialog
+          address={address}
+          onConfirm={() => {
+            setConfirmDisconnect(false);
+            void disconnect();
+            toast.info("Wallet disconnected");
+          }}
+          onCancel={() => setConfirmDisconnect(false)}
+        />
       )}
     </div>
   );
