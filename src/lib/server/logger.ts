@@ -1,55 +1,73 @@
 /**
- * Structured JSON logger for server-side code (API routes, background work).
+ * Structured JSON logger for TarshishDEX server-side code.
  *
- * Emits one JSON object per line to stdout (info/debug) or stderr
- * (warn/error), which is standard for containerized deployments and
- * parseable by log aggregators. The minimum level is controlled by
- * `LOG_LEVEL` (debug | info | warn | error), defaulting to `info`.
+ * Emits log lines as JSON to stdout so they can be ingested by log
+ * aggregators (CloudWatch, Datadog, etc.). In development the output is
+ * pretty-printed for readability.
  */
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogFields {
+interface LogEntry {
+  ts: string;
+  level: LogLevel;
+  msg: string;
+  reqId?: string;
   [key: string]: unknown;
 }
 
 const LEVEL_ORDER: Record<LogLevel, number> = {
-  debug: 10,
-  info: 20,
-  warn: 30,
-  error: 40,
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
 };
 
-function isLogLevel(value: string | undefined): value is LogLevel {
-  return value === "debug" || value === "info" || value === "warn" || value === "error";
+const currentLevel = (): LogLevel => {
+  const env = process.env.LOG_LEVEL?.toLowerCase();
+  if (env === "debug") return "debug";
+  if (env === "warn") return "warn";
+  if (env === "error") return "error";
+  return "info";
+};
+
+function shouldLog(level: LogLevel): boolean {
+  return LEVEL_ORDER[level] >= LEVEL_ORDER[currentLevel()];
 }
 
-function getThreshold(): LogLevel {
-  const raw = process.env.LOG_LEVEL;
-  return isLogLevel(raw) ? raw : "info";
+let globalReqId: string | undefined;
+
+/** Set a request-scoped ID so every log line in that request is traceable. */
+export function setRequestId(id: string | undefined): void {
+  globalReqId = id;
 }
 
-function emit(level: LogLevel, message: string, fields?: LogFields): void {
-  const threshold = getThreshold();
-  if (LEVEL_ORDER[level] < LEVEL_ORDER[threshold]) return;
+function emit(level: LogLevel, msg: string, extra?: Record<string, unknown>): void {
+  if (!shouldLog(level)) return;
 
-  const entry = {
+  const entry: LogEntry = {
     ts: new Date().toISOString(),
     level,
-    message,
-    ...fields,
+    msg,
+    ...(globalReqId ? { reqId: globalReqId } : {}),
+    ...extra,
   };
-  const line = JSON.stringify(entry);
-  if (level === "warn" || level === "error") {
-    console.error(line);
+
+  const line =
+    process.env.NODE_ENV === "production"
+      ? JSON.stringify(entry)
+      : JSON.stringify(entry, null, 2);
+
+  if (level === "error") {
+    process.stderr.write(line + "\n");
   } else {
-    console.log(line);
+    process.stdout.write(line + "\n");
   }
 }
 
 export const logger = {
-  debug: (message: string, fields?: LogFields) => emit("debug", message, fields),
-  info: (message: string, fields?: LogFields) => emit("info", message, fields),
-  warn: (message: string, fields?: LogFields) => emit("warn", message, fields),
-  error: (message: string, fields?: LogFields) => emit("error", message, fields),
+  debug: (msg: string, extra?: Record<string, unknown>) => emit("debug", msg, extra),
+  info: (msg: string, extra?: Record<string, unknown>) => emit("info", msg, extra),
+  warn: (msg: string, extra?: Record<string, unknown>) => emit("warn", msg, extra),
+  error: (msg: string, extra?: Record<string, unknown>) => emit("error", msg, extra),
 };
