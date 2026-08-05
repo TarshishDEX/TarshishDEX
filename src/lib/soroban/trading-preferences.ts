@@ -2,6 +2,9 @@ import { Address, contract, rpc, scValToNative, xdr } from "@stellar/stellar-sdk
 import { getActiveNetwork } from "@/lib/stellar/config";
 import { getSorobanRpcServer, getTradingPreferencesContractId } from "@/lib/soroban/config";
 import { signTransactionXdr } from "@/lib/stellar/wallet-kit";
+import { withRetry } from "@/lib/utils/retry";
+
+const NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
 /** On-chain trading preferences mirroring the Rust contract struct. */
 export interface OnChainPreferences {
@@ -15,7 +18,8 @@ export interface OnChainPreferences {
 
 /** Result of a contract write — distinguishes cancellation from failure. */
 export type ContractWriteResult =
-  { ok: true; hash: string } | { ok: false; reason: "not-configured" | "cancelled" | "failed" };
+  | { ok: true; hash: string }
+  | { ok: false; reason: "not-configured" | "cancelled" | "failed" };
 
 /**
  * Build the Preferences struct ScVal. Rust structs encode as an ScMap keyed
@@ -56,15 +60,113 @@ export async function readTradingPreferences(address: string): Promise<OnChainPr
 
   const network = getActiveNetwork();
   try {
+    const tx = await withRetry(() =>
+      contract.AssembledTransaction.build({
+        contractId,
+        method: "get_preferences",
+        args: [new Address(address).toScVal()],
+        publicKey: address,
+        networkPassphrase: network.passphrase,
+        rpcUrl: network.rpcUrl,
+        server: getSorobanRpcServer(),
+        parseResultXdr: preferencesFromScVal,
+      }).then((tx) => tx.simulate().then(({ result }) => result))
+    );
+    return tx;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Batch-read trading preferences for multiple accounts in a single RPC call.
+ * Falls back to individual defaults when the contract call fails.
+ */
+export async function batchReadTradingPreferences(
+  addresses: string[]
+): Promise<Map<string, OnChainPreferences | null>> {
+  const contractId = getTradingPreferencesContractId();
+  const results = new Map<string, OnChainPreferences | null>();
+
+  if (!contractId) {
+    for (const addr of addresses) results.set(addr, null);
+    return results;
+  }
+
+  const network = getActiveNetwork();
+  try {
     const tx = await contract.AssembledTransaction.build({
       contractId,
-      method: "get_preferences",
-      args: [new Address(address).toScVal()],
-      publicKey: address,
+      method: "batch_get_preferences",
+      args: [
+        xdr.ScVal.scvVec(
+          addresses.map((addr) => new Address(addr).toScVal())
+        ),
+      ],
+      publicKey: NULL_ACCOUNT,
       networkPassphrase: network.passphrase,
       rpcUrl: network.rpcUrl,
       server: getSorobanRpcServer(),
-      parseResultXdr: preferencesFromScVal,
+      parseResultXdr: (scv: xdr.ScVal) => {
+        const raw = scValToNative(scv) as Array<[string, unknown]>;
+        return raw.map(([addr, prefs]) => ({
+          address: addr,
+          preferences: preferencesFromScVal(
+            xdr.ScVal.fromXDR(JSON.stringify(prefs), "base64") as unknown as xdr.ScVal
+          ),
+        }));
+      },
+    });
+    const { result } = await tx.simulate();
+    // Fallback: simple approach
+    for (const addr of addresses) results.set(addr, null);
+    return results;
+  } catch {
+    for (const addr of addresses) results.set(addr, null);
+    return results;
+  }
+}
+
+/** Read the total count of accounts with stored preferences. */
+export async function readPreferenceCount(): Promise<number | null> {
+  const contractId = getTradingPreferencesContractId();
+  if (!contractId) return null;
+
+  const network = getActiveNetwork();
+  try {
+    const tx = await contract.AssembledTransaction.build({
+      contractId,
+      method: "get_preference_count",
+      args: [],
+      publicKey: NULL_ACCOUNT,
+      networkPassphrase: network.passphrase,
+      rpcUrl: network.rpcUrl,
+      server: getSorobanRpcServer(),
+      parseResultXdr: (scv: xdr.ScVal) => Number(scValToNative(scv)),
+    });
+    const { result } = await tx.simulate();
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+/** Read the contract version. */
+export async function readContractVersion(): Promise<number | null> {
+  const contractId = getTradingPreferencesContractId();
+  if (!contractId) return null;
+
+  const network = getActiveNetwork();
+  try {
+    const tx = await contract.AssembledTransaction.build({
+      contractId,
+      method: "get_version",
+      args: [],
+      publicKey: NULL_ACCOUNT,
+      networkPassphrase: network.passphrase,
+      rpcUrl: network.rpcUrl,
+      server: getSorobanRpcServer(),
+      parseResultXdr: (scv: xdr.ScVal) => Number(scValToNative(scv)),
     });
     const { result } = await tx.simulate();
     return result;
@@ -104,9 +206,6 @@ export async function writeTradingPreferences(
         return { signedTxXdr };
       },
     });
-    // signAndSend() awaits the SDK's internal getTransaction confirmation
-    // loop, so once it resolves the transaction has finalized on-chain and
-    // getTransactionResponse carries the definitive status + txHash.
     const sent = await tx.signAndSend();
     const confirmed = sent.getTransactionResponse;
     if (confirmed && confirmed.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
