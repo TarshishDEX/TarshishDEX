@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { ConnectWalletButton } from "@/components/wallet/connect-wallet-button";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { NetworkIndicator } from "@/components/ui/network-indicator";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -45,6 +47,9 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          <span className="hidden sm:block">
+            <NetworkIndicator />
+          </span>
           <span className="border-border text-foreground-muted hidden items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium sm:flex">
             <span className="relative flex h-2 w-2">
               <span className="bg-warning absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" />
@@ -53,6 +58,7 @@ export function Header() {
             Testnet
           </span>
           <ConnectWalletButton />
+          <MobileMenu />
         </div>
       </div>
 
