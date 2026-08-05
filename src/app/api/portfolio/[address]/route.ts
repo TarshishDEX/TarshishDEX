@@ -25,3 +25,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ addr
     return NextResponse.json({ error: "Failed to fetch portfolio" }, { status: 502 });
   }
 }
+
+export { OPTIONS } from "@/lib/api/cors";

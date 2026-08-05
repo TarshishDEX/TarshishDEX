@@ -24,3 +24,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to fetch assets" }, { status: 502 });
   }
 }
+
+export { OPTIONS } from "@/lib/api/cors";

@@ -28,3 +28,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ addr
     return NextResponse.json({ error: "Failed to fetch trade history" }, { status: 502 });
   }
 }
+
+export { OPTIONS } from "@/lib/api/cors";

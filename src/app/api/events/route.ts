@@ -74,3 +74,5 @@ export async function GET(request: Request) {
     },
   });
 }
+
+export { OPTIONS } from "@/lib/api/cors";
