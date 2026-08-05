@@ -4,11 +4,12 @@
 //!
 //! An admin-managed price observation feed for TarshishDEX market analytics.
 //! Authorized publishers submit (base, counter, price) observations; the
-//! contract stores the latest observation per pair and exposes a read-only
-//! query API for the frontend and analytics.
+//! contract stores observations per pair and exposes a read-only query API
+//! for the frontend and analytics.
 //!
-//! Demonstrates: admin-gated access control, TTL-managed keyed storage,
-//! and typed on-chain events via `#[contractevent]`.
+//! Features: admin-gated access control, TTL-managed keyed storage,
+//! staleness detection, publisher count tracking, admin transfer,
+//! history retention, contract versioning, and typed on-chain events.
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, Address, Env, Symbol, Vec,
@@ -16,6 +17,10 @@ use soroban_sdk::{
 
 /// TTL (in ledgers) applied to observations and publisher grants.
 const TTL_LEDGERS: u32 = 518_400;
+/// Maximum number of historical observations stored per pair.
+const MAX_HISTORY: u32 = 16;
+/// Ledgers after which an observation is considered stale (~1 hour at 5s/ledger).
+const STALE_THRESHOLD: u32 = 720;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -24,6 +29,7 @@ pub enum Error {
     NotInitialized = 2,
     AlreadyInitialized = 3,
     InvalidPrice = 4,
+    StaleObservation = 5,
 }
 
 #[contracttype]
@@ -42,8 +48,13 @@ pub struct Observation {
 pub enum DataKey {
     Initialized,
     Admin,
+    Version,
+    PublisherCount,
     Publisher(Address),
+    /// Latest observation for a pair.
     Observation(Symbol, Symbol),
+    /// History ring buffer for a pair: (ledger, price, publisher).
+    History(Symbol, Symbol),
     Pairs,
 }
 
@@ -52,6 +63,15 @@ pub enum DataKey {
 pub struct Initialized {
     #[topic]
     pub admin: Address,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AdminTransferred {
+    #[topic]
+    pub previous_admin: Address,
+    #[topic]
+    pub new_admin: Address,
 }
 
 #[contractevent]
@@ -74,6 +94,12 @@ pub struct PricePublished {
     pub observation: Observation,
 }
 
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VersionSet {
+    pub version: u32,
+}
+
 #[contract]
 pub struct MarketOracle;
 
@@ -94,6 +120,24 @@ impl MarketOracle {
         Ok(())
     }
 
+    /// Transfer admin ownership. Only the current admin may call this.
+    pub fn transfer_admin(env: Env, new_admin: Address) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        let previous = admin.clone();
+        env.storage().instance().set(&DataKey::Admin, &new_admin);
+        AdminTransferred {
+            previous_admin: previous.clone(),
+            new_admin: new_admin.clone(),
+        }
+        .publish(&env);
+        Ok(())
+    }
+
     /// Admin: grant or revoke a publisher's write access.
     pub fn set_publisher(env: Env, publisher: Address, allowed: bool) -> Result<(), Error> {
         let admin: Address = env
@@ -103,10 +147,40 @@ impl MarketOracle {
             .ok_or(Error::NotInitialized)?;
         admin.require_auth();
         let key = DataKey::Publisher(publisher.clone());
+        let was_allowed: bool = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or(false);
         env.storage().persistent().set(&key, &allowed);
         env.storage().persistent().extend_ttl(&key, 0, TTL_LEDGERS);
+
+        // Track publisher count
+        let count: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::PublisherCount)
+            .unwrap_or(0);
+        if allowed && !was_allowed {
+            env.storage()
+                .instance()
+                .set(&DataKey::PublisherCount, &(count + 1));
+        } else if !allowed && was_allowed && count > 0 {
+            env.storage()
+                .instance()
+                .set(&DataKey::PublisherCount, &(count - 1));
+        }
+
         PublisherUpdated { publisher, allowed }.publish(&env);
         Ok(())
+    }
+
+    /// Return the number of active publishers.
+    pub fn get_publisher_count(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::PublisherCount)
+            .unwrap_or(0)
     }
 
     /// Publisher: submit the latest price for a pair.
@@ -137,11 +211,29 @@ impl MarketOracle {
             ledger,
             publisher: publisher.clone(),
         };
+
+        // Store the latest observation
         let key = DataKey::Observation(base.clone(), counter.clone());
         env.storage().persistent().set(&key, &observation);
         env.storage().persistent().extend_ttl(&key, 0, TTL_LEDGERS);
 
-        // Track the pair so `all_observations` can enumerate everything.
+        // Append to history ring buffer
+        let hist_key = DataKey::History(base.clone(), counter.clone());
+        let mut history: Vec<Observation> = env
+            .storage()
+            .persistent()
+            .get(&hist_key)
+            .unwrap_or_else(|| Vec::new(&env));
+        if history.len() >= MAX_HISTORY {
+            history.remove(0);
+        }
+        history.push_back(observation.clone());
+        env.storage().persistent().set(&hist_key, &history);
+        env.storage()
+            .persistent()
+            .extend_ttl(&hist_key, 0, TTL_LEDGERS);
+
+        // Track the pair
         let mut pairs: Vec<(Symbol, Symbol)> = env
             .storage()
             .instance()
@@ -162,15 +254,60 @@ impl MarketOracle {
         Ok(observation)
     }
 
-    /// Read the latest observation for a pair.
-    pub fn get_observation(env: Env, base: Symbol, counter: Symbol) -> Option<Observation> {
-        env.storage()
+    /// Read the latest observation for a pair (rejects stale data).
+    pub fn get_observation(env: Env, base: Symbol, counter: Symbol) -> Result<Option<Observation>, Error> {
+        let current_ledger = env.ledger().sequence();
+        match env
+            .storage()
             .persistent()
             .get(&DataKey::Observation(base, counter))
+        {
+            Some(obs) => {
+                if current_ledger.saturating_sub(obs.ledger) > STALE_THRESHOLD {
+                    Err(Error::StaleObservation)
+                } else {
+                    Ok(Some(obs))
+                }
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// Read the observation history for a pair (up to MAX_HISTORY entries).
+    pub fn get_observation_history(
+        env: Env,
+        base: Symbol,
+        counter: Symbol,
+    ) -> Vec<Observation> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::History(base, counter))
+            .unwrap_or_else(|| Vec::new(&env))
+    }
+
+    /// Batch-read latest observations for multiple pairs in one call.
+    pub fn batch_get_observations(
+        env: Env,
+        pairs: Vec<(Symbol, Symbol)>,
+    ) -> Vec<(Symbol, Symbol, Option<Observation>)> {
+        let current_ledger = env.ledger().sequence();
+        let mut out = Vec::new(&env);
+        for (base, counter) in pairs.iter() {
+            let obs = env
+                .storage()
+                .persistent()
+                .get(&DataKey::Observation(base.clone(), counter.clone()))
+                .filter(|o: &Observation| {
+                    current_ledger.saturating_sub(o.ledger) <= STALE_THRESHOLD
+                });
+            out.push_back((base.clone(), counter.clone(), obs));
+        }
+        out
     }
 
     /// List all observations currently stored (for analytics).
     pub fn all_observations(env: Env) -> Vec<(Symbol, Symbol, Observation)> {
+        let current_ledger = env.ledger().sequence();
         let pairs: Vec<(Symbol, Symbol)> = env
             .storage()
             .instance()
@@ -183,10 +320,33 @@ impl MarketOracle {
                 .persistent()
                 .get(&DataKey::Observation(base.clone(), counter.clone()))
             {
-                out.push_back((base.clone(), counter.clone(), observation));
+                if current_ledger.saturating_sub(observation.ledger) <= STALE_THRESHOLD {
+                    out.push_back((base.clone(), counter.clone(), observation));
+                }
             }
         }
         out
+    }
+
+    /// Set the contract version for migration tracking. Admin only.
+    pub fn set_version(env: Env, version: u32) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Version, &version);
+        VersionSet { version }.publish(&env);
+        Ok(())
+    }
+
+    /// Read the current contract version. Returns 0 if unset.
+    pub fn get_version(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::Version)
+            .unwrap_or(0)
     }
 }
 
@@ -210,6 +370,18 @@ mod test {
     }
 
     #[test]
+    fn transfer_admin_succeeds() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let new_admin = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        assert!(client.try_transfer_admin(&new_admin).is_ok());
+    }
+
+    #[test]
     fn unauthorized_publisher_is_rejected() {
         let env = Env::default();
         env.mock_all_auths();
@@ -219,7 +391,6 @@ mod test {
         let client = MarketOracleClient::new(&env, &contract_id);
 
         client.initialize(&admin);
-        // `stranger` was never granted publisher access.
         assert_eq!(
             client.try_publish(
                 &stranger,
@@ -254,6 +425,7 @@ mod test {
 
         let stored = client
             .get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"))
+            .unwrap()
             .unwrap();
         assert_eq!(stored, obs);
     }
@@ -325,5 +497,55 @@ mod test {
         assert_eq!(all.len(), 1);
         assert_eq!(all.get(0).unwrap().0, symbol_short!("XLM"));
         assert_eq!(all.get(0).unwrap().2.price, 10_000_000);
+    }
+
+    #[test]
+    fn publisher_count_tracks_grants_and_revocations() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(client.get_publisher_count(), 0);
+        client.set_publisher(&publisher, &true);
+        assert_eq!(client.get_publisher_count(), 1);
+        client.set_publisher(&publisher, &false);
+        assert_eq!(client.get_publisher_count(), 0);
+    }
+
+    #[test]
+    fn observation_history_is_retained() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        client.publish(&publisher, &symbol_short!("XLM"), &symbol_short!("USDC"), &10_000_000);
+        client.publish(&publisher, &symbol_short!("XLM"), &symbol_short!("USDC"), &11_000_000);
+
+        let history = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        assert_eq!(history.len(), 2);
+    }
+
+    #[test]
+    fn version_get_set_roundtrip() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(client.get_version(), 0);
+        assert!(client.try_set_version(&3).is_ok());
+        assert_eq!(client.get_version(), 3);
     }
 }
