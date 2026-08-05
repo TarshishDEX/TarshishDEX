@@ -6,7 +6,10 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { WalletProvider } from "@/components/providers/wallet-provider";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { SkipLink } from "@/components/ui/skip-link";
 import { ToastViewport } from "@/components/ui/toast";
+import { ThemeProvider } from "@/lib/theme";
+import { Analytics } from "@/lib/analytics";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,6 +43,20 @@ export const metadata: Metadata = {
     description: "Swap, analyze, and trade Stellar assets through Stellar's native DEX.",
     type: "website",
     siteName: "TarshishDEX",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "TarshishDEX — The trading gateway to the Stellar ecosystem",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TarshishDEX — Stellar Decentralized Exchange",
+    description: "Swap, analyze, and trade Stellar assets through Stellar's native DEX.",
+    images: ["/og-image.svg"],
   },
   icons: {
     icon: "/favicon.svg",
@@ -64,17 +81,21 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
       <body className="flex min-h-screen flex-col font-sans">
-        <QueryProvider>
-          <WalletProvider>
-            <ErrorBoundary>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <ScrollToTop />
-              <ToastViewport />
-            </ErrorBoundary>
-          </WalletProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <WalletProvider>
+              <ErrorBoundary>
+                <SkipLink />
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <ScrollToTop />
+                <ToastViewport />
+              </ErrorBoundary>
+            </WalletProvider>
+          </QueryProvider>
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   );
