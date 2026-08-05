@@ -1,0 +1,50 @@
+"use client";
+
+import { useRef, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+
+interface TransitionHeightProps {
+  children: React.ReactNode;
+  show: boolean;
+  duration?: number;
+  className?: string;
+}
+
+/**
+ * Animate height changes when children mount/unmount.
+ * Uses a ref-based approach for smooth CSS transitions.
+ */
+export function TransitionHeight({ children, show, duration = 300, className }: TransitionHeightProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | "auto">(0);
+  const [mounted, setMounted] = useState(show);
+
+  useEffect(() => {
+    if (show) {
+      setMounted(true);
+      // Wait a frame for the DOM to update
+      requestAnimationFrame(() => {
+        if (ref.current) setHeight(ref.current.scrollHeight);
+      });
+    } else {
+      setHeight(0);
+      const timer = setTimeout(() => setMounted(false), duration);
+      return () => clearTimeout(timer);
+    }
+  }, [show, duration]);
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      ref={ref}
+      className={cn("overflow-hidden transition-all", className)}
+      style={{
+        maxHeight: height === "auto" ? "9999px" : `${height}px`,
+        transitionDuration: `${duration}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
