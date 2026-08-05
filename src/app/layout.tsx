@@ -4,6 +4,8 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { WalletProvider } from "@/components/providers/wallet-provider";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { ToastViewport } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -31,11 +33,18 @@ export const metadata: Metadata = {
     "A production-grade decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts. Swap, analyze liquidity, track portfolios, and trade with confidence.",
   applicationName: "TarshishDEX",
   keywords: ["stellar", "dex", "soroban", "defi", "trading", "crypto", "blockchain"],
+  authors: [{ name: "TarshishDEX" }],
+  robots: { index: true, follow: true },
   openGraph: {
     title: "TarshishDEX — Stellar Decentralized Exchange",
     description: "Swap, analyze, and trade Stellar assets through Stellar's native DEX.",
     type: "website",
+    siteName: "TarshishDEX",
   },
+  icons: {
+    icon: "/favicon.svg",
+  },
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
@@ -57,10 +66,13 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col font-sans">
         <QueryProvider>
           <WalletProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <ToastViewport />
+            <ErrorBoundary>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <ScrollToTop />
+              <ToastViewport />
+            </ErrorBoundary>
           </WalletProvider>
         </QueryProvider>
       </body>
