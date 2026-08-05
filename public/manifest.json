@@ -1,0 +1,18 @@
+{
+  "name": "TarshishDEX — Stellar Decentralized Exchange",
+  "short_name": "TarshishDEX",
+  "description": "A production-grade decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06090f",
+  "theme_color": "#06090f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
