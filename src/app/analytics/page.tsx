@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PriceChartPanel } from "@/components/analytics/price-chart-panel";
+import { getActiveNetwork } from "@/lib/stellar/config";
 
 export const metadata: Metadata = { title: "Analytics" };
 
@@ -15,7 +16,7 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <span className="border-border bg-surface text-foreground-muted rounded-full border px-3 py-1.5 text-xs font-medium">
-          Live on Testnet
+          Live on {getActiveNetwork().label}
         </span>
       </div>
       <div className="mt-8">
