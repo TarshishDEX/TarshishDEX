@@ -1,43 +1,51 @@
 import type { Metadata } from "next";
 
-interface SeoInput {
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tarshishdex.vercel.app";
+const OG_IMAGE = `${BASE_URL}/og-image.png`;
+
+interface PageSeoOptions {
   title: string;
-  description?: string;
+  description: string;
+  /** Relative path (e.g. "/swap"). Defaults to BASE_URL. */
   path?: string;
-  image?: string;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tarshishdex.vercel.app";
-const SITE_NAME = "TarshishDEX";
-const DEFAULT_DESC =
-  "A production-grade decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.";
-
 /**
- * Build page metadata for SEO and social sharing.
- * Provides sensible defaults for all Open Graph and Twitter tags.
+ * Build consistent SEO metadata for any page.
+ * Falls back to sensible defaults for the TarshishDEX brand.
  */
-export function buildSeo(input: SeoInput): Metadata {
-  const title = input.title.includes(SITE_NAME) ? input.title : `${input.title} · ${SITE_NAME}`;
-  const description = input.description ?? DEFAULT_DESC;
-  const url = input.path ? `${BASE_URL}${input.path}` : BASE_URL;
+export function buildPageMetadata({
+  title,
+  description,
+  path = "/",
+}: PageSeoOptions): Metadata {
+  const url = `${BASE_URL}${path}`;
+  const fullTitle = `${title} · TarshishDEX`;
 
   return {
-    title,
+    title: fullTitle,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title,
+      title: fullTitle,
       description,
       url,
-      siteName: SITE_NAME,
+      siteName: "TarshishDEX",
+      images: [
+        {
+          url: OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: fullTitle,
+        },
+      ],
       type: "website",
-      ...(input.image ? { images: [{ url: input.image, width: 1200, height: 630 }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: fullTitle,
       description,
-      ...(input.image ? { images: [input.image] } : {}),
+      images: [OG_IMAGE],
     },
   };
 }
