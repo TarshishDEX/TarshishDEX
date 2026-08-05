@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06090f"/>
+      <stop offset="50%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#06090f"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ba0fd"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ba0fd"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.03" stroke="#5ba0fd" stroke-width="0.5">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+
+  <!-- Glow behind logo -->
+  <circle cx="600" cy="200" r="180" fill="#5ba0fd" opacity="0.05" filter="blur(60px)"/>
+
+  <!-- Logo icon -->
+  <g transform="translate(568, 130)">
+    <rect x="0" y="0" width="64" height="64" rx="16" fill="#06090f" stroke="url(#brand)" stroke-width="2.5"/>
+    <path d="M16 16h32M32 16v32M32 48c8 0 12-4.5 12-10" stroke="url(#brand)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="280" text-anchor="middle" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="58" font-weight="700" fill="white" letter-spacing="-0.5">
+    <tspan fill="url(#textGrad)">Tarshish</tspan><tspan fill="white">DEX</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="335" text-anchor="middle" font-family="'Inter', sans-serif" font-size="28" fill="#cdd6f4" opacity="0.7" letter-spacing="-0.2">
+    The trading gateway to the Stellar ecosystem
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(150, 400)">
+    <rect x="0" y="0" width="250" height="52" rx="26" fill="white" opacity="0.06"/>
+    <text x="125" y="32" text-anchor="middle" font-family="'Inter', sans-serif" font-size="17" fill="#bac2de">⇄ Native DEX Swaps</text>
+  </g>
+  <g transform="translate(430, 400)">
+    <rect x="0" y="0" width="260" height="52" rx="26" fill="white" opacity="0.06"/>
+    <text x="130" y="32" text-anchor="middle" font-family="'Inter', sans-serif" font-size="17" fill="#bac2de">◈ Intelligent Routing</text>
+  </g>
+  <g transform="translate(720, 400)">
+    <rect x="0" y="0" width="280" height="52" rx="26" fill="white" opacity="0.06"/>
+    <text x="140" y="32" text-anchor="middle" font-family="'Inter', sans-serif" font-size="17" fill="#bac2de">◉ Portfolio Analytics</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="600" y="580" text-anchor="middle" font-family="'Inter', sans-serif" font-size="18" fill="#6c7086">
+    Built on Stellar · Soroban · Next.js
+  </text>
+</svg>
