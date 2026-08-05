@@ -3,11 +3,14 @@
 import { useMemo, useState } from "react";
 import { useSwapQuote } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
+import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { TokenSelector } from "@/components/swap/token-selector";
 import { SwapExecutionPanel } from "@/components/swap/swap-execution-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn, formatNumber } from "@/lib/utils";
 import { isSameAsset } from "@/lib/stellar/asset";
 import type { StellarAsset } from "@/lib/stellar/types";
@@ -25,6 +28,7 @@ export function SwapWidget() {
     issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
   });
   const [amountIn, setAmountIn] = useState("");
+  const debouncedAmount = useDebounce(amountIn, 400);
   const [slippagePct, setSlippagePct] = useState(1);
   const [customSlippage, setCustomSlippage] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -33,7 +37,7 @@ export function SwapWidget() {
     data: quote,
     isLoading,
     isError,
-  } = useSwapQuote(inputAsset, outputAsset, amountIn, slippagePct);
+  } = useSwapQuote(inputAsset, outputAsset, debouncedAmount, slippagePct);
 
   const sameAsset = inputAsset && outputAsset && isSameAsset(inputAsset, outputAsset);
   const disabled = !amountIn || Number(amountIn) <= 0 || !inputAsset || !outputAsset || !!sameAsset;
@@ -51,6 +55,17 @@ export function SwapWidget() {
     setOutputAsset(inputAsset);
     setAmountIn("");
   }
+
+  // Keyboard shortcut: press "s" to focus the amount input
+  useKeyboardShortcuts([
+    {
+      key: "s",
+      description: "Focus swap amount input",
+      handler: () => {
+        document.querySelector<HTMLInputElement>('[aria-label="Amount to pay"]')?.focus();
+      },
+    },
+  ]);
 
   return (
     <Card className="w-full max-w-md p-6">
@@ -88,27 +103,29 @@ export function SwapWidget() {
 
       {/* Reverse */}
       <div className="relative flex justify-center py-1">
-        <button
-          type="button"
-          onClick={handleSwapDirection}
-          aria-label="Reverse swap direction"
-          className="border-border bg-surface-elevated text-foreground-muted hover:border-primary/50 hover:text-primary absolute -top-3.5 flex h-9 w-9 items-center justify-center rounded-xl border shadow-lg transition-all duration-200 hover:rotate-180 active:scale-90"
-        >
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
+        <Tooltip content="Reverse swap direction">
+          <button
+            type="button"
+            onClick={handleSwapDirection}
+            aria-label="Reverse swap direction"
+            className="border-border bg-surface-elevated text-foreground-muted hover:border-primary/50 hover:text-primary absolute -top-3.5 flex h-9 w-9 items-center justify-center rounded-xl border shadow-lg transition-all duration-200 hover:rotate-180 active:scale-90"
           >
-            <path
-              d="M4 7h12m0 0l-3-3m3 3l-3 3M16 13H4m0 0l3 3m-3-3l3-3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 7h12m0 0l-3-3m3 3l-3 3M16 13H4m0 0l3 3m-3-3l3-3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Output */}
