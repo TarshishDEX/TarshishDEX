@@ -5,6 +5,7 @@ const RESOURCES = [
   { href: "/docs", label: "Documentation" },
   { href: "/analytics", label: "Market Analytics" },
   { href: "/api", label: "Developer API" },
+  { href: "https://github.com/TarshishDEX/TarshishDEX", label: "GitHub", external: true },
   { href: "https://developers.stellar.org", label: "Stellar Docs", external: true },
   { href: "https://stellar.expert", label: "StellarExpert", external: true },
 ];
