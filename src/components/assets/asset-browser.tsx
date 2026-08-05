@@ -6,6 +6,7 @@ import { fetchAssetCatalog, type AssetCatalogEntry } from "@/lib/stellar/catalog
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { SortIndicator } from "@/components/ui/sort-indicator";
 import { cn, formatCompact } from "@/lib/utils";
 
 type SortKey = "trustlines" | "supply" | "accounts";
@@ -99,16 +100,19 @@ export function AssetBrowser() {
                 <SortableHeader
                   label="Trustlines"
                   active={sortKey === "trustlines"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("trustlines")}
                 />
                 <SortableHeader
                   label="Supply"
                   active={sortKey === "supply"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("supply")}
                 />
                 <SortableHeader
                   label="Accounts"
                   active={sortKey === "accounts"}
+                  direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("accounts")}
                 />
                 <th className="px-6 py-3 text-right font-medium">Flags</th>
@@ -183,10 +187,12 @@ function AssetRow({ entry }: { entry: AssetCatalogEntry }) {
 function SortableHeader({
   label,
   active,
+  direction,
   onClick,
 }: {
   label: string;
   active: boolean;
+  direction: "asc" | "desc";
   onClick: () => void;
 }) {
   return (
@@ -200,16 +206,7 @@ function SortableHeader({
         )}
       >
         {label}
-        <svg
-          className="h-3 w-3"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <path d="M5 8l5-4 5 4M5 12l5 4 5-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <SortIndicator active={active} direction={direction} />
       </button>
     </th>
   );
