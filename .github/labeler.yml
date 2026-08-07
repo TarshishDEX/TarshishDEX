@@ -1,0 +1,44 @@
+# Auto-label PRs based on changed files. Used by auto-label.yml workflow.
+
+"rust":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/contracts/**/*.rs"
+          - "src/contracts/**/Cargo.toml"
+
+"frontend":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/components/**"
+          - "src/app/**/page.tsx"
+          - "src/app/layout.tsx"
+
+"api":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/app/api/**"
+
+"lib":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/lib/**"
+
+"ci/cd":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "Dockerfile"
+          - "docker-compose.yml"
+
+"docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "*.md"
+
+"tests":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.test.ts"
+          - "**/*.test.tsx"
+          - "e2e/**"
