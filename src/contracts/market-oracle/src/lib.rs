@@ -27,6 +27,8 @@ const TTL_LEDGERS: u32 = 518_400;
 const MAX_HISTORY: u32 = 16;
 /// Ledgers after which an observation is considered stale (~1 hour at 5s/ledger).
 const STALE_THRESHOLD: u32 = 720;
+/// Maximum unique pairs before requiring paginated_observations usage.
+const MAX_TRACKED_PAIRS: u32 = 100;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -36,6 +38,7 @@ pub enum Error {
     AlreadyInitialized = 3,
     InvalidPrice = 4,
     StaleObservation = 5,
+    TooManyPairs = 6,
 }
 
 #[contracttype]
@@ -273,6 +276,9 @@ impl MarketOracle {
             .instance()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
+        if (pairs.len() as u32) >= MAX_TRACKED_PAIRS {
+            return Err(Error::TooManyPairs);
+        }
         if !pairs.contains(&(base.clone(), counter.clone())) {
             pairs.push_back((base.clone(), counter.clone()));
             env.storage().instance().set(&DataKey::Pairs, &pairs);
