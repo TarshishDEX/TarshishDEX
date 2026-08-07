@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /**
  * Smoke test suite — verifies core pages render without errors.
