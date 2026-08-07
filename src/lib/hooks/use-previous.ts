@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useLayoutEffect } from "react";
 
 /**
  * Track the previous value of a state or prop across renders.
  * Returns undefined on the first render.
  */
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
+  const [prev, setPrev] = useState<T | undefined>(undefined);
 
-  useEffect(() => {
-    ref.current = value;
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional previous-value tracking
+  useLayoutEffect(() => {
+    setPrev(value);
   }, [value]);
 
-  return ref.current;
+  return prev;
 }
