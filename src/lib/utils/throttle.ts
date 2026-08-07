@@ -1,37 +1,43 @@
 /**
- * Throttle a function to fire at most once every `intervalMs`.
- * Uses leading edge — fires immediately on the first call, then ignores
- * subsequent calls until the interval passes.
+ * Throttle utility — limits function execution to once per interval.
+ */
+
+/**
+ * Create a throttled version of a function.
+ * The function is called at most once every `delayMs` milliseconds.
  */
 export function throttle<T extends (...args: unknown[]) => void>(
   fn: T,
-  intervalMs: number
-): T & { cancel: () => void } {
-  let lastTime = 0;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  delayMs: number
+): (...args: Parameters<T>) => void {
+  let lastCall = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const throttled = function (this: unknown, ...args: unknown[]) {
+  return (...args: Parameters<T>) => {
     const now = Date.now();
-    const remaining = intervalMs - (now - lastTime);
+    const elapsed = now - lastCall;
 
-    if (remaining <= 0) {
-      lastTime = now;
-      fn.apply(this, args);
-    } else if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        lastTime = Date.now();
-        timeoutId = null;
-        fn.apply(this, args);
-      }, remaining);
-    }
-  } as T & { cancel: () => void };
-
-  throttled.cancel = () => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
+    if (elapsed >= delayMs) {
+      lastCall = now;
+      fn(...args);
+    } else if (!timer) {
+      timer = setTimeout(() => {
+        lastCall = Date.now();
+        timer = null;
+        fn(...args);
+      }, delayMs - elapsed);
     }
   };
+}
 
-  return throttled;
+/** Create a debounced version of a function. */
+export function debounce<T extends (...args: unknown[]) => void>(
+  fn: T,
+  delayMs: number
+): (...args: Parameters<T>) => void {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  };
 }
