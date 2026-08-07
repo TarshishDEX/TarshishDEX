@@ -4,6 +4,7 @@ import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { getMarketStatsForTokens, fetchTopAssets, fetchCandles } from "@/lib/stellar/prices";
 import { fetchPortfolioSummary, fetchXlmBalance, isValidPublicKey } from "@/lib/stellar/account";
 import { fetchTradeHistory } from "@/lib/stellar/history";
+import { readPriceObservation } from "@/lib/soroban/market-oracle";
 import type { StellarAsset, SwapRoute, Token } from "@/lib/stellar/types";
 
 /** Live quote for a swap via the routing engine. */
@@ -102,5 +103,16 @@ export function usePriceHistory(
     queryFn: () => fetchCandles(base, counter, Date.now() - rangeMs, Date.now(), resolutionMs),
     enabled: Boolean(base && counter && base.code !== counter.code),
     staleTime: 60_000,
+  });
+}
+
+/** Current oracle price for a pair from the market-oracle Soroban contract. */
+export function useOraclePrice(base: string, counter: string) {
+  return useQuery({
+    queryKey: ["oracle-price", base, counter],
+    queryFn: () => readPriceObservation(base, counter),
+    enabled: Boolean(base && counter),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 }
