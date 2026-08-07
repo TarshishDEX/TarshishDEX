@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useSyncExternalStore, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from "react";
 
 /**
  * Track a CSS media query match state reactively.
