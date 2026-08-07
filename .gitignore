@@ -55,3 +55,4 @@ src/contracts/**/target
 # Environment
 .env.local
 .env.production
+.stellar/
