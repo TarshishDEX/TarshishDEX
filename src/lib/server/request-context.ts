@@ -1,33 +1,29 @@
-import { AsyncLocalStorage } from "async_hooks";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 interface RequestContext {
   requestId: string;
   startTime: number;
   path: string;
+  method: string;
 }
 
 const storage = new AsyncLocalStorage<RequestContext>();
 
 /**
- * Per-request context using AsyncLocalStorage.
- * Propagates request ID and timing through the entire async call chain
- * without passing props through every function.
+ * Run a callback within a request context.
+ * The context is available to all downstream async operations
+ * without passing it explicitly through function parameters.
  */
-export function getRequestContext(): RequestContext | undefined {
-  return storage.getStore();
-}
-
 export function runWithContext<T>(ctx: RequestContext, fn: () => T): T {
   return storage.run(ctx, fn);
 }
 
-/** Get the current request ID or fallback. */
-export function getRequestId(): string {
-  return getRequestContext()?.requestId ?? "unknown";
+/** Get the current request context. Returns undefined outside a request. */
+export function getRequestContext(): RequestContext | undefined {
+  return storage.getStore();
 }
 
-/** Measure elapsed time since the request started. */
-export function getElapsedMs(): number {
-  const ctx = getRequestContext();
-  return ctx ? Date.now() - ctx.startTime : 0;
+/** Get the current request ID for logging correlation. */
+export function getRequestId(): string {
+  return storage.getStore()?.requestId ?? "unknown";
 }
