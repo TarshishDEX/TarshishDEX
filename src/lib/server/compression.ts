@@ -1,45 +1,26 @@
-import { gzipSync, brotliCompressSync } from "zlib";
-
-type CompressionEncoding = "gzip" | "br" | "identity";
-
 /**
- * Select the best compression encoding based on Accept-Encoding header.
+ * Compression middleware configuration.
+ * Next.js handles gzip/brotli automatically via the `compress` config
+ * but this utility helps API routes apply compression conditionally.
  */
-export function selectEncoding(acceptEncoding: string | null): CompressionEncoding {
-  if (!acceptEncoding) return "identity";
-  if (acceptEncoding.includes("br")) return "br";
-  if (acceptEncoding.includes("gzip")) return "gzip";
-  return "identity";
-}
 
-/**
- * Compress a response body string using the selected encoding.
- * Returns [compressedBuffer, contentEncoding] or null if compression
- * isn't beneficial (small payloads).
- */
-export function compressResponse(
-  body: string,
-  encoding: CompressionEncoding
-): [Buffer, string] | null {
-  const input = Buffer.from(body, "utf-8");
+/** Minimum response size in bytes to apply compression. */
+export const COMPRESSION_MIN_SIZE = 1024;
 
-  // Don't compress already-small payloads
-  if (input.length < 1024) return null;
+/** Content types that benefit from compression. */
+export const COMPRESSIBLE_TYPES = [
+  "application/json",
+  "application/javascript",
+  "text/css",
+  "text/html",
+  "text/plain",
+  "text/xml",
+  "application/xml",
+];
 
-  try {
-    if (encoding === "br") {
-      const compressed = brotliCompressSync(input);
-      if (compressed.length < input.length) return [compressed, "br"];
-      return null;
-    }
-    if (encoding === "gzip") {
-      const compressed = gzipSync(input);
-      if (compressed.length < input.length) return [compressed, "gzip"];
-      return null;
-    }
-  } catch {
-    // Compression failed — fall back to uncompressed
-  }
-
-  return null;
+/** Check if a response should be compressed based on content type and size. */
+export function shouldCompress(contentType: string | null, contentLength: number): boolean {
+  if (contentLength < COMPRESSION_MIN_SIZE) return false;
+  if (!contentType) return false;
+  return COMPRESSIBLE_TYPES.some((t) => contentType.startsWith(t));
 }
