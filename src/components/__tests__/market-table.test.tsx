@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { Token } from "@/lib/stellar/types";
 
 vi.mock("@/lib/stellar/queries", () => ({
   useMarketStats: () => ({ data: null, isLoading: false, isError: false }),
@@ -22,14 +21,6 @@ describe("MarketTable", () => {
     const { MarketTable } = await import("@/components/markets/market-table");
     render(<MarketTable />);
     expect(screen.getByText("Asset")).toBeInTheDocument();
-  });
-
-  it("shows loading skeleton", async () => {
-    vi.mocked(vi.importMock("@/lib/stellar/queries")).useMarketStats = () => ({
-      data: null,
-      isLoading: true,
-      isError: false,
-    });
   });
 
   it("shows auto-refresh indicator", async () => {

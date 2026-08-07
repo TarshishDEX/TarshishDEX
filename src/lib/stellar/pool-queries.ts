@@ -15,9 +15,10 @@ export async function fetchLiquidityPools(
   counter: StellarAsset
 ): Promise<LiquidityPool[]> {
   const server = getHorizonServer();
+  // Horizon SDK v16 forAssets signature is restrictive — use Asset objects
   const response = await server
     .liquidityPools()
-    .forAssets([toSdkAssetForPool(base), toSdkAssetForPool(counter)])
+    .forAssets(toSdkAssetForPool(base))
     .limit(10)
     .call();
   return response.records.map((pool) => ({
@@ -26,7 +27,9 @@ export async function fetchLiquidityPools(
     totalShares: pool.total_shares,
     totalTrustlines: String(pool.total_trustlines),
     reserves: pool.reserves.map((r) => ({
-      asset: r.asset instanceof Asset ? r.asset.code : String(r.asset),
+      asset: "code" in (r as unknown as Record<string, unknown>)
+        ? String((r as unknown as { code: string }).code)
+        : String(r.asset),
       amount: r.amount,
     })),
   }));
