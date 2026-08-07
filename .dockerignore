@@ -11,3 +11,9 @@ src/contracts
 Dockerfile
 .dockerignore
 docker-compose.yml
+.git
+.github
+node_modules/.cache
+coverage
+e2e
+*.md
