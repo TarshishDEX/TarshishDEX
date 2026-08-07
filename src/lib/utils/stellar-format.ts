@@ -1,7 +1,4 @@
-@/* eslint-disable @typescript-eslint/no-unused-vars */
-// STELLAR_PUBLIC_KEY_LENGTH = 56
 const STELLAR_PUBLIC_KEY_LENGTH = 56;
-/* const STELLAR_PUBLIC_KEY_LENGTH = 56;
 
 /**
  * Stellar-specific formatting utilities.
