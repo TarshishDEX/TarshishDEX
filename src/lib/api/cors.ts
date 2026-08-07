@@ -1,9 +1,6 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-/**
- * API-level CORS configuration.
- * Used by individual route handlers for fine-grained CORS control.
- */
+/** API-level CORS configuration. */
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
@@ -13,14 +10,21 @@ const ALLOWED_ORIGINS = [
 
 export function getAllowedOrigin(request: NextRequest): string {
   const origin = request.headers.get("origin");
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    return origin;
-  }
-  // In development, allow all origins
-  if (process.env.NODE_ENV === "development") {
-    return origin ?? "*";
-  }
+  if (origin && ALLOWED_ORIGINS.includes(origin)) return origin;
+  if (process.env.NODE_ENV === "development") return origin ?? "*";
   return ALLOWED_ORIGINS[0];
+}
+
+export function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-Request-Id, Authorization",
+      "Access-Control-Max-Age": "86400",
+    },
+  });
 }
 
 export { ALLOWED_ORIGINS };
