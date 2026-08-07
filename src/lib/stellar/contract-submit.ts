@@ -3,7 +3,6 @@
 import { TransactionBuilder } from "@stellar/stellar-sdk";
 import { signTransactionXdr } from "@/lib/stellar/wallet-kit";
 import { getHorizonServer } from "@/lib/stellar/horizon";
-import { getActiveNetwork } from "@/lib/stellar/config";
 
 /**
  * Sign a Soroban contract invocation XDR with the user's wallet and submit it.
@@ -17,7 +16,6 @@ export async function signAndSubmitContractTx(
   networkPassphrase: string
 ): Promise<{ success: true; hash: string } | { success: false; error: string }> {
   try {
-    const network = getActiveNetwork();
     const signedXdr = await signTransactionXdr(txXdr, {
       networkPassphrase,
       address: userAddress,

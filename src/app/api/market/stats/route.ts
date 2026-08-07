@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const ip = getClientIp(request);
-  const limit = checkRateLimit(ip, "/api/market/stats");
-  if (!limit.allowed) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
+  const rateLimit = checkRateLimit(ip, "/api/market/stats");
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } });
   }
 
   const url = new URL(request.url);

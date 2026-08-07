@@ -70,7 +70,12 @@ export function checkRateLimit(
   const config = getConfigForKey(key);
   const now = Date.now();
 
-  let entry = store.get(key);
+  const existing = store.get(key);
+  const entry = existing ?? { timestamps: [now] };
+  if (!existing) {
+    store.set(key, entry);
+    return { allowed: true };
+  }
   if (!entry) {
     store.set(key, { timestamps: [now] });
     return { allowed: true };
