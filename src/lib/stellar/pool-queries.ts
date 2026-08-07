@@ -15,10 +15,11 @@ export async function fetchLiquidityPools(
   counter: StellarAsset
 ): Promise<LiquidityPool[]> {
   const server = getHorizonServer();
-  // Horizon SDK v16 forAssets signature is restrictive — use Asset objects
+  // Pass both base and counter assets to filter pools containing either asset.
+  // This ensures we find pools regardless of which side was used as the primary filter.
   const response = await server
     .liquidityPools()
-    .forAssets(toSdkAssetForPool(base))
+    .forAssets(toSdkAssetForPool(base), toSdkAssetForPool(counter))
     .limit(10)
     .call();
   return response.records.map((pool) => ({
