@@ -1,54 +1,35 @@
 /**
- * Server-Timing header builder for exposing backend performance metrics
- * to the browser's Performance API. Chrome DevTools automatically parses
- * Server-Timing headers and shows them in the Network tab.
+ * Server-Timing header builder.
+ * Adds performance metrics to responses for debugging in browser DevTools.
  */
 
 interface TimingEntry {
   name: string;
-  durationMs: number;
+  duration: number;
   description?: string;
 }
 
 /**
  * Build a Server-Timing header value from timing entries.
- * Format: "db;dur=45.3;desc=\"Database query\", cache;dur=2.1;desc=\"Cache lookup\""
+ * Example: "db;dur=53, cache;dur=0;desc=HIT"
  */
-export function buildServerTiming(entries: TimingEntry[]): string {
+export function buildServerTiming(...entries: TimingEntry[]): string {
   return entries
-    .map((entry) => {
-      let value = entry.name;
-      value += `;dur=${entry.durationMs.toFixed(1)}`;
-      if (entry.description) {
-        value += `;desc="${entry.description.replace(/"/g, '\\"')}"`;
-      }
+    .map((e) => {
+      let value = `${e.name};dur=${Math.round(e.duration)}`;
+      if (e.description) value += `;desc="${e.description}"`;
       return value;
     })
     .join(", ");
 }
 
-/**
- * Measure the execution time of a function and add it to the timing entries.
- */
+/** Measure the execution time of an async function. */
 export async function measureTiming<T>(
   name: string,
-  fn: () => Promise<T>,
-  entries: TimingEntry[]
-): Promise<T> {
+  fn: () => Promise<T>
+): Promise<{ result: T; timing: TimingEntry }> {
   const start = performance.now();
-  try {
-    return await fn();
-  } finally {
-    entries.push({
-      name,
-      durationMs: performance.now() - start,
-    });
-  }
-}
-
-/**
- * Create an empty timing entries array for collecting measurements.
- */
-export function createTimings(): TimingEntry[] {
-  return [];
+  const result = await fn();
+  const duration = performance.now() - start;
+  return { result, timing: { name, duration } };
 }
