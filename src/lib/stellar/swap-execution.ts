@@ -1,8 +1,9 @@
-import { Operation, TransactionBuilder, BASE_FEE } from "@stellar/stellar-sdk";
+import { Operation, TransactionBuilder, BASE_FEE, Asset } from "@stellar/stellar-sdk";
 import { getHorizonServer } from "@/lib/stellar/horizon";
 import { toSdkAsset } from "@/lib/stellar/asset";
 import { explorerTxUrl, getActiveNetwork } from "@/lib/stellar/config";
 import { signTransactionXdr } from "@/lib/stellar/wallet-kit";
+import { calculateFee, getFeeCollector, getFeeBps } from "@/lib/stellar/fee-collector";
 import type { StellarAsset } from "@/lib/stellar/types";
 
 export type SwapExecutionPhase =
@@ -31,6 +32,10 @@ export interface SwapExecutionParams {
   minReceived: string;
   /** Full route path, including input and output as first/last elements. */
   path: StellarAsset[];
+  /** Route method used for fee calculation. */
+  method?: string;
+  /** Optional limit order ID to mark as executed on success. */
+  orderId?: number;
 }
 
 /** Whether the destination asset needs a trustline created before receiving. */
@@ -48,12 +53,30 @@ export function needsTrustline(
 /** Intermediate hops for a path payment — excludes the input and output assets. */
 export function intermediatePath(path: StellarAsset[]): StellarAsset[] {
   return path.length > 2 ? path.slice(1, -1) : [];
-} /** Build the path-payment strict-send operations for a swap. */
+} /** Build the path-payment strict-send operations for a swap, including fee. */
 export function buildSwapOperations(
   params: SwapExecutionParams
 ): ReturnType<typeof Operation.pathPaymentStrictSend>[] {
-  const { address, input, output, amountIn, minReceived, path } = params;
-  return [
+  const { address, input, output, amountIn, minReceived, path, method } = params;
+  const ops: ReturnType<typeof Operation.pathPaymentStrictSend>[] = [];
+
+  // Fee collection: send a small percentage to the fee collector
+  const feeAmount = calculateFee(amountIn, method ?? "direct");
+  const feeBps = getFeeBps(method ?? "direct");
+  if (feeBps > 0 && Number(feeAmount) > 0 && !input.isNative) {
+    ops.push(
+      Operation.payment({
+        destination: getFeeCollector(),
+        asset: toSdkAsset(input),
+        amount: feeAmount,
+      })
+    );
+  }
+
+  // For native XLM input, add fee as a createAccount-like payment or skip
+  // (XLM fees are collected via the Stellar base fee mechanism)
+
+  ops.push(
     Operation.pathPaymentStrictSend({
       sendAsset: toSdkAsset(input),
       sendAmount: amountIn,
@@ -61,8 +84,9 @@ export function buildSwapOperations(
       destAsset: toSdkAsset(output),
       destMin: minReceived,
       path: intermediatePath(path).map(toSdkAsset),
-    }),
-  ];
+    })
+  );
+  return ops;
 }
 
 /**
