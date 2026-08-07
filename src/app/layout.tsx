@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -16,16 +17,22 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -89,7 +96,9 @@ export default function RootLayout({
               <ErrorBoundary>
                 <SkipLink />
                 <Header />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1">
+                  <Suspense fallback={null}>{children}</Suspense>
+                </main>
                 <Footer />
                 <ScrollToTop />
                 <ToastViewport />
