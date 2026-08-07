@@ -52,3 +52,6 @@ next-env.d.ts
 # rust / soroban contracts
 /target
 src/contracts/**/target
+# Environment
+.env.local
+.env.production
