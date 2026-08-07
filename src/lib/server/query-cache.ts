@@ -1,52 +1,47 @@
 /**
- * Simple in-memory query cache for server-side API routes.
- * Caches Horizon responses with a TTL to reduce redundant RPC calls.
+ * Simple in-memory query cache with TTL.
+ * Caches API responses to reduce Horizon/RPC load for frequently
+ * accessed data that doesn't change rapidly.
  */
 
 interface CacheEntry<T> {
-  data: T;
-  expiresAt: number;
+  value: T;
+  expiry: number;
 }
 
-const store = new Map<string, CacheEntry<unknown>>();
+const cache = new Map<string, CacheEntry<unknown>>();
 
-/** Store a value in the cache with a TTL in milliseconds. */
-export function cacheSet<T>(key: string, data: T, ttlMs: number): void {
-  store.set(key, { data, expiresAt: Date.now() + ttlMs });
-}
-
-/** Retrieve a value from the cache. Returns null if expired or missing. */
-export function cacheGet<T>(key: string): T | null {
-  const entry = store.get(key);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    store.delete(key);
-    return null;
+/**
+ * Get a cached value by key. Returns undefined if not found or expired.
+ */
+export function cacheGet<T>(key: string): T | undefined {
+  const entry = cache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiry) {
+    cache.delete(key);
+    return undefined;
   }
-  return entry.data as T;
+  return entry.value as T;
 }
 
-/** Invalidate a specific cache key. */
-export function cacheInvalidate(keyPattern: string): void {
-  for (const key of store.keys()) {
-    if (key.includes(keyPattern)) store.delete(key);
-  }
+/**
+ * Set a cached value with a TTL in milliseconds.
+ */
+export function cacheSet<T>(key: string, value: T, ttlMs: number): void {
+  cache.set(key, { value, expiry: Date.now() + ttlMs });
 }
 
-/** Clear the entire cache. */
+/** Remove a specific key from the cache. */
+export function cacheDelete(key: string): void {
+  cache.delete(key);
+}
+
+/** Clear the entire cache. Useful in tests. */
 export function cacheClear(): void {
-  store.clear();
+  cache.clear();
 }
 
-/** Get cache stats for monitoring. */
-export function cacheStats(): { size: number; keys: string[] } {
-  return { size: store.size, keys: Array.from(store.keys()) };
+/** Get the current cache size. */
+export function cacheSize(): number {
+  return cache.size;
 }
-
-// Periodic cleanup of expired entries
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of store) {
-    if (now > entry.expiresAt) store.delete(key);
-  }
-}, 60_000).unref?.();
