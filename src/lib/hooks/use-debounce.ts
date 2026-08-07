@@ -1,19 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 
 /**
- * Debounce a rapidly-changing value. The debounced value only updates after
- * `delayMs` of inactivity — perfect for search inputs and range sliders.
+ * Debounce a rapidly changing value.
+ * Returns the debounced value after `delayMs` of inactivity.
  */
 export function useDebounce<T>(value: T, delayMs = 300): T {
-  const [debounced, setDebounced] = useState(value);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    timerRef.current = setTimeout(() => setDebounced(value), delayMs);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    const timer = setTimeout(() => setDebouncedValue(value), delayMs);
+    return () => clearTimeout(timer);
   }, [value, delayMs]);
 
-  return debounced;
+  return debouncedValue;
 }
