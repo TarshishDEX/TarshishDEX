@@ -136,7 +136,7 @@ fn admin_transfer_and_versioning() {
 
     let admin = Address::generate(&env);
     let new_admin = Address::generate(&env);
-    let publisher = Address::generate(&env);
+    let _publisher = Address::generate(&env);
 
     let (tp, mo) = deploy_both(&env, &admin);
 
