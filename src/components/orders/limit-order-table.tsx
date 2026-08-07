@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useUserLimitOrders } from "@/lib/stellar/limit-order-queries";
+import { useOraclePrice } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +10,56 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import type { LimitOrder } from "@/lib/stellar/limit-order-types";
-
-const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
+import type { LimitOrder } from "@/lib/stellar/limit-order-types";const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
   buy: { label: "Buy", tone: "accent" },
   sell: { label: "Sell", tone: "primary" },
 };
+
+/** Inline cell that fetches the oracle price for a pair and compares it to the order target. */
+function OraclePriceCell({
+  base,
+  counter,
+  targetPrice,
+  side,
+}: {
+  base: string;
+  counter: string;
+  targetPrice: number;
+  side: "buy" | "sell";
+}) {
+  const { data: obs, isLoading } = useOraclePrice(base, counter);
+
+  if (isLoading) {
+    return <span className="text-foreground-faint animate-pulse text-xs">…</span>;
+  }
+
+  if (!obs || obs.price <= 0) {
+    return (
+      <span className="text-foreground-faint text-xs" title="Oracle price unavailable">
+        —
+      </span>
+    );
+  }
+
+  const oraclePrice = obs.price / 1e7;
+  const distancePct = ((oraclePrice - targetPrice) / targetPrice) * 100;
+  const fillable =
+    side === "buy" ? oraclePrice <= targetPrice : oraclePrice >= targetPrice;
+
+  return (
+    <div className="flex flex-col text-right">
+      <span className="font-mono text-xs tabular-nums">{formatNumber(oraclePrice)}</span>
+      <span
+        className={cn(
+          "text-[11px] tabular-nums",
+          fillable ? "text-success" : "text-foreground-faint"
+        )}
+      >
+        {fillable ? "✓ fillable" : `${distancePct >= 0 ? "+" : ""}${distancePct.toFixed(1)}%`}
+      </span>
+    </div>
+  );
+}
 
 export function LimitOrderTable() {
   const { address } = useWallet();
@@ -84,9 +129,10 @@ export function LimitOrderTable() {
               <tr className="border-border text-foreground-faint border-b text-left text-xs tracking-wider uppercase">
                 <th className="px-6 py-3 font-medium">Side</th>
                 <th className="px-6 py-3 font-medium">Pair</th>
-                <th className="px-6 py-3 text-right font-medium">Price</th>
+                <th className="px-6 py-3 text-right font-medium">Target</th>
                 <th className="px-6 py-3 text-right font-medium">Amount</th>
                 <th className="px-6 py-3 text-right font-medium">Total</th>
+                <th className="px-6 py-3 text-right font-medium">Oracle</th>
                 <th className="px-6 py-3 font-medium">Placed</th>
                 <th className="px-6 py-3 text-right font-medium" />
               </tr>
@@ -116,8 +162,16 @@ export function LimitOrderTable() {
                     <td className="text-foreground-muted px-6 py-3.5 text-right font-mono tabular-nums">
                       {formatNumber(total)}
                     </td>
+                    <td className="px-6 py-3.5 text-right">
+                      <OraclePriceCell
+                        base={order.base}
+                        counter={order.counter}
+                        targetPrice={order.price}
+                        side={order.side}
+                      />
+                    </td>
                     <td className="text-foreground-faint px-6 py-3.5 text-xs">
-                      {formatNumber(order.placedAt * 1000)}
+                      {new Date(order.placedAt * 1000).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       <Button
