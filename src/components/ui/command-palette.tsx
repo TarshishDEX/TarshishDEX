@@ -41,32 +41,41 @@ export function CommandPalette() {
     (href: string) => {
       setOpen(false);
       setQuery("");
+      setSelectedIndex(0);
       router.push(href);
     },
     [router]
   );
 
+  // Clamp selectedIndex when filtered results shrink (e.g. after query change).
+  const safeIndex = Math.min(selectedIndex, Math.max(0, filtered.length - 1));
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((v) => {
+          if (!v) setSelectedIndex(0); // Reset selection on open
+          return !v;
+        });
       }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
+  // Focus the input when the palette opens.
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
-      setSelectedIndex(0);
     }
   }, [open]);
 
-  useEffect(() => {
+  // Handle query changes inline — reset selectedIndex with the state update.
+  function handleQueryChange(value: string) {
+    setQuery(value);
     setSelectedIndex(0);
-  }, [query]);
+  }
 
   if (!open) return null;
 
@@ -86,7 +95,7 @@ export function CommandPalette() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Type a command or search…"
             className="w-full bg-transparent text-sm placeholder:text-foreground-faint outline-none"
             onKeyDown={(e) => {
@@ -99,8 +108,8 @@ export function CommandPalette() {
                 e.preventDefault();
                 setSelectedIndex((i) => Math.max(i - 1, 0));
               }
-              if (e.key === "Enter" && filtered[selectedIndex]) {
-                navigate(filtered[selectedIndex].href);
+              if (e.key === "Enter" && filtered[safeIndex]) {
+                navigate(filtered[safeIndex].href);
               }
             }}
           />
@@ -116,7 +125,7 @@ export function CommandPalette() {
                 onClick={() => navigate(cmd.href)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-                  i === selectedIndex ? "bg-primary-soft" : "hover:bg-surface-elevated"
+                  i === safeIndex ? "bg-primary-soft" : "hover:bg-surface-elevated"
                 )}
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-elevated text-sm">
