@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useInsertionEffect } from "react";
 
 /**
  * Declarative setTimeout with auto-cleanup and reset.
@@ -8,7 +8,11 @@ import { useEffect, useRef, useCallback } from "react";
  */
 export function useTimeout(callback: () => void, delayMs: number | null) {
   const savedCallback = useRef(callback);
-  savedCallback.current = callback;
+  // Sync the latest callback in an insertion effect to avoid
+  // reading/writing refs during render.
+  useInsertionEffect(() => {
+    savedCallback.current = callback;
+  });
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
