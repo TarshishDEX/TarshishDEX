@@ -20,17 +20,20 @@ export function QuoteRefreshIndicator({
   className,
 }: QuoteRefreshIndicatorProps) {
   const [progress, setProgress] = useState(100);
-  const startRef = useRef(Date.now());
-  const rafRef = useRef<number>(0);
+  // Initialised on mount — never read during render.
+  const startRef = useRef(0);
+  const rafRef = useRef(0);
 
   useEffect(() => {
+    // Set initial values — defer state update to next frame to avoid
+    // calling setState synchronously in the effect body.
     startRef.current = Date.now();
-    setProgress(100);
+    requestAnimationFrame(() => setProgress(100));
 
     function tick() {
       const elapsed = Date.now() - startRef.current;
       const pct = Math.max(0, 100 - (elapsed / staleTimeMs) * 100);
-      setProgress(pct);
+      setProgress(Math.round(pct));
       if (pct > 0) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
