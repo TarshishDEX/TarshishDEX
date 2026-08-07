@@ -130,3 +130,14 @@ For answers to common questions about this code of conduct, see the FAQ at
 [Mozilla CoC]: https://github.com/mozilla/diversity
 [FAQ]: https://www.contributor-covenant.org/faq
 [translations]: https://www.contributor-covenant.org/translations
+
+## Scope
+
+This Code of Conduct applies to all TarshishDEX community spaces,
+including GitHub repositories, Discord servers, and social media.
+
+## Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behavior
+may be reported to conduct@tarshishdex.com. All complaints will be
+reviewed and investigated promptly and fairly.
