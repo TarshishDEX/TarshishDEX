@@ -1,14 +1,14 @@
 /**
- * Lightweight typed event emitter for in-app pub/sub.
- * No external dependencies.
+ * Type-safe event emitter for cross-component communication.
+ * Lightweight alternative to prop drilling or context for non-React events.
  */
 
-type Listener<T> = (payload: T) => void;
+type Listener<T> = (data: T) => void;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class TypedEventEmitter<Events extends Record<string, any>> {
+class TypedEventEmitter<Events extends Record<string, unknown>> {
   private listeners = new Map<keyof Events, Set<Listener<unknown>>>();
 
+  /** Subscribe to an event. Returns an unsubscribe function. */
   on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -17,26 +17,29 @@ export class TypedEventEmitter<Events extends Record<string, any>> {
     return () => this.off(event, listener);
   }
 
+  /** Unsubscribe from an event. */
   off<K extends keyof Events>(event: K, listener: Listener<Events[K]>): void {
     this.listeners.get(event)?.delete(listener as Listener<unknown>);
   }
 
-  emit<K extends keyof Events>(event: K, payload: Events[K]): void {
-    this.listeners.get(event)?.forEach((fn) => fn(payload));
+  /** Emit an event to all listeners. */
+  emit<K extends keyof Events>(event: K, data: Events[K]): void {
+    this.listeners.get(event)?.forEach((fn) => fn(data));
   }
 
-  removeAll(): void {
+  /** Remove all listeners. */
+  clear(): void {
     this.listeners.clear();
   }
 }
 
-/** App-wide event types for cross-component communication. */
+/** Application-wide event types. */
 export interface AppEvents {
   "wallet:connected": { address: string };
   "wallet:disconnected": void;
-  "swap:completed": { inputAmount: string; outputAmount: string; txHash: string };
-  "price-alert:triggered": { asset: string; price: number; direction: string };
+  "swap:completed": { txHash: string };
+  "price:alert": { asset: string; price: number };
 }
 
-/** Global app event bus — import and use from any component. */
+/** Global event bus instance. */
 export const appEvents = new TypedEventEmitter<AppEvents>();
