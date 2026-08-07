@@ -34,12 +34,12 @@ class TypedEventEmitter<Events extends Record<string, unknown | void>> {
 }
 
 /** Application-wide event types. */
-export interface AppEvents {
+export type AppEvents = {
   "wallet:connected": { address: string };
   "wallet:disconnected": void;
   "swap:completed": { txHash: string };
   "price:alert": { asset: string; price: number };
-}
+};
 
 /** Global event bus instance. */
 export const appEvents = new TypedEventEmitter<AppEvents>();
