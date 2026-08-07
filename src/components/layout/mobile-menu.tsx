@@ -42,7 +42,9 @@ export function MobileMenu() {
   // Prevent body scroll when open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -55,7 +57,14 @@ export function MobileMenu() {
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
       >
-        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
           {open ? (
             <path d="M5 5l10 10M15 5L5 15" strokeLinecap="round" strokeLinejoin="round" />
           ) : (
@@ -67,7 +76,7 @@ export function MobileMenu() {
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden animate-fade-in"
+          className="animate-fade-in fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={() => setOpen(false)}
           aria-hidden="true"
         />
@@ -76,12 +85,12 @@ export function MobileMenu() {
       {/* Slide-out drawer */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-surface border-r border-border shadow-2xl md:hidden",
+          "bg-surface border-border fixed inset-y-0 left-0 z-50 w-72 border-r shadow-2xl md:hidden",
           "transform transition-transform duration-300 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex items-center gap-2.5 border-b border-border px-5 py-4">
+        <div className="border-border flex items-center gap-2.5 border-b px-5 py-4">
           <LogoMark className="h-7 w-7" />
           <span className="font-display text-base font-semibold tracking-tight">
             Tarshish<span className="text-gradient">DEX</span>
@@ -103,17 +112,17 @@ export function MobileMenu() {
                 )}
                 aria-current={active ? "page" : undefined}
               >
-                <span className="text-lg" aria-hidden="true">{item.icon}</span>
+                <span className="text-lg" aria-hidden="true">
+                  {item.icon}
+                </span>
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border p-4">
-          <p className="text-foreground-faint text-xs text-center">
-            Built on Stellar · Testnet
-          </p>
+        <div className="border-border absolute right-0 bottom-0 left-0 border-t p-4">
+          <p className="text-foreground-faint text-center text-xs">Built on Stellar · Testnet</p>
         </div>
       </div>
     </>

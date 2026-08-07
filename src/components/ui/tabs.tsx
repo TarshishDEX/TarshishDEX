@@ -37,9 +37,7 @@ export function Tabs({ tabs, defaultTab, className }: TabsProps) {
             onClick={() => setActive(tab.id)}
             className={cn(
               "relative px-4 py-2.5 text-sm font-medium transition-colors",
-              tab.id === active
-                ? "text-foreground"
-                : "text-foreground-muted hover:text-foreground"
+              tab.id === active ? "text-foreground" : "text-foreground-muted hover:text-foreground"
             )}
           >
             {tab.label}

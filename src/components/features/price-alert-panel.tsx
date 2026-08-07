@@ -82,7 +82,7 @@ export function PriceAlertPanel() {
           value={asset}
           onChange={(e) => setAsset(e.target.value.toUpperCase())}
           placeholder="Asset code"
-          className="border-border bg-surface h-10 w-24 rounded-lg border px-3 text-sm font-mono"
+          className="border-border bg-surface h-10 w-24 rounded-lg border px-3 font-mono text-sm"
           maxLength={12}
         />
         <select

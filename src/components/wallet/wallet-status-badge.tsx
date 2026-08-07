@@ -21,7 +21,12 @@ export function WalletStatusBadge({ status, className }: WalletStatusBadgeProps)
     <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", className)}>
       <span className="relative flex h-2 w-2">
         {config.pulse && (
-          <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-60", config.color)} />
+          <span
+            className={cn(
+              "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
+              config.color
+            )}
+          />
         )}
         <span className={cn("relative inline-flex h-2 w-2 rounded-full", config.color)} />
       </span>

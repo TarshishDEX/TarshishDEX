@@ -20,14 +20,24 @@ interface SelectProps {
 }
 
 export function Select({
-  options, value, onChange, label, placeholder, error, disabled, className,
+  options,
+  value,
+  onChange,
+  label,
+  placeholder,
+  error,
+  disabled,
+  className,
 }: SelectProps) {
   const id = useId();
 
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={id} className="text-foreground-muted mb-1.5 block text-xs font-medium tracking-wider uppercase">
+        <label
+          htmlFor={id}
+          className="text-foreground-muted mb-1.5 block text-xs font-medium tracking-wider uppercase"
+        >
           {label}
         </label>
       )}
@@ -37,7 +47,7 @@ export function Select({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         className={cn(
-          "h-10 w-full rounded-xl border bg-surface px-3 text-sm transition-colors appearance-none",
+          "bg-surface h-10 w-full appearance-none rounded-xl border px-3 text-sm transition-colors",
           "focus:border-primary/60 focus:ring-primary/20 focus:ring-2 focus:outline-none",
           error ? "border-danger/60" : "border-border hover:border-border-strong",
           disabled && "cursor-not-allowed opacity-50"

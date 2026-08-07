@@ -55,17 +55,31 @@ export function DropdownMenu({ trigger, items, onSelect, align = "right" }: Drop
 
   return (
     <div ref={menuRef} className="relative">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
         {trigger}
       </button>
       {open && (
-        <div className={cn("glass-card absolute top-full z-50 mt-2 w-56 overflow-hidden rounded-xl p-1.5 animate-fade-in", alignClass)} role="menu">
+        <div
+          className={cn(
+            "glass-card animate-fade-in absolute top-full z-50 mt-2 w-56 overflow-hidden rounded-xl p-1.5",
+            alignClass
+          )}
+          role="menu"
+        >
           {items.map((item, i) => (
             <button
               key={item.id}
               type="button"
               role="menuitem"
-              onClick={() => { onSelect(item.id); setOpen(false); }}
+              onClick={() => {
+                onSelect(item.id);
+                setOpen(false);
+              }}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                 i === activeIndex ? "bg-surface-elevated" : "hover:bg-surface-elevated",

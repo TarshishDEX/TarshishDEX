@@ -37,37 +37,54 @@ export function NotificationCenter() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface hover:border-border-strong transition-colors"
+        className="border-border bg-surface hover:border-border-strong relative flex h-9 w-9 items-center justify-center rounded-lg border transition-colors"
         aria-label={`Notifications (${unreadCount} unread)`}
       >
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-          <path d="M8 17a2 2 0 004 0M4 8a6 6 0 0112 0v3l2 3H2l2-3V8z" strokeLinecap="round" strokeLinejoin="round" />
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
+          <path
+            d="M8 17a2 2 0 004 0M4 8a6 6 0 0112 0v3l2 3H2l2-3V8z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+          <span className="bg-primary absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="glass-card absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl shadow-2xl animate-fade-in">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="glass-card animate-fade-in absolute top-12 right-0 z-50 w-80 overflow-hidden rounded-2xl shadow-2xl">
+          <div className="border-border flex items-center justify-between border-b px-4 py-3">
             <h3 className="text-sm font-semibold">Notifications</h3>
             <div className="flex gap-2">
-              <button onClick={markAllRead} className="text-primary text-xs hover:underline">Mark read</button>
-              <button onClick={clearAll} className="text-foreground-faint text-xs hover:underline">Clear</button>
+              <button onClick={markAllRead} className="text-primary text-xs hover:underline">
+                Mark read
+              </button>
+              <button onClick={clearAll} className="text-foreground-faint text-xs hover:underline">
+                Clear
+              </button>
             </div>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-foreground-faint px-4 py-8 text-center text-sm">No notifications</p>
+              <p className="text-foreground-faint px-4 py-8 text-center text-sm">
+                No notifications
+              </p>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
                   className={cn(
-                    "border-b border-border/50 px-4 py-3 text-sm transition-colors",
+                    "border-border/50 border-b px-4 py-3 text-sm transition-colors",
                     !n.read && "bg-primary-soft/30"
                   )}
                 >

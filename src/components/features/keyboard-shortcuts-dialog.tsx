@@ -25,10 +25,7 @@ export function KeyboardShortcutsDialog() {
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (
-        e.key === "?" &&
-        !(e.target as HTMLElement)?.matches?.("input, textarea, select")
-      ) {
+      if (e.key === "?" && !(e.target as HTMLElement)?.matches?.("input, textarea, select")) {
         e.preventDefault();
         setOpen((v) => !v);
       }
@@ -48,7 +45,7 @@ export function KeyboardShortcutsDialog() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="glass-card mx-4 w-full max-w-md rounded-2xl p-6 shadow-2xl animate-fade-in-up"
+        className="glass-card animate-fade-in-up mx-4 w-full max-w-md rounded-2xl p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -69,14 +66,16 @@ export function KeyboardShortcutsDialog() {
           {SHORTCUTS.map((shortcut) => (
             <div key={shortcut.keys} className="flex items-center justify-between text-sm">
               <span className="text-foreground-muted">{shortcut.description}</span>
-              <kbd className="inline-flex h-6 items-center rounded-md border border-border bg-surface-elevated px-2 text-xs font-mono font-medium text-foreground">
+              <kbd className="border-border bg-surface-elevated text-foreground inline-flex h-6 items-center rounded-md border px-2 font-mono text-xs font-medium">
                 {shortcut.keys}
               </kbd>
             </div>
           ))}
         </div>
         <p className="text-foreground-faint mt-4 text-center text-xs">
-          Press <kbd className="rounded bg-surface-elevated px-1 py-0.5 font-mono text-[10px]">?</kbd> to toggle this dialog
+          Press{" "}
+          <kbd className="bg-surface-elevated rounded px-1 py-0.5 font-mono text-[10px]">?</kbd> to
+          toggle this dialog
         </p>
       </div>
     </div>
