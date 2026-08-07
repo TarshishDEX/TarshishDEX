@@ -1,75 +1,102 @@
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
-  buildSwapOperations,
-  intermediatePath,
   needsTrustline,
+  intermediatePath,
+  classifySwapError,
+  type SwapErrorKind,
 } from "@/lib/stellar/swap-execution";
+import type { StellarAsset } from "@/lib/stellar/types";
 
-const USDC = { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" };
-const XLM = { code: "XLM", isNative: true };
-// Valid testnet public key (all-zero payload) accepted by the SDK's address validation.
-const DESTINATION = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+const XLM: StellarAsset = { code: "XLM", isNative: true };
+const USDC: StellarAsset = {
+  code: "USDC",
+  issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+};
+const EURMTL: StellarAsset = {
+  code: "EURMTL",
+  issuer: "GACKTN5DAZGWXRWB2WLM6OPBDHAMT6SJNGLJZPQMEZBUR4JUGBX2UK7V",
+};
 
 describe("needsTrustline", () => {
-  it("returns false for native XLM", () => {
+  it("returns false for native XLM output", () => {
     expect(needsTrustline([], XLM)).toBe(false);
   });
 
-  it("returns true when the issued asset is missing from balances", () => {
-    expect(needsTrustline([{ asset_type: "native" }], USDC)).toBe(true);
+  it("returns true when balance missing for non-native asset", () => {
+    expect(needsTrustline([], USDC)).toBe(true);
   });
 
-  it("returns false when a matching trustline exists", () => {
+  it("returns false when trustline exists", () => {
     const balances = [
-      { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: USDC.issuer },
+      { asset_type: "native", balance: "100" },
+      {
+        asset_type: "credit_alphanum4",
+        asset_code: "USDC",
+        asset_issuer: USDC.issuer!,
+        balance: "50",
+      },
     ];
     expect(needsTrustline(balances, USDC)).toBe(false);
   });
 
-  it("ignores unrelated trustlines", () => {
+  it("returns true when trustline has different issuer", () => {
     const balances = [
-      { asset_type: "credit_alphanum4", asset_code: "EURT", asset_issuer: "GAAAAA" },
+      {
+        asset_type: "credit_alphanum4",
+        asset_code: "USDC",
+        asset_issuer: "GDifferentIssuer",
+        balance: "50",
+      },
     ];
     expect(needsTrustline(balances, USDC)).toBe(true);
   });
 });
 
 describe("intermediatePath", () => {
-  it("returns no intermediate hops for a direct route", () => {
-    expect(intermediatePath([XLM, USDC])).toHaveLength(0);
+  it("returns empty array for direct swap (2 assets)", () => {
+    expect(intermediatePath([XLM, USDC])).toEqual([]);
   });
 
-  it("returns the bridge asset for a multi-hop route", () => {
-    const hops = intermediatePath([XLM, USDC, XLM]);
-    expect(hops).toHaveLength(1);
-    expect(hops[0].code).toBe("USDC");
+  it("returns middle assets for multi-hop (3+ assets)", () => {
+    expect(intermediatePath([XLM, EURMTL, USDC])).toEqual([EURMTL]);
+  });
+
+  it("returns empty array for single asset", () => {
+    expect(intermediatePath([XLM])).toEqual([]);
   });
 });
 
-describe("buildSwapOperations", () => {
-  it("builds a single path-payment operation for a direct swap", () => {
-    const operations = buildSwapOperations({
-      address: DESTINATION,
-      input: XLM,
-      output: USDC,
-      amountIn: "100",
-      minReceived: "95",
-      path: [XLM, USDC],
-    });
+describe("classifySwapError", () => {
+  function err(msg: string): Error {
+    return new Error(msg);
+  }
 
-    expect(operations).toHaveLength(1);
+  it("classifies underfunded errors as insufficient-balance", () => {
+    expect(classifySwapError(err("op_underfunded"))).toBe("insufficient-balance");
+    expect(classifySwapError(err("insufficient balance"))).toBe("insufficient-balance");
   });
 
-  it("accepts multi-hop routes", () => {
-    const operations = buildSwapOperations({
-      address: DESTINATION,
-      input: XLM,
-      output: XLM,
-      amountIn: "100",
-      minReceived: "90",
-      path: [XLM, USDC, XLM],
-    });
+  it("classifies rejection errors as user-cancelled", () => {
+    expect(classifySwapError(err("user cancelled"))).toBe("user-cancelled");
+    expect(classifySwapError(err("transaction rejected"))).toBe("user-cancelled");
+  });
 
-    expect(operations).toHaveLength(1);
+  it("classifies network errors", () => {
+    expect(classifySwapError(err("network timeout"))).toBe("network");
+    expect(classifySwapError(err("fetch failed"))).toBe("network");
+  });
+
+  it("classifies invalid transaction errors", () => {
+    expect(classifySwapError(err("invalid transaction"))).toBe("invalid-transaction");
+    expect(classifySwapError(err("malformed XDR"))).toBe("invalid-transaction");
+  });
+
+  it("returns unknown for unrecognized errors", () => {
+    expect(classifySwapError(err("something unexpected"))).toBe("unknown");
+  });
+
+  it("returns unknown for non-Error objects", () => {
+    expect(classifySwapError("string error")).toBe("unknown");
+    expect(classifySwapError(null)).toBe("unknown");
   });
 });
