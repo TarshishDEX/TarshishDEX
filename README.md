@@ -347,3 +347,16 @@ Licensed under the [MIT License](LICENSE). TarshishDEX is a demonstration projec
 - **Stellar Development Foundation** — the Stellar network, Horizon, Soroban, and tooling.
 - **SDF StellarWalletsKit ecosystem** — wallet abstraction (`@creit.tech/stellar-wallets-kit`) and Freighter.
 - Open-source libraries: Next.js, React, TanStack Query, zustand, Recharts, lightweight-charts, Tailwind CSS.
+
+## Production
+
+```bash
+npm run build
+npm start
+```
+
+Or via Docker:
+
+```bash
+docker compose up -d
+```
