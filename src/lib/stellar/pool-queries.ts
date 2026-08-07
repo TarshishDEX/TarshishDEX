@@ -1,6 +1,13 @@
+import { Asset } from "@stellar/stellar-sdk";
 import { getHorizonServer } from "@/lib/stellar/horizon";
 import type { PoolSummary, LiquidityPool } from "@/lib/stellar/pool-types";
 import type { StellarAsset } from "@/lib/stellar/types";
+
+function toSdkAssetForPool(a: StellarAsset): Asset {
+  return a.isNative || (!a.issuer && a.code === "XLM")
+    ? Asset.native()
+    : new Asset(a.code, a.issuer ?? "");
+}
 
 /** Fetch all liquidity pools for a pair from Horizon. */
 export async function fetchLiquidityPools(
@@ -10,8 +17,7 @@ export async function fetchLiquidityPools(
   const server = getHorizonServer();
   const response = await server
     .liquidityPools()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .forAssets([base.code, counter.code] as any)
+    .forAssets([toSdkAssetForPool(base), toSdkAssetForPool(counter)])
     .limit(10)
     .call();
   return response.records.map((pool) => ({
@@ -20,7 +26,7 @@ export async function fetchLiquidityPools(
     totalShares: pool.total_shares,
     totalTrustlines: String(pool.total_trustlines),
     reserves: pool.reserves.map((r) => ({
-      asset: String((r as unknown as { code?: string; asset?: string }).code ?? (r as unknown as { asset: string }).asset),
+      asset: r.asset instanceof Asset ? r.asset.code : String(r.asset),
       amount: r.amount,
     })),
   }));
