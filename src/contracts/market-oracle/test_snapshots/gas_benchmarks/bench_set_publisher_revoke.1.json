@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 3,
+    "address": 4,
     "nonce": 0,
     "mux_id": 0
   },
@@ -49,24 +49,18 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "publish",
+              "function_name": "set_publisher",
               "args": [
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "symbol": "XLM"
-                },
-                {
-                  "symbol": "USDC"
-                },
-                {
-                  "i128": "10000000"
+                  "bool": true
                 }
               ]
             }
@@ -75,7 +69,28 @@
         }
       ]
     ],
-    []
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "function_name": "set_publisher",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                },
+                {
+                  "bool": false
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ]
   ],
   "ledger": {
     "protocol_version": 27,
@@ -116,26 +131,6 @@
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
               "key": {
                 "ledger_key_nonce": {
-                  "nonce": "5541220902715666415"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-              "key": {
-                "ledger_key_nonce": {
                   "nonce": "1033654523790656264"
                 }
               },
@@ -153,58 +148,19 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
               "key": {
-                "vec": [
-                  {
-                    "symbol": "History"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
+                "ledger_key_nonce": {
+                  "nonce": "4837995959683129791"
+                }
               },
-              "durability": "persistent",
-              "val": {
-                "vec": [
-                  {
-                    "map": [
-                      {
-                        "key": {
-                          "symbol": "ledger"
-                        },
-                        "val": {
-                          "u32": 0
-                        }
-                      },
-                      {
-                        "key": {
-                          "symbol": "price"
-                        },
-                        "val": {
-                          "i128": "10000000"
-                        }
-                      },
-                      {
-                        "key": {
-                          "symbol": "publisher"
-                        },
-                        "val": {
-                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
+              "durability": "temporary",
+              "val": "void"
             }
           },
           "ext": "v0"
         },
-        "live_until": 4095
+        "live_until": 6311999
       },
       {
         "entry": {
@@ -212,84 +168,19 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
               "key": {
-                "vec": [
-                  {
-                    "symbol": "HistoryIndex"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
+                "ledger_key_nonce": {
+                  "nonce": "5541220902715666415"
+                }
               },
-              "durability": "persistent",
-              "val": {
-                "u32": 1
-              }
+              "durability": "temporary",
+              "val": "void"
             }
           },
           "ext": "v0"
         },
-        "live_until": 4095
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Observation"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "map": [
-                  {
-                    "key": {
-                      "symbol": "ledger"
-                    },
-                    "val": {
-                      "u32": 0
-                    }
-                  },
-                  {
-                    "key": {
-                      "symbol": "price"
-                    },
-                    "val": {
-                      "i128": "10000000"
-                    }
-                  },
-                  {
-                    "key": {
-                      "symbol": "publisher"
-                    },
-                    "val": {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 4095
+        "live_until": 6311999
       },
       {
         "entry": {
@@ -311,6 +202,33 @@
               "durability": "persistent",
               "val": {
                 "bool": true
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "Publisher"
+                  },
+                  {
+                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "bool": false
               }
             }
           },
@@ -361,29 +279,6 @@
                       "key": {
                         "vec": [
                           {
-                            "symbol": "Pairs"
-                          }
-                        ]
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "vec": [
-                              {
-                                "symbol": "XLM"
-                              },
-                              {
-                                "symbol": "USDC"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "vec": [
-                          {
                             "symbol": "PublisherCount"
                           }
                         ]
@@ -417,5 +312,38 @@
       }
     ]
   },
-  "events": []
+  "events": [
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+        "type_": "contract",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "publisher_updated"
+              },
+              {
+                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "allowed"
+                  },
+                  "val": {
+                    "bool": false
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 3,
+    "address": 4,
     "nonce": 0,
     "mux_id": 0
   },
@@ -12,7 +12,7 @@
         {
           "function": {
             "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
               "function_name": "initialize",
               "args": [
                 {
@@ -27,40 +27,50 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
         {
           "function": {
             "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "set_publisher",
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
+              "function_name": "set_preferences",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "bool": true
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "set_publisher",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                },
-                {
-                  "bool": false
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "allowed_assets"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "USDC"
+                          },
+                          {
+                            "symbol": "XLM"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "max_slippage_bps"
+                      },
+                      "val": {
+                        "u32": 50
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "routing_mode"
+                      },
+                      "val": {
+                        "symbol": "auto"
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -107,27 +117,7 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "key": {
-                "ledger_key_nonce": {
-                  "nonce": "1033654523790656264"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
                 "ledger_key_nonce": {
                   "nonce": "5541220902715666415"
@@ -147,11 +137,11 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
               "key": {
                 "vec": [
                   {
-                    "symbol": "Publisher"
+                    "symbol": "Preferences"
                   },
                   {
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -160,7 +150,39 @@
               },
               "durability": "persistent",
               "val": {
-                "bool": false
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "allowed_assets"
+                    },
+                    "val": {
+                      "vec": [
+                        {
+                          "symbol": "USDC"
+                        },
+                        {
+                          "symbol": "XLM"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_slippage_bps"
+                    },
+                    "val": {
+                      "u32": 50
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "routing_mode"
+                    },
+                    "val": {
+                      "symbol": "auto"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -174,7 +196,7 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
               "key": "ledger_key_contract_instance",
               "durability": "persistent",
               "val": {
@@ -211,12 +233,12 @@
                       "key": {
                         "vec": [
                           {
-                            "symbol": "PublisherCount"
+                            "symbol": "PreferenceCount"
                           }
                         ]
                       },
                       "val": {
-                        "u32": 0
+                        "u32": 1
                       }
                     }
                   ]

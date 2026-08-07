@@ -75,6 +75,35 @@
         }
       ]
     ],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "function_name": "publish",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                },
+                {
+                  "symbol": "BTC"
+                },
+                {
+                  "symbol": "USDC"
+                },
+                {
+                  "i128": "50000000"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [],
     []
   ],
   "ledger": {
@@ -153,6 +182,85 @@
           "data": {
             "contract_data": {
               "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+              "key": {
+                "ledger_key_nonce": {
+                  "nonce": "4837995959683129791"
+                }
+              },
+              "durability": "temporary",
+              "val": "void"
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 6311999
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "History"
+                  },
+                  {
+                    "symbol": "BTC"
+                  },
+                  {
+                    "symbol": "USDC"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "vec": [
+                  {
+                    "map": [
+                      {
+                        "key": {
+                          "symbol": "ledger"
+                        },
+                        "val": {
+                          "u32": 0
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "price"
+                        },
+                        "val": {
+                          "i128": "50000000"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "publisher"
+                        },
+                        "val": {
+                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
               "key": {
                 "vec": [
@@ -219,6 +327,36 @@
                     "symbol": "HistoryIndex"
                   },
                   {
+                    "symbol": "BTC"
+                  },
+                  {
+                    "symbol": "USDC"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "u32": 1
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "HistoryIndex"
+                  },
+                  {
                     "symbol": "XLM"
                   },
                   {
@@ -229,6 +367,61 @@
               "durability": "persistent",
               "val": {
                 "u32": 1
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "Observation"
+                  },
+                  {
+                    "symbol": "BTC"
+                  },
+                  {
+                    "symbol": "USDC"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "ledger"
+                    },
+                    "val": {
+                      "u32": 0
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "price"
+                    },
+                    "val": {
+                      "i128": "50000000"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "publisher"
+                    },
+                    "val": {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -371,6 +564,16 @@
                             "vec": [
                               {
                                 "symbol": "XLM"
+                              },
+                              {
+                                "symbol": "USDC"
+                              }
+                            ]
+                          },
+                          {
+                            "vec": [
+                              {
+                                "symbol": "BTC"
                               },
                               {
                                 "symbol": "USDC"

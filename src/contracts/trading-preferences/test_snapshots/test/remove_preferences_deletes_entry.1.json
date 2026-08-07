@@ -209,6 +209,18 @@
                       "val": {
                         "bool": true
                       }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PreferenceCount"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "u32": 0
+                      }
                     }
                   ]
                 }

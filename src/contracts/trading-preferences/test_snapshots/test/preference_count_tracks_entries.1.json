@@ -25,20 +25,53 @@
         }
       ]
     ],
+    [],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "set_publisher",
+              "function_name": "set_preferences",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "bool": true
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "allowed_assets"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "USDC"
+                          },
+                          {
+                            "symbol": "XLM"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "max_slippage_bps"
+                      },
+                      "val": {
+                        "u32": 50
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "routing_mode"
+                      },
+                      "val": {
+                        "symbol": "auto"
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -47,20 +80,18 @@
         }
       ]
     ],
+    [],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "set_publisher",
+              "function_name": "remove_preferences",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                },
-                {
-                  "bool": false
                 }
               ]
             }
@@ -107,7 +138,7 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
                 "ledger_key_nonce": {
                   "nonce": "1033654523790656264"
@@ -127,7 +158,7 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
                 "ledger_key_nonce": {
                   "nonce": "5541220902715666415"
@@ -140,33 +171,6 @@
           "ext": "v0"
         },
         "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Publisher"
-                  },
-                  {
-                    "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "bool": false
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 4095
       },
       {
         "entry": {
@@ -211,7 +215,7 @@
                       "key": {
                         "vec": [
                           {
-                            "symbol": "PublisherCount"
+                            "symbol": "PreferenceCount"
                           }
                         ]
                       },

@@ -27,18 +27,53 @@
     ],
     [
       [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
         {
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "set_publisher",
+              "function_name": "set_preferences",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "bool": true
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "allowed_assets"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "USDC"
+                          },
+                          {
+                            "symbol": "XLM"
+                          },
+                          {
+                            "symbol": "EURMTL"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "max_slippage_bps"
+                      },
+                      "val": {
+                        "u32": 50
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "routing_mode"
+                      },
+                      "val": {
+                        "symbol": "auto"
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -54,19 +89,48 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "publish",
+              "function_name": "set_preferences",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "symbol": "XLM"
-                },
-                {
-                  "symbol": "USDC"
-                },
-                {
-                  "i128": "10000000"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "allowed_assets"
+                      },
+                      "val": {
+                        "vec": [
+                          {
+                            "symbol": "USDC"
+                          },
+                          {
+                            "symbol": "XLM"
+                          },
+                          {
+                            "symbol": "EURMTL"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "max_slippage_bps"
+                      },
+                      "val": {
+                        "u32": 75
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "routing_mode"
+                      },
+                      "val": {
+                        "symbol": "auto"
+                      }
+                    }
+                  ]
                 }
               ]
             }
@@ -74,8 +138,7 @@
           "sub_invocations": []
         }
       ]
-    ],
-    []
+    ]
   ],
   "ledger": {
     "protocol_version": 27,
@@ -113,26 +176,6 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "key": {
-                "ledger_key_nonce": {
-                  "nonce": "5541220902715666415"
-                }
-              },
-              "durability": "temporary",
-              "val": "void"
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 6311999
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
               "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
                 "ledger_key_nonce": {
@@ -153,58 +196,19 @@
           "data": {
             "contract_data": {
               "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
               "key": {
-                "vec": [
-                  {
-                    "symbol": "History"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
+                "ledger_key_nonce": {
+                  "nonce": "5541220902715666415"
+                }
               },
-              "durability": "persistent",
-              "val": {
-                "vec": [
-                  {
-                    "map": [
-                      {
-                        "key": {
-                          "symbol": "ledger"
-                        },
-                        "val": {
-                          "u32": 0
-                        }
-                      },
-                      {
-                        "key": {
-                          "symbol": "price"
-                        },
-                        "val": {
-                          "i128": "10000000"
-                        }
-                      },
-                      {
-                        "key": {
-                          "symbol": "publisher"
-                        },
-                        "val": {
-                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
+              "durability": "temporary",
+              "val": "void"
             }
           },
           "ext": "v0"
         },
-        "live_until": 4095
+        "live_until": 6311999
       },
       {
         "entry": {
@@ -216,92 +220,7 @@
               "key": {
                 "vec": [
                   {
-                    "symbol": "HistoryIndex"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "u32": 1
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 4095
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Observation"
-                  },
-                  {
-                    "symbol": "XLM"
-                  },
-                  {
-                    "symbol": "USDC"
-                  }
-                ]
-              },
-              "durability": "persistent",
-              "val": {
-                "map": [
-                  {
-                    "key": {
-                      "symbol": "ledger"
-                    },
-                    "val": {
-                      "u32": 0
-                    }
-                  },
-                  {
-                    "key": {
-                      "symbol": "price"
-                    },
-                    "val": {
-                      "i128": "10000000"
-                    }
-                  },
-                  {
-                    "key": {
-                      "symbol": "publisher"
-                    },
-                    "val": {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "ext": "v0"
-        },
-        "live_until": 4095
-      },
-      {
-        "entry": {
-          "last_modified_ledger_seq": 0,
-          "data": {
-            "contract_data": {
-              "ext": "v0",
-              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "key": {
-                "vec": [
-                  {
-                    "symbol": "Publisher"
+                    "symbol": "Preferences"
                   },
                   {
                     "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
@@ -310,7 +229,42 @@
               },
               "durability": "persistent",
               "val": {
-                "bool": true
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "allowed_assets"
+                    },
+                    "val": {
+                      "vec": [
+                        {
+                          "symbol": "USDC"
+                        },
+                        {
+                          "symbol": "XLM"
+                        },
+                        {
+                          "symbol": "EURMTL"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "max_slippage_bps"
+                    },
+                    "val": {
+                      "u32": 75
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "routing_mode"
+                    },
+                    "val": {
+                      "symbol": "auto"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -361,30 +315,7 @@
                       "key": {
                         "vec": [
                           {
-                            "symbol": "Pairs"
-                          }
-                        ]
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "vec": [
-                              {
-                                "symbol": "XLM"
-                              },
-                              {
-                                "symbol": "USDC"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "key": {
-                        "vec": [
-                          {
-                            "symbol": "PublisherCount"
+                            "symbol": "PreferenceCount"
                           }
                         ]
                       },
@@ -417,5 +348,76 @@
       }
     ]
   },
-  "events": []
+  "events": [
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+        "type_": "contract",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "preferences_changed"
+              },
+              {
+                "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+              },
+              {
+                "symbol": "set"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "preferences"
+                  },
+                  "val": {
+                    "map": [
+                      {
+                        "key": {
+                          "symbol": "allowed_assets"
+                        },
+                        "val": {
+                          "vec": [
+                            {
+                              "symbol": "USDC"
+                            },
+                            {
+                              "symbol": "XLM"
+                            },
+                            {
+                              "symbol": "EURMTL"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "max_slippage_bps"
+                        },
+                        "val": {
+                          "u32": 75
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "routing_mode"
+                        },
+                        "val": {
+                          "symbol": "auto"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    }
+  ]
 }
