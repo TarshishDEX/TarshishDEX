@@ -2,11 +2,18 @@ import { NextResponse } from "next/server";
 import { fetchLiquidityPools, buildPoolSummary } from "@/lib/stellar/pool-queries";
 import { parseAssetParam } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /** GET /api/market/pools?base=XLM&counter=USDC:ISSUER */
 export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(ip, "/api/market/pools");
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
+  }
+
   const url = new URL(request.url);
   const base = parseAssetParam(url.searchParams.get("base"));
   const counter = parseAssetParam(url.searchParams.get("counter"));

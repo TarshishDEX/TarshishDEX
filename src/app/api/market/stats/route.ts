@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchTopAssets, getMarketStatsForTokens } from "@/lib/stellar/prices";
 import { parseLimit } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,12 @@ export const dynamic = "force-dynamic";
  * Market stats for the most traded assets, quoted against XLM.
  */
 export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  const limit = checkRateLimit(ip, "/api/market/stats");
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
+  }
+
   const url = new URL(request.url);
   const limit = parseLimit(url.searchParams.get("limit"), 10, 25);
 

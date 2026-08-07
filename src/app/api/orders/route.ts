@@ -2,8 +2,18 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { parseAddress, parseLimit } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
+import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+function withRateLimit(request: Request): NextResponse | null {
+  const ip = getClientIp(request);
+  const result = checkRateLimit(ip, "/api/orders");
+  if (!result.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(result.retryAfter) } });
+  }
+  return null;
+}
 
 /**
  * GET /api/orders?user=G...&limit=20&cursor=0
@@ -12,6 +22,9 @@ export const dynamic = "force-dynamic";
  * When no user is provided, returns the global order count.
  */
 export async function GET(request: Request) {
+  const rateLimit = withRateLimit(request);
+  if (rateLimit) return rateLimit;
+
   const url = new URL(request.url);
   const user = parseAddress(url.searchParams.get("user") ?? "");
   const limit = parseLimit(url.searchParams.get("limit"), 20, 50);
@@ -41,6 +54,9 @@ export async function GET(request: Request) {
  * Build a place_order Soroban transaction and return the XDR for wallet signing.
  */
 export async function POST(request: Request) {
+  const rateLimit = withRateLimit(request);
+  if (rateLimit) return rateLimit;
+
   try {
     const body = await request.json();
     const { userAddress, base, counter, price, amount, expiryLedger, side } = body;
@@ -70,6 +86,9 @@ export async function POST(request: Request) {
  * Body: { id, userAddress, txHash? }
  */
 export async function DELETE(request: Request) {
+  const rateLimit = withRateLimit(request);
+  if (rateLimit) return rateLimit;
+
   try {
     const body = await request.json();
     const { id, userAddress, txHash } = body;

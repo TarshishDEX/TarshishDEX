@@ -1,44 +1,102 @@
-import { NextResponse, type NextRequest } from "next/server";
+/**
+ * In-memory rate limiter for API routes.
+ *
+ * Uses a sliding-window approach per IP address. Each endpoint defines
+ * a max request count within a window (ms). Multiple windows are stored
+ * per IP+endpoint combo to prevent bursts while allowing sustained traffic.
+ *
+ * Not suitable for multi-instance deployments without a shared store (Redis).
+ * For single-instance or serverless cold-start, this provides basic protection.
+ */
 
-interface RateLimitStore {
-  [ip: string]: { count: number; resetTime: number };
+interface RateLimitConfig {
+  /** Maximum requests allowed in the window. */
+  maxRequests: number;
+  /** Window size in milliseconds. */
+  windowMs: number;
 }
 
-const store: RateLimitStore = {};
-const WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS = 60; // 60 requests per minute per IP
+interface WindowEntry {
+  timestamps: number[];
+}
 
-/** Clean up expired entries periodically. */
-setInterval(() => {
+const DEFAULT_CONFIG: RateLimitConfig = {
+  maxRequests: 100,
+  windowMs: 60_000,
+};
+
+const ENDPOINT_CONFIGS: Record<string, RateLimitConfig> = {
+  "/api/orders": { maxRequests: 30, windowMs: 60_000 },
+  "/api/swap/quote": { maxRequests: 60, windowMs: 60_000 },
+  "/api/market/stats": { maxRequests: 120, windowMs: 60_000 },
+  "/api/market/pools": { maxRequests: 60, windowMs: 60_000 },
+};
+
+const store = new Map<string, WindowEntry>();
+
+/** Clean up expired entries periodically (every 5 minutes). */
+function cleanupExpired() {
   const now = Date.now();
-  for (const key of Object.keys(store)) {
-    if (store[key].resetTime < now) {
-      delete store[key];
+  for (const [key, entry] of store.entries()) {
+    const config = getConfigForKey(key);
+    entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
+    if (entry.timestamps.length === 0) {
+      store.delete(key);
     }
   }
-}, 60_000);
+}
+
+function getConfigForKey(key: string): RateLimitConfig {
+  for (const [path, config] of Object.entries(ENDPOINT_CONFIGS)) {
+    if (key.startsWith(path)) return config;
+  }
+  return DEFAULT_CONFIG;
+}
+
+// Auto-cleanup every 5 minutes
+if (typeof globalThis !== "undefined") {
+  setInterval(cleanupExpired, 300_000);
+}
 
 /**
- * Apply rate limiting to API requests based on client IP.
- * Returns a 429 response if the limit is exceeded.
+ * Check if a request should be rate-limited.
+ * Returns { allowed: true } or { allowed: false, retryAfter: seconds }.
  */
-export function rateLimitMiddleware(request: NextRequest): NextResponse | null {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+export function checkRateLimit(
+  ip: string,
+  path: string
+): { allowed: true } | { allowed: false; retryAfter: number } {
+  const key = `${ip}:${path}`;
+  const config = getConfigForKey(key);
   const now = Date.now();
 
-  if (!store[ip] || store[ip].resetTime < now) {
-    store[ip] = { count: 1, resetTime: now + WINDOW_MS };
-    return null;
+  let entry = store.get(key);
+  if (!entry) {
+    store.set(key, { timestamps: [now] });
+    return { allowed: true };
   }
 
-  store[ip].count++;
+  // Remove expired timestamps
+  entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
 
-  if (store[ip].count > MAX_REQUESTS) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later.", retryAfter: Math.ceil((store[ip].resetTime - now) / 1000) },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((store[ip].resetTime - now) / 1000)) } }
-    );
+  if (entry.timestamps.length >= config.maxRequests) {
+    const oldest = entry.timestamps[0];
+    const retryAfter = Math.ceil((oldest + config.windowMs - now) / 1000);
+    return { allowed: false, retryAfter: Math.max(1, retryAfter) };
   }
 
-  return null;
+  entry.timestamps.push(now);
+  return { allowed: true };
+}
+
+/**
+ * Extract client IP from request headers.
+ * Checks X-Forwarded-For (proxy/CDN) then falls back to direct connection.
+ */
+export function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return "127.0.0.1";
 }
