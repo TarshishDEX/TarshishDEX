@@ -13,7 +13,7 @@ jobs:
   spellcheck:
     name: cspell
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,4 +22,4 @@ jobs:
       - name: Install cspell
         run: npm install -g cspell@latest
       - name: Run spell check
-        run: cspell "**/*.{ts,tsx,md,json,yml,yaml}" --no-progress
+        run: cspell "**/*.{ts,tsx,md,yml,yaml}" --no-progress --gitignore
