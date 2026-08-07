@@ -1,17 +1,18 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 
 /**
  * Returns true on the first render, false on subsequent renders.
  * Useful for skipping animations or effects on initial mount.
  */
 export function useIsFirstRender(): boolean {
-  const isFirst = useRef(true);
+  const [isFirst, setIsFirst] = useState(true);
 
-  useEffect(() => {
-    isFirst.current = false;
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time state init
+  useLayoutEffect(() => {
+    setIsFirst(false);
   }, []);
 
-  return isFirst.current;
+  return isFirst;
 }
