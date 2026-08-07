@@ -195,7 +195,7 @@ impl TradingPreferences {
         account.require_auth();
         let key = DataKey::Preferences(account.clone());
         if !env.storage().persistent().has(&key) {
-            return Err(Error::NotInitialized);
+            return Err(Error::PreferenceNotFound);
         }
         env.storage().persistent().remove(&key);
 
@@ -368,7 +368,7 @@ mod test {
         );
         assert_eq!(
             client.try_remove_preferences(&account),
-            Err(Ok(Error::NotInitialized))
+            Err(Ok(Error::PreferenceNotFound))
         );
     }
 

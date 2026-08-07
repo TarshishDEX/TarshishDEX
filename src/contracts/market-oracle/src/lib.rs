@@ -266,14 +266,17 @@ impl MarketOracle {
         env.storage().persistent().set(&idx_key, &next_idx);
         env.storage().persistent().extend_ttl(&idx_key, 0, TTL_LEDGERS);
 
-        // Track pair without O(n) contains check — duplicates are idempotent in storage.
+        // Track unique pairs — deduplicate to prevent unbounded growth.
+        // For small pair counts (<100), linear scan is cheaper than a map lookup.
         let mut pairs: Vec<(Symbol, Symbol)> = env
             .storage()
             .instance()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
-        pairs.push_back((base.clone(), counter.clone()));
-        env.storage().instance().set(&DataKey::Pairs, &pairs);
+        if !pairs.contains(&(base.clone(), counter.clone())) {
+            pairs.push_back((base.clone(), counter.clone()));
+            env.storage().instance().set(&DataKey::Pairs, &pairs);
+        }
 
         PricePublished {
             base,
