@@ -1,71 +1,49 @@
 /**
- * Structured JSON logger for TarshishDEX server-side code.
- *
- * Emits log lines as JSON to stdout so they can be ingested by log
- * aggregators (CloudWatch, Datadog, etc.). In development the output is
- * pretty-printed for readability.
+ * Structured logger for server-side logging.
+ * Supports log levels and JSON output for log aggregation.
  */
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogEntry {
-  ts: string;
-  level: LogLevel;
-  msg: string;
-  reqId?: string;
-  [key: string]: unknown;
-}
-
-const LEVEL_ORDER: Record<LogLevel, number> = {
+const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
   warn: 2,
   error: 3,
 };
 
-const currentLevel = (): LogLevel => {
-  const env = process.env.LOG_LEVEL?.toLowerCase();
-  if (env === "debug") return "debug";
-  if (env === "warn") return "warn";
-  if (env === "error") return "error";
-  return "info";
-};
+function getConfiguredLevel(): LogLevel {
+  const envLevel = process.env.LOG_LEVEL as LogLevel | undefined;
+  if (envLevel && envLevel in LOG_LEVELS) return envLevel;
+  return process.env.NODE_ENV === "production" ? "info" : "debug";
+}
+
+const currentLevel = getConfiguredLevel();
 
 function shouldLog(level: LogLevel): boolean {
-  return LEVEL_ORDER[level] >= LEVEL_ORDER[currentLevel()];
+  return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
 }
 
-let globalReqId: string | undefined;
-
-/** Set a request-scoped ID so every log line in that request is traceable. */
-export function setRequestId(id: string | undefined): void {
-  globalReqId = id;
-}
-
-function emit(level: LogLevel, msg: string, extra?: Record<string, unknown>): void {
-  if (!shouldLog(level)) return;
-
-  const entry: LogEntry = {
-    ts: new Date().toISOString(),
+function formatMessage(level: LogLevel, message: string, meta?: Record<string, unknown>): string {
+  return JSON.stringify({
+    timestamp: new Date().toISOString(),
     level,
-    msg,
-    ...(globalReqId ? { reqId: globalReqId } : {}),
-    ...extra,
-  };
-
-  const line =
-    process.env.NODE_ENV === "production" ? JSON.stringify(entry) : JSON.stringify(entry, null, 2);
-
-  if (level === "error") {
-    process.stderr.write(line + "\n");
-  } else {
-    process.stdout.write(line + "\n");
-  }
+    message,
+    ...meta,
+  });
 }
 
 export const logger = {
-  debug: (msg: string, extra?: Record<string, unknown>) => emit("debug", msg, extra),
-  info: (msg: string, extra?: Record<string, unknown>) => emit("info", msg, extra),
-  warn: (msg: string, extra?: Record<string, unknown>) => emit("warn", msg, extra),
-  error: (msg: string, extra?: Record<string, unknown>) => emit("error", msg, extra),
+  debug(message: string, meta?: Record<string, unknown>) {
+    if (shouldLog("debug")) console.debug(formatMessage("debug", message, meta));
+  },
+  info(message: string, meta?: Record<string, unknown>) {
+    if (shouldLog("info")) console.info(formatMessage("info", message, meta));
+  },
+  warn(message: string, meta?: Record<string, unknown>) {
+    if (shouldLog("warn")) console.warn(formatMessage("warn", message, meta));
+  },
+  error(message: string, meta?: Record<string, unknown>) {
+    if (shouldLog("error")) console.error(formatMessage("error", message, meta));
+  },
 };
