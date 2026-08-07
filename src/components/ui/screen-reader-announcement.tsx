@@ -1,11 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 
 interface ScreenReaderAnnouncementProps {
   message: string;
   politeness?: "polite" | "assertive";
+}
+
+type Action = { type: "append"; message: string };
+
+function reducer(state: string[], action: Action): string[] {
+  if (action.type === "append") {
+    return [...state.slice(-5), action.message];
+  }
+  return state;
 }
 
 /**
@@ -16,10 +25,10 @@ export function ScreenReaderAnnouncement({
   message,
   politeness = "polite",
 }: ScreenReaderAnnouncementProps) {
-  const [announcements, setAnnouncements] = useState<string[]>([]);
+  const [announcements, dispatch] = useReducer(reducer, []);
 
   useEffect(() => {
-    if (message) setAnnouncements((prev) => [...prev.slice(-5), message]);
+    if (message) dispatch({ type: "append", message });
   }, [message]);
 
   return (
