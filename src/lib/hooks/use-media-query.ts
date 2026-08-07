@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useSyncExternalStore, useCallback } from "react";
 
 /**
  * Track a CSS media query match state reactively.
+ * Uses useSyncExternalStore which is the recommended primitive for
+ * subscribing to external stores (like matchMedia) without calling
+ * setState synchronously in an effect.
+ *
  * Example: useMediaQuery("(min-width: 768px)") → true on tablet+ screens.
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia(query).matches;
-  });
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    function handleChange(e: MediaQueryListEvent) {
-      setMatches(e.matches);
-    }
-    mql.addEventListener("change", handleChange);
-    setMatches(mql.matches);
-    return () => mql.removeEventListener("change", handleChange);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(
+    useCallback(
+      (onStoreChange: () => void) => {
+        const mql = window.matchMedia(query);
+        mql.addEventListener("change", onStoreChange);
+        return () => mql.removeEventListener("change", onStoreChange);
+      },
+      [query]
+    ),
+    () => window.matchMedia(query).matches,
+    () => false
+  );
 }
 
 /** Pre-built breakpoint helpers. */
