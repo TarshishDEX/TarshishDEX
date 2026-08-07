@@ -8,11 +8,12 @@ import { useState, useEffect, useCallback } from "react";
  */
 export function useCountdown(seconds: number, onComplete?: () => void) {
   const [remaining, setRemaining] = useState(seconds);
-  const [isComplete, setIsComplete] = useState(false);
+  // Derive isComplete from remaining instead of tracking it separately
+  // with a setState inside an effect (which triggers cascading renders).
+  const isComplete = remaining <= 0;
 
   useEffect(() => {
     if (remaining <= 0) {
-      setIsComplete(true);
       onComplete?.();
       return;
     }
@@ -22,7 +23,6 @@ export function useCountdown(seconds: number, onComplete?: () => void) {
 
   const reset = useCallback((newSeconds?: number) => {
     setRemaining(newSeconds ?? seconds);
-    setIsComplete(false);
   }, [seconds]);
 
   const formatted = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
