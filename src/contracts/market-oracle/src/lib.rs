@@ -720,9 +720,9 @@ mod gas_benchmarks {
         let contract_id = env.register(MarketOracle, ());
         let client = MarketOracleClient::new(&env, &contract_id);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.initialize(&admin);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] initialize: {cost} cpu instructions");
     }
@@ -731,14 +731,14 @@ mod gas_benchmarks {
     fn bench_publish_first() {
         let (env, _admin, publisher, client) = setup();
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.publish(
             &publisher,
             &symbol_short!("XLM"),
             &symbol_short!("USDC"),
             &10_000_000,
         );
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] publish (first): {cost} cpu instructions");
     }
@@ -753,14 +753,14 @@ mod gas_benchmarks {
             &10_000_000,
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.publish(
             &publisher,
             &symbol_short!("XLM"),
             &symbol_short!("USDC"),
             &11_000_000,
         );
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] publish (subsequent): {cost} cpu instructions");
     }
@@ -775,9 +775,9 @@ mod gas_benchmarks {
             &10_000_000,
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_observation: {cost} cpu instructions");
     }
@@ -798,10 +798,10 @@ mod gas_benchmarks {
             &11_000_000,
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ =
             client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_observation_history: {cost} cpu instructions");
     }
@@ -811,9 +811,9 @@ mod gas_benchmarks {
         let (env, _admin, _, client) = setup();
         let new_pub = Address::generate(&env);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.set_publisher(&new_pub, &true);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_publisher (grant): {cost} cpu instructions");
     }
@@ -824,9 +824,9 @@ mod gas_benchmarks {
         let new_pub = Address::generate(&env);
         client.set_publisher(&new_pub, &true);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.set_publisher(&new_pub, &false);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_publisher (revoke): {cost} cpu instructions");
     }
@@ -850,9 +850,9 @@ mod gas_benchmarks {
             ],
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.batch_get_observations(&pairs);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] batch_get_observations (3 pairs): {cost} cpu instructions");
     }
@@ -867,9 +867,9 @@ mod gas_benchmarks {
             &10_000_000,
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.all_observations();
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] all_observations: {cost} cpu instructions");
     }
@@ -884,9 +884,9 @@ mod gas_benchmarks {
             &10_000_000,
         );
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.paginated_observations(&10, &0);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] paginated_observations (limit=10): {cost} cpu instructions");
     }
@@ -895,32 +895,32 @@ mod gas_benchmarks {
     fn bench_publisher_count() {
         let (env, _admin, _, client) = setup();
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_publisher_count();
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_publisher_count: {cost} cpu instructions");
     }
 
     #[test]
     fn bench_get_version() {
-        let (env, admin, _, client) = setup();
+        let (env, _admin, _, client) = setup();
         client.set_version(&3);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_version();
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_version: {cost} cpu instructions");
     }
 
     #[test]
     fn bench_set_version() {
-        let (env, admin, _, client) = setup();
+        let (env, _admin, _, client) = setup();
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         assert!(client.try_set_version(&5).is_ok());
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
     }
