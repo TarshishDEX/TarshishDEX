@@ -1,33 +1,32 @@
-import { getActiveNetwork, NETWORKS, type NetworkName } from "@/lib/stellar/config";
-
 /**
- * Network metadata helpers for the active Stellar network.
+ * Network detection and status utilities.
  */
 
-/** Get the explorer base URL for the active network. */
-export function getExplorerUrl(): string {
-  return getActiveNetwork().explorerUrl;
+/**
+ * Check if the browser is currently online.
+ * Combines navigator.onLine with a fetch probe.
+ */
+export function isOnline(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine;
 }
 
-/** Get the Horizon URL for the active network. */
-export function getHorizonNetworkUrl(): string {
-  return getActiveNetwork().horizonUrl;
+/**
+ * Subscribe to online/offline events.
+ * Returns an unsubscribe function.
+ */
+export function onNetworkChange(callback: (online: boolean) => void): () => void {
+  const handleOnline = () => callback(true);
+  const handleOffline = () => callback(false);
+  window.addEventListener("online", handleOnline);
+  window.addEventListener("offline", handleOffline);
+  return () => {
+    window.removeEventListener("online", handleOnline);
+    window.removeEventListener("offline", handleOffline);
+  };
 }
 
-/** Check if we're on testnet. */
-export function isTestnet(): boolean {
-  return getActiveNetwork().name === "testnet";
-}
-
-/** Check if we're on the public network (mainnet). */
-export function isMainnet(): boolean {
-  return getActiveNetwork().name === "public";
-}
-
-/** Get all available network configurations. */
-export function getAvailableNetworks(): Array<{ name: NetworkName; label: string }> {
-  return Object.entries(NETWORKS).map(([name, config]) => ({
-    name: name as NetworkName,
-    label: config.label,
-  }));
+/** Get effective network type (4g, 3g, 2g, slow-2g) if available. */
+export function getNetworkType(): string | undefined {
+  const conn = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
+  return conn?.effectiveType;
 }
