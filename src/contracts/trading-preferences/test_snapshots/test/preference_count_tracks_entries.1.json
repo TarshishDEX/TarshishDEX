@@ -222,6 +222,18 @@
                       "val": {
                         "u32": 0
                       }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "PreferencesList"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "vec": []
+                      }
                     }
                   ]
                 }
