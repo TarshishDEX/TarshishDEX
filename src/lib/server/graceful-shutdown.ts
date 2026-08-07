@@ -1,48 +1,43 @@
-import { logger } from "@/lib/server/logger";
+/**
+ * Graceful shutdown handler.
+ * Listens for SIGTERM/SIGINT and closes connections cleanly before
+ * the process exits. Prevents dropped requests during deployments.
+ */
 
-type CleanupFn = () => Promise<void> | void;
+interface ShutdownOptions {
+  /** Maximum time to wait for connections to close (ms). */
+  timeoutMs?: number;
+  /** Called before shutdown to clean up resources. */
+  onShutdown?: () => Promise<void>;
+}
 
 /**
- * Register shutdown handlers for SIGTERM and SIGINT.
- * Runs all registered cleanup functions in reverse order before exiting.
- * Only active in Node.js runtime (not Edge).
+ * Register graceful shutdown handlers.
+ * On SIGTERM/SIGINT, calls onShutdown and exits after timeoutMs.
  */
-export function setupGracefulShutdown(cleanupFns: CleanupFn[] = []): () => void {
-  let shuttingDown = false;
+export function registerGracefulShutdown(options: ShutdownOptions = {}): void {
+  const { timeoutMs = 10_000, onShutdown } = options;
 
-  async function handleShutdown(signal: string) {
-    if (shuttingDown) return;
-    shuttingDown = true;
+  async function handleShutdown(signal: string): Promise<void> {
+    console.log(`[shutdown] Received ${signal}, shutting down gracefully...`);
 
-    logger.info(`Received ${signal} — starting graceful shutdown`, {
-      cleanupCount: cleanupFns.length,
-    });
-
-    // Run cleanups in reverse order (LIFO)
-    for (let i = cleanupFns.length - 1; i >= 0; i--) {
-      try {
-        await cleanupFns[i]();
-      } catch (error) {
-        logger.error("Cleanup function failed during shutdown", {
-          index: i,
-          error: String(error),
-        });
+    try {
+      if (onShutdown) {
+        await Promise.race([
+          onShutdown(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Shutdown timed out")), timeoutMs)
+          ),
+        ]);
       }
+    } catch (err) {
+      console.error("[shutdown] Error during shutdown:", err);
     }
 
-    logger.info("Graceful shutdown complete");
+    console.log("[shutdown] Goodbye.");
     process.exit(0);
   }
 
-  const onSigterm = () => handleShutdown("SIGTERM");
-  const onSigint = () => handleShutdown("SIGINT");
-
-  process.on("SIGTERM", onSigterm);
-  process.on("SIGINT", onSigint);
-
-  // Return a function to remove the listeners (for testing)
-  return () => {
-    process.off("SIGTERM", onSigterm);
-    process.off("SIGINT", onSigint);
-  };
+  process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+  process.on("SIGINT", () => handleShutdown("SIGINT"));
 }
