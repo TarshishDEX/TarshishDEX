@@ -13,16 +13,17 @@ interface LastUpdatedProps {
  * last data refresh. Auto-updates every 30 seconds.
  */
 export function LastUpdated({ timestamp, className }: LastUpdatedProps) {
-  const [, forceRender] = useState(0);
+  // Track the current time in state so we never call Date.now() during render.
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => forceRender(Date.now()), 30_000);
+    const interval = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(interval);
   }, []);
 
   if (!timestamp) return null;
 
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  const seconds = Math.floor((now - timestamp) / 1000);
   const text =
     seconds < 10
       ? "just now"
