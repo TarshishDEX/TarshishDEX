@@ -60,6 +60,7 @@ export function SwapExecutionPanel({
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<SwapErrorKind | null>(null);
+  const [orderMarked, setOrderMarked] = useState(false);
 
   const busy = phase !== "idle" && phase !== "success" && phase !== "failed";
   const success = phase === "success";
@@ -78,7 +79,17 @@ export function SwapExecutionPanel({
         method: quote.method,
         orderId,
       },
-      setPhase
+      setPhase,
+      orderId
+        ? async (txHash: string) => {
+            await fetch("/api/orders", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: orderId, txHash }),
+            });
+            setOrderMarked(true);
+          }
+        : undefined
     );
     if (result.phase === "success") {
       setHash(result.hash ?? null);
@@ -188,6 +199,9 @@ export function SwapExecutionPanel({
       {success && hash && (
         <div className="bg-success-soft border-success/30 text-success animate-fade-in rounded-xl border px-4 py-3 text-sm">
           <p className="font-semibold">Swap completed on-chain</p>
+          {orderMarked && (
+            <p className="mt-1 text-xs">Limit order # {orderId} marked as executed.</p>
+          )}
           {explorerUrl && (
             <a
               href={explorerUrl}

@@ -3,7 +3,6 @@ import {
   needsTrustline,
   intermediatePath,
   classifySwapError,
-  type SwapErrorKind,
 } from "@/lib/stellar/swap-execution";
 import type { StellarAsset } from "@/lib/stellar/types";
 

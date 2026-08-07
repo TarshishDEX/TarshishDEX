@@ -1,4 +1,4 @@
-import { Operation, TransactionBuilder, BASE_FEE, Asset } from "@stellar/stellar-sdk";
+import { Operation, TransactionBuilder, BASE_FEE } from "@stellar/stellar-sdk";
 import { getHorizonServer } from "@/lib/stellar/horizon";
 import { toSdkAsset } from "@/lib/stellar/asset";
 import { explorerTxUrl, getActiveNetwork } from "@/lib/stellar/config";

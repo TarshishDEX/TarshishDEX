@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import type { LimitOrder } from "@/lib/stellar/limit-order-types";const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
+import { cn } from "@/lib/utils";const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
   buy: { label: "Buy", tone: "accent" },
   sell: { label: "Sell", tone: "primary" },
 };
