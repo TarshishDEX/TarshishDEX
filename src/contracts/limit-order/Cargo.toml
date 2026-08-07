@@ -1,0 +1,16 @@
+[package]
+name = "limit-order"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "On-chain limit order registry for TarshishDEX — store, cancel, and query orders"
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk.workspace = true
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

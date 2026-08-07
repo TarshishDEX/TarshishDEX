@@ -1,5 +1,5 @@
 [workspace]
-members = ["trading-preferences", "market-oracle"]
+members = ["trading-preferences", "market-oracle", "limit-order"]
 resolver = "2"
 
 [workspace.package]
