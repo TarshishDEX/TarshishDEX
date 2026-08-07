@@ -83,9 +83,7 @@ export async function queryUserOrders(userAddress: string): Promise<LimitOrder[]
     if (!orderIds || orderIds.length === 0) return [];
 
     // Fetch each order individually
-    const orders = await Promise.all(
-      orderIds.map((id: number) => queryOrder(id))
-    );
+    const orders = await Promise.all(orderIds.map((id: number) => queryOrder(id)));
     return orders.filter((o): o is LimitOrder => o !== null);
   } catch {
     return [];
@@ -94,9 +92,7 @@ export async function queryUserOrders(userAddress: string): Promise<LimitOrder[]
 
 /** Get the total order count from the contract. */
 export async function queryOrderCount(): Promise<number> {
-  return (
-    (await simulateRead("get_order_count", [], (scv) => scValToNative(scv) as number)) ?? 0
-  );
+  return (await simulateRead("get_order_count", [], (scv) => scValToNative(scv) as number)) ?? 0;
 }
 
 /**
@@ -154,7 +150,10 @@ export async function buildCancelOrExecuteTx(
   if (!contractId) return null;
 
   const method = txHash ? "mark_executed" : "cancel_order";
-  const args: xdr.ScVal[] = [Address.fromString(userAddress).toScVal(), nativeToScVal(orderId, { type: "u64" })];
+  const args: xdr.ScVal[] = [
+    Address.fromString(userAddress).toScVal(),
+    nativeToScVal(orderId, { type: "u64" }),
+  ];
   if (txHash) {
     args.push(nativeToScVal(txHash, { type: "symbol" }));
   }

@@ -9,7 +9,11 @@ describe("Badge", () => {
   });
 
   it("renders with dot indicator", () => {
-    render(<Badge tone="success" dot>Active</Badge>);
+    render(
+      <Badge tone="success" dot>
+        Active
+      </Badge>
+    );
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
 

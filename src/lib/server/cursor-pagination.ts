@@ -22,7 +22,8 @@ export function paginateWithCursor<T extends { id: string }>(
   const page = items.slice(startIndex, startIndex + limit);
   return {
     items: page,
-    nextCursor: page.length === limit && startIndex + limit < items.length ? page[page.length - 1].id : null,
+    nextCursor:
+      page.length === limit && startIndex + limit < items.length ? page[page.length - 1].id : null,
     hasMore: startIndex + limit < items.length,
   };
 }

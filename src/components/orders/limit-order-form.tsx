@@ -34,7 +34,8 @@ export function LimitOrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<"idle" | "building" | "signing" | "submitting">("idle");
 
-  const disabled = !price || Number(price) <= 0 || !amount || Number(amount) <= 0 || !base || !counter;
+  const disabled =
+    !price || Number(price) <= 0 || !amount || Number(amount) <= 0 || !base || !counter;
 
   async function handlePlace() {
     if (disabled) return;
@@ -96,9 +97,13 @@ export function LimitOrderForm() {
   const total = price && amount ? (Number(price) * Number(amount)).toFixed(2) : "—";
 
   const phaseLabel =
-    phase === "building" ? "Building transaction…" :
-    phase === "signing" ? "Signing in wallet…" :
-    phase === "submitting" ? "Submitting…" : undefined;
+    phase === "building"
+      ? "Building transaction…"
+      : phase === "signing"
+        ? "Signing in wallet…"
+        : phase === "submitting"
+          ? "Submitting…"
+          : undefined;
 
   return (
     <Card className="p-6">

@@ -10,7 +10,10 @@ function withRateLimit(request: Request): NextResponse | null {
   const ip = getClientIp(request);
   const result = checkRateLimit(ip, "/api/orders");
   if (!result.allowed) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(result.retryAfter) } });
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(result.retryAfter) } }
+    );
   }
   return null;
 }
@@ -45,7 +48,10 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     logger.error("limit orders query failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to query limit orders — contract may not be deployed" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to query limit orders — contract may not be deployed" },
+      { status: 502 }
+    );
   }
 }
 
@@ -62,14 +68,28 @@ export async function POST(request: Request) {
     const { userAddress, base, counter, price, amount, expiryLedger, side } = body;
 
     if (!userAddress || !base || !counter || !price || !amount || !side) {
-      return NextResponse.json({ error: "Missing required fields: userAddress, base, counter, price, amount, side" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields: userAddress, base, counter, price, amount, side" },
+        { status: 400 }
+      );
     }
 
     const { buildPlaceOrderTx } = await import("@/lib/soroban/limit-order");
-    const xdr = await buildPlaceOrderTx(userAddress, base, counter, Number(price), Number(amount), Number(expiryLedger ?? 0), side);
+    const xdr = await buildPlaceOrderTx(
+      userAddress,
+      base,
+      counter,
+      Number(price),
+      Number(amount),
+      Number(expiryLedger ?? 0),
+      side
+    );
 
     if (!xdr) {
-      return NextResponse.json({ error: "Failed to build transaction — contract may not be deployed" }, { status: 502 });
+      return NextResponse.json(
+        { error: "Failed to build transaction — contract may not be deployed" },
+        { status: 502 }
+      );
     }
 
     logger.info("place order tx built", { user: userAddress, base, counter });
@@ -94,21 +114,34 @@ export async function DELETE(request: Request) {
     const { id, userAddress, txHash } = body;
 
     if (!id || !userAddress) {
-      return NextResponse.json({ error: "Missing required fields: id, userAddress" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields: id, userAddress" },
+        { status: 400 }
+      );
     }
 
     const { buildCancelOrExecuteTx } = await import("@/lib/soroban/limit-order");
     const xdr = await buildCancelOrExecuteTx(userAddress, Number(id), txHash);
 
     if (!xdr) {
-      return NextResponse.json({ error: "Failed to build transaction — contract may not be deployed" }, { status: 502 });
+      return NextResponse.json(
+        { error: "Failed to build transaction — contract may not be deployed" },
+        { status: 502 }
+      );
     }
 
-    logger.info("cancel/execute tx built", { orderId: id, user: userAddress, action: txHash ? "mark_executed" : "cancel_order" });
+    logger.info("cancel/execute tx built", {
+      orderId: id,
+      user: userAddress,
+      action: txHash ? "mark_executed" : "cancel_order",
+    });
     return NextResponse.json({ xdr, method: txHash ? "mark_executed" : "cancel_order" });
   } catch (error) {
     logger.error("cancel/execute build failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to build cancel/execute transaction" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to build cancel/execute transaction" },
+      { status: 502 }
+    );
   }
 }
 

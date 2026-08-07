@@ -8,7 +8,9 @@ export function PoolDepth({ pools, loading }: { pools: PoolSummary[]; loading?: 
   return (
     <Card className="p-5">
       <h3 className="font-display text-sm font-semibold">AMM Liquidity Pools</h3>
-      {loading ? <Skeleton className="mt-3 h-32 w-full" /> : pools.length === 0 ? (
+      {loading ? (
+        <Skeleton className="mt-3 h-32 w-full" />
+      ) : pools.length === 0 ? (
         <p className="text-foreground-faint mt-3 text-xs">No AMM pools for this pair.</p>
       ) : (
         <div className="mt-3 space-y-3">

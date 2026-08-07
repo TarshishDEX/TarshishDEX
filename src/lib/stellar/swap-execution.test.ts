@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  needsTrustline,
-  intermediatePath,
-  classifySwapError,
-} from "@/lib/stellar/swap-execution";
+import { needsTrustline, intermediatePath, classifySwapError } from "@/lib/stellar/swap-execution";
 import type { StellarAsset } from "@/lib/stellar/types";
 
 const XLM: StellarAsset = { code: "XLM", isNative: true };

@@ -28,9 +28,10 @@ export async function fetchLiquidityPools(
     totalShares: pool.total_shares,
     totalTrustlines: String(pool.total_trustlines),
     reserves: pool.reserves.map((r) => ({
-      asset: "code" in (r as unknown as Record<string, unknown>)
-        ? String((r as unknown as { code: string }).code)
-        : String(r.asset),
+      asset:
+        "code" in (r as unknown as Record<string, unknown>)
+          ? String((r as unknown as { code: string }).code)
+          : String(r.asset),
       amount: r.amount,
     })),
   }));

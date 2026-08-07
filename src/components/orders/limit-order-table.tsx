@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { formatNumber } from "@/lib/utils";
-import { cn } from "@/lib/utils";const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
+import { cn } from "@/lib/utils";
+const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
   buy: { label: "Buy", tone: "accent" },
   sell: { label: "Sell", tone: "primary" },
 };
@@ -44,8 +45,7 @@ function OraclePriceCell({
 
   const oraclePrice = obs.price / 1e7;
   const distancePct = ((oraclePrice - targetPrice) / targetPrice) * 100;
-  const fillable =
-    side === "buy" ? oraclePrice <= targetPrice : oraclePrice >= targetPrice;
+  const fillable = side === "buy" ? oraclePrice <= targetPrice : oraclePrice >= targetPrice;
 
   return (
     <div className="flex flex-col text-right">
@@ -158,7 +158,10 @@ export function LimitOrderTable() {
             <tbody>
               {sorted.map((order) => {
                 const total = order.price * order.amount;
-                const side = SIDE_LABELS[order.side] ?? { label: order.side, tone: "neutral" as const };
+                const side = SIDE_LABELS[order.side] ?? {
+                  label: order.side,
+                  tone: "neutral" as const,
+                };
                 return (
                   <tr
                     key={order.id}

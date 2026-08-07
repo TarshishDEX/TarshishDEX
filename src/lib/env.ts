@@ -4,9 +4,7 @@
  * rather than encountering cryptic runtime errors.
  */
 
-const requiredVars = [
-  "NEXT_PUBLIC_STELLAR_NETWORK",
-] as const;
+const requiredVars = ["NEXT_PUBLIC_STELLAR_NETWORK"] as const;
 
 const optionalVars = [
   "NEXT_PUBLIC_SITE_URL",

@@ -14,7 +14,10 @@ export async function GET(request: Request) {
   const ip = getClientIp(request);
   const rateLimit = checkRateLimit(ip, "/api/swap/quote");
   if (!rateLimit.allowed) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } });
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } }
+    );
   }
 
   const url = new URL(request.url);

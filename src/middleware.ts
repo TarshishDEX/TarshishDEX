@@ -22,7 +22,10 @@ export function middleware(request: NextRequest) {
   response.headers.set("Access-Control-Allow-Headers", "Content-Type, X-Request-Id, Authorization");
 
   if (process.env.NODE_ENV === "production") {
-    response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload"
+    );
   }
 
   return response;
