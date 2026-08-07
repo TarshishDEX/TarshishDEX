@@ -14,7 +14,12 @@ interface TransitionHeightProps {
  * Animate height changes when children mount/unmount.
  * Uses a ref-based approach for smooth CSS transitions.
  */
-export function TransitionHeight({ children, show, duration = 300, className }: TransitionHeightProps) {
+export function TransitionHeight({
+  children,
+  show,
+  duration = 300,
+  className,
+}: TransitionHeightProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | "auto">(0);
   const [mounted, setMounted] = useState(show);

@@ -35,7 +35,7 @@ export function RadioGroup({ options, value, onChange, name, className }: RadioG
             value={opt.value}
             checked={value === opt.value}
             onChange={() => onChange(opt.value)}
-            className="mt-0.5 accent-primary"
+            className="accent-primary mt-0.5"
           />
           <div>
             <span className="text-sm font-medium">{opt.label}</span>

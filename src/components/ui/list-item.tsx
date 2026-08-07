@@ -21,9 +21,7 @@ export function ListItem({ icon, primary, secondary, action, className }: ListIt
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{primary}</p>
-        {secondary && (
-          <p className="text-foreground-faint truncate text-xs">{secondary}</p>
-        )}
+        {secondary && <p className="text-foreground-faint truncate text-xs">{secondary}</p>}
       </div>
       {action && <span className="shrink-0">{action}</span>}
     </div>

@@ -39,13 +39,7 @@ export function Th({
   align?: "left" | "right";
 }) {
   return (
-    <th
-      className={cn(
-        "px-6 py-3 font-medium",
-        align === "right" && "text-right",
-        className
-      )}
-    >
+    <th className={cn("px-6 py-3 font-medium", align === "right" && "text-right", className)}>
       {children}
     </th>
   );

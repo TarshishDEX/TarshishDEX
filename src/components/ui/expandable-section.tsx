@@ -37,7 +37,7 @@ export function ExpandableSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-surface"
+        className="hover:bg-surface flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium transition-colors"
         aria-expanded={open}
       >
         <span>{title}</span>

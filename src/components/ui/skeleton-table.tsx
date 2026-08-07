@@ -35,11 +35,7 @@ export function SkeletonTable({ rows = 5, columns = 4, className }: SkeletonTabl
       {/* Header */}
       <div className="border-border flex gap-6 border-b px-6 py-3">
         {tableData.headers.map((h, i) => (
-          <div
-            key={i}
-            className="bg-surface-elevated h-3 rounded"
-            style={{ width: h.width }}
-          />
+          <div key={i} className="bg-surface-elevated h-3 rounded" style={{ width: h.width }} />
         ))}
       </div>
       {/* Rows */}

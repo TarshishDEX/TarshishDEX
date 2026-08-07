@@ -20,7 +20,7 @@ export function Avatar({ src, alt, size = "md", fallback, className }: AvatarPro
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl font-semibold",
-        "bg-gradient-to-br from-primary/30 to-accent/30 text-foreground",
+        "from-primary/30 to-accent/30 text-foreground bg-gradient-to-br",
         sizeMap[size],
         className
       )}
@@ -28,7 +28,14 @@ export function Avatar({ src, alt, size = "md", fallback, className }: AvatarPro
       aria-label={alt}
     >
       {src ? (
-        <img src={src} alt={alt} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
       ) : (
         <span>{initials}</span>
       )}

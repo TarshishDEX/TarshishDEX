@@ -18,7 +18,10 @@ function getImpactLevel(pct: number): ImpactLevel {
   return "critical";
 }
 
-const IMPACT_STYLES: Record<ImpactLevel, { tone: "success" | "warning" | "danger"; label: string }> = {
+const IMPACT_STYLES: Record<
+  ImpactLevel,
+  { tone: "success" | "warning" | "danger"; label: string }
+> = {
   low: { tone: "success", label: "Low impact" },
   medium: { tone: "success", label: "Medium impact" },
   high: { tone: "warning", label: "High impact" },

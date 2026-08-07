@@ -21,11 +21,9 @@ export function PageHeader({ title, description, actions, className }: PageHeade
     >
       <div>
         <h1 className="font-display text-3xl font-bold tracking-tight">{title}</h1>
-        {description && (
-          <p className="text-foreground-muted mt-2 max-w-2xl">{description}</p>
-        )}
+        {description && <p className="text-foreground-muted mt-2 max-w-2xl">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
 }

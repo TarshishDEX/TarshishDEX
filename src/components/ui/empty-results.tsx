@@ -11,7 +11,9 @@ interface EmptyResultsProps {
 export function EmptyResults({ query, className }: EmptyResultsProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
-      <span className="text-foreground-faint mb-3 text-3xl" aria-hidden="true">🔍</span>
+      <span className="text-foreground-faint mb-3 text-3xl" aria-hidden="true">
+        🔍
+      </span>
       <h3 className="font-display text-base font-semibold">No results found</h3>
       {query && (
         <p className="text-foreground-muted mt-2 text-sm">

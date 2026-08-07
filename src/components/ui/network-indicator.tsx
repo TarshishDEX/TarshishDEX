@@ -20,7 +20,8 @@ export function NetworkIndicator({ className }: { className?: string }) {
         return;
       }
       // Heuristic: if connection has effectiveType and it's slow-2g/2g, flag as slow.
-      const conn = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection;
+      const conn = (navigator as Navigator & { connection?: { effectiveType?: string } })
+        .connection;
       if (conn?.effectiveType && ["slow-2g", "2g"].includes(conn.effectiveType)) {
         setStatus("slow");
         return;
@@ -52,7 +53,12 @@ export function NetworkIndicator({ className }: { className?: string }) {
     <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", className)}>
       <span className="relative flex h-2 w-2">
         {status !== "offline" && (
-          <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-60", color)} />
+          <span
+            className={cn(
+              "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
+              color
+            )}
+          />
         )}
         <span className={cn("relative inline-flex h-2 w-2 rounded-full", color)} />
       </span>

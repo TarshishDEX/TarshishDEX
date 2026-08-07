@@ -18,7 +18,9 @@ const variantMap = {
  */
 export function Blockquote({ children, variant = "info", className }: BlockquoteProps) {
   return (
-    <blockquote className={cn("rounded-xl border-l-4 px-4 py-3 text-sm", variantMap[variant], className)}>
+    <blockquote
+      className={cn("rounded-xl border-l-4 px-4 py-3 text-sm", variantMap[variant], className)}
+    >
       {children}
     </blockquote>
   );

@@ -16,12 +16,23 @@ const variantMap = {
   danger: "bg-danger text-white",
 };
 
-export function BadgeCounter({ count, max = 99, variant = "primary", className }: BadgeCounterProps) {
+export function BadgeCounter({
+  count,
+  max = 99,
+  variant = "primary",
+  className,
+}: BadgeCounterProps) {
   const display = count > max ? `${max}+` : String(count);
   if (count <= 0) return null;
 
   return (
-    <span className={cn("inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-none", variantMap[variant], className)}>
+    <span
+      className={cn(
+        "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] leading-none font-bold",
+        variantMap[variant],
+        className
+      )}
+    >
       {display}
     </span>
   );

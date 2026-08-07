@@ -47,14 +47,28 @@ export function CopyButton({ text, label = "Copy", className }: CopyButtonProps)
     >
       {copied ? (
         <>
-          <svg className="h-3 w-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <svg
+            className="h-3 w-3"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
             <path d="M5 10l3.5 3.5L15 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Copied
         </>
       ) : (
         <>
-          <svg className="h-3 w-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <svg
+            className="h-3 w-3"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
             <rect x="6" y="6" width="11" height="11" rx="2" />
             <path d="M3 14V5a2 2 0 012-2h9" strokeLinecap="round" />
           </svg>

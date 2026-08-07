@@ -14,7 +14,13 @@ interface CheckboxCardProps {
  * Card-style checkbox — the entire card is clickable.
  * Used for selecting options in settings panels.
  */
-export function CheckboxCard({ checked, onChange, title, description, className }: CheckboxCardProps) {
+export function CheckboxCard({
+  checked,
+  onChange,
+  title,
+  description,
+  className,
+}: CheckboxCardProps) {
   return (
     <label
       className={cn(
@@ -30,7 +36,7 @@ export function CheckboxCard({ checked, onChange, title, description, className 
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="mt-0.5 accent-primary"
+          className="accent-primary mt-0.5"
         />
         <div>
           <p className="text-sm font-semibold">{title}</p>

@@ -14,7 +14,7 @@ export function InputGroup({ prepend, append, children, className }: InputGroupP
   return (
     <div
       className={cn(
-        "flex items-center rounded-xl border border-border bg-surface transition-colors focus-within:border-primary/60 focus-within:ring-primary/20 focus-within:ring-2",
+        "border-border bg-surface focus-within:border-primary/60 focus-within:ring-primary/20 flex items-center rounded-xl border transition-colors focus-within:ring-2",
         className
       )}
     >

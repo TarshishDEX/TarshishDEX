@@ -31,7 +31,14 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
         disabled={page <= 1}
         aria-label="Previous page"
       >
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
           <path d="M12 5l-5 5 5 5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Button>
@@ -67,7 +74,14 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
         disabled={page >= totalPages}
         aria-label="Next page"
       >
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
           <path d="M8 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Button>

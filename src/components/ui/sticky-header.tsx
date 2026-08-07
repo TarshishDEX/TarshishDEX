@@ -11,7 +11,7 @@ interface StickyHeaderProps {
  */
 export function StickyHeader({ children, className }: StickyHeaderProps) {
   return (
-    <div className={cn("sticky top-16 z-10 bg-background/95 backdrop-blur-sm", className)}>
+    <div className={cn("bg-background/95 sticky top-16 z-10 backdrop-blur-sm", className)}>
       {children}
     </div>
   );

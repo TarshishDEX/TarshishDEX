@@ -42,13 +42,24 @@ export function ShareLink({ url, title, text, className }: ShareLinkProps) {
       type="button"
       onClick={handleShare}
       className={cn(
-        "inline-flex items-center gap-1.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors",
+        "text-foreground-muted hover:text-foreground inline-flex items-center gap-1.5 text-xs font-medium transition-colors",
         className
       )}
       aria-label="Share link"
     >
-      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        <path d="M13 4l4 4m0 0l-4 4m4-4H7a4 4 0 000 8" strokeLinecap="round" strokeLinejoin="round" />
+      <svg
+        className="h-3.5 w-3.5"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        aria-hidden="true"
+      >
+        <path
+          d="M13 4l4 4m0 0l-4 4m4-4H7a4 4 0 000 8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
       {copied ? "Copied!" : "Share"}
     </button>

@@ -13,11 +13,41 @@ interface Command {
 }
 
 const COMMANDS: Command[] = [
-  { id: "swap", label: "Swap", description: "Trade assets on the native DEX", href: "/swap", icon: "⇄" },
-  { id: "markets", label: "Markets", description: "View market data and orderbooks", href: "/markets", icon: "◈" },
-  { id: "portfolio", label: "Portfolio", description: "Track balances and trade history", href: "/portfolio", icon: "◉" },
-  { id: "assets", label: "Assets", description: "Browse Stellar asset catalog", href: "/assets", icon: "▥" },
-  { id: "analytics", label: "Analytics", description: "Price charts and volume data", href: "/analytics", icon: "{}" },
+  {
+    id: "swap",
+    label: "Swap",
+    description: "Trade assets on the native DEX",
+    href: "/swap",
+    icon: "⇄",
+  },
+  {
+    id: "markets",
+    label: "Markets",
+    description: "View market data and orderbooks",
+    href: "/markets",
+    icon: "◈",
+  },
+  {
+    id: "portfolio",
+    label: "Portfolio",
+    description: "Track balances and trade history",
+    href: "/portfolio",
+    icon: "◉",
+  },
+  {
+    id: "assets",
+    label: "Assets",
+    description: "Browse Stellar asset catalog",
+    href: "/assets",
+    icon: "▥",
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    description: "Price charts and volume data",
+    href: "/analytics",
+    icon: "{}",
+  },
 ];
 
 /**
@@ -81,11 +111,11 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/60 backdrop-blur-sm pt-[20vh]"
+      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/60 pt-[20vh] backdrop-blur-sm"
       onClick={() => setOpen(false)}
     >
       <div
-        className="glass-card mx-4 w-full max-w-lg overflow-hidden rounded-2xl shadow-2xl animate-fade-in-up"
+        className="glass-card animate-fade-in-up mx-4 w-full max-w-lg overflow-hidden rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -97,7 +127,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Type a command or search…"
-            className="w-full bg-transparent text-sm placeholder:text-foreground-faint outline-none"
+            className="placeholder:text-foreground-faint w-full bg-transparent text-sm outline-none"
             onKeyDown={(e) => {
               if (e.key === "Escape") setOpen(false);
               if (e.key === "ArrowDown") {
@@ -128,16 +158,14 @@ export function CommandPalette() {
                   i === safeIndex ? "bg-primary-soft" : "hover:bg-surface-elevated"
                 )}
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-elevated text-sm">
+                <span className="bg-surface-elevated flex h-8 w-8 items-center justify-center rounded-lg text-sm">
                   {cmd.icon}
                 </span>
                 <div>
                   <p className="text-sm font-semibold">{cmd.label}</p>
                   <p className="text-foreground-faint text-xs">{cmd.description}</p>
                 </div>
-                <span className="text-foreground-faint ml-auto text-xs font-mono">
-                  {cmd.href}
-                </span>
+                <span className="text-foreground-faint ml-auto font-mono text-xs">{cmd.href}</span>
               </button>
             ))
           )}

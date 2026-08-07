@@ -24,7 +24,7 @@ export function IconButton({ onClick, label, children, disabled, className }: Ic
         disabled={disabled}
         aria-label={label}
         className={cn(
-          "inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground-muted transition-colors",
+          "text-foreground-muted inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
           "hover:bg-surface-elevated hover:text-foreground",
           "disabled:cursor-not-allowed disabled:opacity-40",
           "focus-visible:ring-primary/40 ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-1",

@@ -12,7 +12,7 @@ interface FieldErrorProps {
 export function FieldError({ error, className }: FieldErrorProps) {
   if (!error) return null;
   return (
-    <p className={cn("text-danger mt-1.5 text-xs animate-fade-in", className)} role="alert">
+    <p className={cn("text-danger animate-fade-in mt-1.5 text-xs", className)} role="alert">
       {error}
     </p>
   );

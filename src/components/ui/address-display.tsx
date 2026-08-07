@@ -32,7 +32,7 @@ export function AddressDisplay({
         type="button"
         onClick={() => copy(address)}
         className={cn(
-          "inline-flex items-center gap-1.5 font-mono text-sm transition-colors hover:text-primary",
+          "hover:text-primary inline-flex items-center gap-1.5 font-mono text-sm transition-colors",
           className
         )}
         aria-label={`Copy address ${address}`}

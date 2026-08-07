@@ -9,9 +9,5 @@ interface InputHintProps {
  * Standard hint text displayed below form inputs.
  */
 export function InputHint({ children, className }: InputHintProps) {
-  return (
-    <p className={cn("text-foreground-faint mt-1.5 text-xs", className)}>
-      {children}
-    </p>
-  );
+  return <p className={cn("text-foreground-faint mt-1.5 text-xs", className)}>{children}</p>;
 }

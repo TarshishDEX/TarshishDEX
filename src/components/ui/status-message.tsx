@@ -18,7 +18,14 @@ const variantStyles = {
  */
 export function StatusMessage({ message, variant = "info", className }: StatusMessageProps) {
   return (
-    <div className={cn("rounded-xl border px-4 py-3 text-sm font-medium", variantStyles[variant], className)} role="alert">
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3 text-sm font-medium",
+        variantStyles[variant],
+        className
+      )}
+      role="alert"
+    >
       {message}
     </div>
   );

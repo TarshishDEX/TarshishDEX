@@ -37,7 +37,10 @@ export function ProgressBar({
       aria-valuemax={max}
     >
       <div
-        className={cn("h-full rounded-full transition-all duration-500 ease-out", variantMap[variant])}
+        className={cn(
+          "h-full rounded-full transition-all duration-500 ease-out",
+          variantMap[variant]
+        )}
         style={{ width: `${pct}%` }}
       />
     </div>

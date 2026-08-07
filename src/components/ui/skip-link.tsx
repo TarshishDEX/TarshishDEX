@@ -10,13 +10,17 @@ interface SkipLinkProps {
  * Skip-to-content link for keyboard navigation accessibility.
  * Visible on focus, hidden otherwise.
  */
-export function SkipLink({ href = "#main-content", label = "Skip to main content", className }: SkipLinkProps) {
+export function SkipLink({
+  href = "#main-content",
+  label = "Skip to main content",
+  className,
+}: SkipLinkProps) {
   return (
     <a
       href={href}
       className={cn(
         "sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300]",
-        "focus:bg-primary focus:text-white focus:rounded-xl focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg",
+        "focus:bg-primary focus:rounded-xl focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg",
         className
       )}
     >

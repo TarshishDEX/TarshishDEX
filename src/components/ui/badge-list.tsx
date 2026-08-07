@@ -20,9 +20,7 @@ export function BadgeList({ items, max = 3, className }: BadgeListProps) {
           {item.label}
         </Badge>
       ))}
-      {remaining > 0 && (
-        <Badge tone="neutral">+{remaining} more</Badge>
-      )}
+      {remaining > 0 && <Badge tone="neutral">+{remaining} more</Badge>}
     </span>
   );
 }
