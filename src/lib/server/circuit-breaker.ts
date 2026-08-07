@@ -1,73 +1,64 @@
 /**
- * Simple circuit breaker for external API calls (Horizon, Soroban RPC).
- * When `failureThreshold` consecutive calls fail, the breaker opens and
- * fast-fails subsequent calls for `cooldownMs`. After the cooldown, one
- * probe request (half-open) is allowed through to test recovery.
+ * Circuit breaker pattern implementation.
+ * Prevents cascading failures by temporarily stopping requests to
+ * failing services after a threshold of errors is reached.
  */
 
-type CircuitState = "closed" | "open" | "half-open";
-
-interface CircuitBreakerOptions {
-  failureThreshold?: number;
-  cooldownMs?: number;
-  name?: string;
+interface CircuitBreaker {
+  failures: number;
+  lastFailure: number;
+  state: "closed" | "open" | "half-open";
 }
 
-export class CircuitBreaker {
-  private state: CircuitState = "closed";
-  private failureCount = 0;
-  private lastFailureTime = 0;
-  private readonly failureThreshold: number;
-  private readonly cooldownMs: number;
-  readonly name: string;
+const breakers = new Map<string, CircuitBreaker>();
 
-  constructor(options: CircuitBreakerOptions = {}) {
-    this.failureThreshold = options.failureThreshold ?? 5;
-    this.cooldownMs = options.cooldownMs ?? 30_000;
-    this.name = options.name ?? "default";
+/**
+ * Execute a function with circuit breaker protection.
+ * After `threshold` failures within `windowMs`, the circuit opens
+ * and requests fail fast for `timeoutMs` before attempting recovery.
+ */
+export async function withCircuitBreaker<T>(
+  name: string,
+  fn: () => Promise<T>,
+  options: { threshold?: number; windowMs?: number; timeoutMs?: number } = {}
+): Promise<T> {
+  const { threshold = 5, windowMs = 30_000, timeoutMs = 60_000 } = options;
+
+  let breaker = breakers.get(name);
+  if (!breaker) {
+    breaker = { failures: 0, lastFailure: 0, state: "closed" };
+    breakers.set(name, breaker);
   }
 
-  /** Execute fn with circuit breaker protection. Throws if the circuit is open. */
-  async call<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.state === "open") {
-      if (Date.now() - this.lastFailureTime > this.cooldownMs) {
-        this.state = "half-open";
-      } else {
-        throw new CircuitOpenError(this.name);
-      }
+  const now = Date.now();
+
+  // Reset if window expired
+  if (breaker.state === "open" && now - breaker.lastFailure > timeoutMs) {
+    breaker.state = "half-open";
+    breaker.failures = 0;
+  }
+
+  if (breaker.state === "open") {
+    throw new Error(`Circuit breaker "${name}" is open`);
+  }
+
+  try {
+    const result = await fn();
+    breaker.state = "closed";
+    breaker.failures = 0;
+    return result;
+  } catch (error) {
+    breaker.failures++;
+    breaker.lastFailure = now;
+
+    if (breaker.failures >= threshold) {
+      breaker.state = "open";
     }
-
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
-    }
-  }
-
-  private onSuccess(): void {
-    this.state = "closed";
-    this.failureCount = 0;
-  }
-
-  private onFailure(): void {
-    this.failureCount++;
-    this.lastFailureTime = Date.now();
-    if (this.failureCount >= this.failureThreshold) {
-      this.state = "open";
-    }
-  }
-
-  get isOpen(): boolean {
-    return this.state === "open";
+    throw error;
   }
 }
 
-export class CircuitOpenError extends Error {
-  constructor(breakerName: string) {
-    super(`Circuit breaker "${breakerName}" is open — fast-failing`);
-    this.name = "CircuitOpenError";
-  }
+/** Reset a circuit breaker (useful in tests). */
+export function resetCircuitBreaker(name: string): void {
+  breakers.delete(name);
 }
