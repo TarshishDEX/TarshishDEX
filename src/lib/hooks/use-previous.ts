@@ -9,8 +9,8 @@ import { useState, useLayoutEffect } from "react";
 export function usePrevious<T>(value: T): T | undefined {
   const [prev, setPrev] = useState<T | undefined>(undefined);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional previous-value tracking
   useLayoutEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setPrev(value);
   }, [value]);
 

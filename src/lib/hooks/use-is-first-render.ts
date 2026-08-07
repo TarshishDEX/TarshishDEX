@@ -9,8 +9,8 @@ import { useState, useLayoutEffect } from "react";
 export function useIsFirstRender(): boolean {
   const [isFirst, setIsFirst] = useState(true);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time state init
   useLayoutEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setIsFirst(false);
   }, []);
 
