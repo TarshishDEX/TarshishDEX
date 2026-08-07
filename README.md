@@ -381,3 +381,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - **Wallet**: Stellar Wallets Kit + Freighter
 - **Testing**: Vitest + Playwright
 - **CI/CD**: GitHub Actions
+
+---
+
+Built with ❤️ for the Stellar ecosystem.
