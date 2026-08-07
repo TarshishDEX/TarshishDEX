@@ -21,10 +21,14 @@ export function TransitionHeight({ children, show, duration = 300, className }: 
 
   useEffect(() => {
     if (show) {
-      setMounted(true);
-      // Wait a frame for the DOM to update
+      // Defer mount state update to the next frame so it isn't called
+      // synchronously in the effect body.
       requestAnimationFrame(() => {
-        if (ref.current) setHeight(ref.current.scrollHeight);
+        setMounted(true);
+        // After mount, read the DOM height and transition in.
+        requestAnimationFrame(() => {
+          if (ref.current) setHeight(ref.current.scrollHeight);
+        });
       });
     } else {
       setHeight(0);
