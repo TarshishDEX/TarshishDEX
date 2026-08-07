@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface Notification {
@@ -21,16 +21,6 @@ const MAX_NOTIFICATIONS = 50;
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
-
-  const addNotification = useCallback((title: string, body: string, type: Notification["type"] = "system") => {
-    setNotifications((prev) => {
-      const updated = [
-        { id: crypto.randomUUID(), title, body, type, timestamp: Date.now(), read: false },
-        ...prev,
-      ].slice(0, MAX_NOTIFICATIONS);
-      return updated;
-    });
-  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
