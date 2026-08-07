@@ -1,61 +1,22 @@
 /**
- * Cache-Control header builders for API responses.
- * Helps CDNs and browsers cache appropriately based on data freshness.
+ * Cache control header utilities.
+ * Provides consistent cache policies for API responses.
  */
 
-interface CachePolicy {
-  maxAgeSec: number;
-  staleWhileRevalidateSec?: number;
-  staleIfErrorSec?: number;
-  isPublic?: boolean;
-}
+/** Cache-Control: no-store — for dynamic data that must be fresh every request. */
+export const NO_CACHE = "no-store, must-revalidate";
 
-/**
- * Build a Cache-Control header value from a policy.
- * Uses stale-while-revalidate for data that can be served slightly stale
- * while a background refresh happens.
- */
-export function buildCacheControl(policy: CachePolicy): string {
-  const directives: string[] = [];
+/** Cache-Control: short-lived (5s) for frequently changing data like prices. */
+export const SHORT_CACHE = "public, max-age=5, s-maxage=5, stale-while-revalidate=10";
 
-  directives.push(policy.isPublic !== false ? "public" : "private");
-  directives.push(`max-age=${policy.maxAgeSec}`);
+/** Cache-Control: medium-lived (60s) for semi-static data like asset lists. */
+export const MEDIUM_CACHE = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
 
-  if (policy.staleWhileRevalidateSec) {
-    directives.push(`stale-while-revalidate=${policy.staleWhileRevalidateSec}`);
-  }
+/** Cache-Control: long-lived (1h) for static data like contract metadata. */
+export const LONG_CACHE = "public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200";
 
-  if (policy.staleIfErrorSec) {
-    directives.push(`stale-if-error=${policy.staleIfErrorSec}`);
-  }
+/** ETag header name. */
+export const ETAG_HEADER = "ETag";
 
-  return directives.join(", ");
-}
-
-/** Short-lived cache for market data that changes frequently. */
-export const MARKET_DATA_CACHE: CachePolicy = {
-  maxAgeSec: 15,
-  staleWhileRevalidateSec: 30,
-  staleIfErrorSec: 60,
-  isPublic: true,
-};
-
-/** Medium cache for asset catalog data (changes infrequently). */
-export const ASSET_CATALOG_CACHE: CachePolicy = {
-  maxAgeSec: 60,
-  staleWhileRevalidateSec: 120,
-  staleIfErrorSec: 300,
-  isPublic: true,
-};
-
-/** Long cache for health checks. */
-export const HEALTH_CACHE: CachePolicy = {
-  maxAgeSec: 30,
-  isPublic: true,
-};
-
-/** No caching for user-specific data. */
-export const NO_CACHE: CachePolicy = {
-  maxAgeSec: 0,
-  isPublic: false,
-};
+/** If-None-Match header name for conditional requests. */
+export const IF_NONE_MATCH = "If-None-Match";
