@@ -1,26 +1,34 @@
 /**
- * Safe JSON operations that never throw.
+ * Safe JSON parsing utilities.
+ * Prevents runtime errors from malformed JSON inputs.
  */
 
-/** Parse JSON safely, returning undefined on failure instead of throwing. */
-export function safeJsonParse<T = unknown>(json: string): T | undefined {
+/**
+ * Parse a JSON string safely, returning a default value on failure.
+ */
+export function safeJsonParse<T>(json: string, fallback: T): T {
   try {
     return JSON.parse(json) as T;
   } catch {
-    return undefined;
+    return fallback;
   }
 }
 
-/** Stringify to JSON safely with a fallback value. */
+/**
+ * Parse a JSON string and return the parsed value or null.
+ */
+export function tryJsonParse<T = unknown>(json: string): T | null {
+  return safeJsonParse<T | null>(json, null);
+}
+
+/**
+ * Stringify a value safely, returning "{}" on circular references
+ * or other serialization failures.
+ */
 export function safeJsonStringify(value: unknown, fallback = "{}"): string {
   try {
     return JSON.stringify(value);
   } catch {
     return fallback;
   }
-}
-
-/** Parse with a default value on failure. */
-export function safeJsonParseWithDefault<T>(json: string, defaultValue: T): T {
-  return safeJsonParse<T>(json) ?? defaultValue;
 }
