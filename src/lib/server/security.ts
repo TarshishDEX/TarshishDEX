@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { v4 } from "uuid";
 
 // Inline UUID v4 generator – avoids pulling in the `uuid` package for one function.
 function generateRequestId(): string {
