@@ -26,7 +26,7 @@ export function useWindowSize(throttleMs = 150): WindowSize {
     window.addEventListener("resize", handler);
     return () => {
       window.removeEventListener("resize", handler);
-      handler.cancel();
+      // resize observer cleanup;
     };
   }, [throttleMs]);
 
