@@ -581,7 +581,7 @@ mod test {
 #[cfg(test)]
 mod gas_benchmarks {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Address, Env, Symbol};
+    use soroban_sdk::{testutils::Address as _, Address, Env};
 
     fn setup() -> (Env, Address, Address, TradingPreferencesClient<'static>) {
         let env = Env::default();
@@ -613,9 +613,9 @@ mod gas_benchmarks {
         let contract_id = env.register(TradingPreferences, ());
         let client = TradingPreferencesClient::new(&env, &contract_id);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.initialize(&admin);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] initialize: {cost} cpu instructions");
     }
@@ -625,9 +625,9 @@ mod gas_benchmarks {
         let (env, _admin, account, client) = setup();
         let p = prefs(&env);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.set_preferences(&account, &p);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_preferences (new): {cost} cpu instructions");
     }
@@ -641,9 +641,9 @@ mod gas_benchmarks {
         let mut updated = prefs(&env);
         updated.max_slippage_bps = 75;
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.set_preferences(&account, &updated);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_preferences (update): {cost} cpu instructions");
     }
@@ -654,9 +654,9 @@ mod gas_benchmarks {
         let p = prefs(&env);
         client.set_preferences(&account, &p);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_preferences(&account);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_preferences: {cost} cpu instructions");
     }
@@ -667,9 +667,9 @@ mod gas_benchmarks {
         let p = prefs(&env);
         client.set_preferences(&account, &p);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         client.remove_preferences(&account);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] remove_preferences: {cost} cpu instructions");
     }
@@ -682,9 +682,9 @@ mod gas_benchmarks {
             accounts.push_back(Address::generate(&env));
         }
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.batch_get_preferences(&accounts);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] batch_get_preferences (10 accts): {cost} cpu instructions");
     }
@@ -693,20 +693,20 @@ mod gas_benchmarks {
     fn bench_preference_count() {
         let (env, _admin, _, client) = setup();
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_preference_count();
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_preference_count: {cost} cpu instructions");
     }
 
     #[test]
     fn bench_set_version() {
-        let (env, admin, _, client) = setup();
+        let (env, _admin, _, client) = setup();
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         assert!(client.try_set_version(&5).is_ok());
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
     }
@@ -717,21 +717,21 @@ mod gas_benchmarks {
         let p = prefs(&env);
         client.set_preferences(&account, &p);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.paginated_get_preferences(&10, &0);
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] paginated_get_preferences (limit=10): {cost} cpu instructions");
     }
 
     #[test]
     fn bench_get_version() {
-        let (env, admin, _, client) = setup();
+        let (env, _admin, _, client) = setup();
         client.set_version(&3);
 
-        let before = env.budget().cpu_instruction_cost();
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.get_version();
-        let after = env.budget().cpu_instruction_cost();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_version: {cost} cpu instructions");
     }
