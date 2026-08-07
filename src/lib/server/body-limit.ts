@@ -1,32 +1,23 @@
 /**
- * API route body size limits applied via the Next.js route segment config.
- *
- * Import and spread into any API route that accepts request bodies.
- *
- * Usage in a route.ts:
- *   export const bodySizeLimit = API_BODY_LIMIT;
- *
- * Or directly:
- *   export const maxDuration = 15;
- *   export { bodyParser } from "next/dist/server/api-utils"; // not needed
+ * Request body size limits.
+ * Prevents memory exhaustion from oversized request payloads.
  */
 
-/** 1 MB — suitable for most JSON payloads. */
-export const API_BODY_LIMIT_1MB = "1mb" as const;
+/** Maximum JSON body size: 1MB. */
+export const MAX_JSON_BODY_SIZE = 1_048_576;
 
-/** 100 KB — suitable for lightweight payloads (preferences, etc.). */
-export const API_BODY_LIMIT_100KB = "100kb" as const;
+/** Maximum URL-encoded body size: 256KB. */
+export const MAX_URLENCODED_BODY_SIZE = 262_144;
 
 /**
- * Route segment config for API routes that accept request bodies.
- * Spread this into the route module's exports.
- *
- * Example:
- *   export { bodySizeLimit } from "@/lib/server/body-limit";
- *   // → sets bodyParser: { sizeLimit: '1mb' }
+ * Check if a Content-Length header exceeds the configured limit.
+ * Returns true if the body is within the limit.
  */
-export const bodySizeLimit = {
-  bodyParser: {
-    sizeLimit: API_BODY_LIMIT_1MB,
-  },
-} as const;
+export function isBodyWithinLimit(
+  contentLength: string | null,
+  maxSize: number = MAX_JSON_BODY_SIZE
+): boolean {
+  if (!contentLength) return true; // No Content-Length — assume streaming
+  const length = parseInt(contentLength, 10);
+  return !isNaN(length) && length <= maxSize;
+}
