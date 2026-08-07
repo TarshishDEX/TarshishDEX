@@ -5,7 +5,8 @@
 
 type Listener<T> = (data: T) => void;
 
-class TypedEventEmitter<Events extends Record<string, unknown>> {
+class TypedEventEmitter<Events extends Record<string, unknown> & {}
+> {
   private listeners = new Map<keyof Events, Set<Listener<unknown>>>();
 
   /** Subscribe to an event. Returns an unsubscribe function. */
