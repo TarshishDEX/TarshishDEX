@@ -1,43 +1,41 @@
 /**
- * Input sanitization helpers for API route parameters.
- * These provide defence-in-depth against injection attacks even though
- * Stellar addresses and asset codes have well-defined formats.
+ * Input sanitization utilities.
+ * Prevents XSS and injection attacks by sanitizing user-supplied values.
  */
 
-const MAX_STRING_LENGTH = 200;
+/** Characters that are safe for Stellar asset codes and account IDs. */
+const STELLAR_SAFE_PATTERN = /^[A-Za-z0-9:_-]+$/;
 
-/** Strip control characters and enforce a reasonable max length. */
-export function sanitizeString(input: string): string {
+/**
+ * Sanitize a string by removing HTML tags and dangerous characters.
+ * Returns an empty string for null/undefined inputs.
+ */
+export function sanitizeString(input: unknown): string {
+  if (typeof input !== "string") return "";
   return input
-    .replace(/[\x00-\x1F\x7F]/g, "") // Strip control characters
-    .replace(/[\u200B-\u200D\uFEFF]/g, "") // Strip zero-width chars
-    .trim()
-    .slice(0, MAX_STRING_LENGTH);
+    .replace(/<[^>]*>/g, "") // Remove HTML tags
+    .replace(/[<>"'&]/g, "") // Remove dangerous characters
+    .trim();
 }
 
-/** Validate that a string is safe for use in file paths or identifiers. */
-export function isSafeIdentifier(input: string): boolean {
-  return /^[a-zA-Z0-9_-]+$/.test(input);
+/**
+ * Validate that a string contains only Stellar-safe characters.
+ * Used for asset codes, account IDs, and other on-chain identifiers.
+ */
+export function isValidStellarIdentifier(value: string): boolean {
+  return STELLAR_SAFE_PATTERN.test(value) && value.length <= 128;
 }
 
-/** Ensure a numeric limit parameter is within reasonable bounds. */
-export function clampLimit(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, Math.floor(value)));
+/**
+ * Sanitize a numeric string — returns the number or throws if invalid.
+ */
+export function parseNumericParam(value: unknown): number | null {
+  if (typeof value !== "string") return null;
+  const num = Number(value);
+  return Number.isFinite(num) && num >= 0 ? num : null;
 }
 
-/** Strip HTML tags from a string (basic XSS defence). */
-export function stripHtml(input: string): string {
-  return input.replace(/<[^>]*>/g, "");
-}
-
-/** Sanitize an object's string values recursively (shallow + one level deep). */
-export function sanitizeParams<T extends Record<string, unknown>>(params: T): T {
-  const result = { ...params };
-  for (const key of Object.keys(result)) {
-    const value = result[key];
-    if (typeof value === "string") {
-      result[key as keyof T] = stripHtml(sanitizeString(value)) as T[keyof T];
-    }
-  }
-  return result;
+/** Limit string length to prevent DoS via oversized inputs. */
+export function truncateString(value: string, maxLength: number): string {
+  return value.slice(0, maxLength);
 }
