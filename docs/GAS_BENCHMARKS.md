@@ -12,6 +12,7 @@
 | `set_preferences` (new) | 62,166 | 1 persistent write + 1 instance read/write + event |
 | `set_preferences` (update) | ~0* | Only overwrites existing persistent entry |
 | `get_preferences` | ~0* | Single persistent read |
+| `paginated_get_preferences` (limit=10) | ~0* | Cursor-based; max 50/page; safe for large datasets |
 | `remove_preferences` | ~0* | Persistent delete + instance read/write |
 | `batch_get_preferences` (10 accts) | 166,442 | Scales linearly; ~16.6k per account |
 | `get_preference_count` | ~0* | Single instance read |
@@ -97,8 +98,36 @@ Soroban charges fees in stroops based on:
 | Set preferences (new user) | ~0.003 |
 | Publish price (first per pair) | ~0.005 |
 | Publish price (subsequent) | ~0.002 |
+| Paginated get preferences (10) | ~0.001 |
 | Batch get 10 preferences | ~0.001 |
 | Grant publisher | ~0.001 |
 
 > **Ultra-low fees**: All operations stay well under 0.01 XLM,
 > making TarshishDEX accessible even during network congestion.
+
+## WASM Binary Sizes (release build, wasm32v1-none)
+
+| Contract | Size | Size (KB) |
+|---|---|---|
+| `trading_preferences.wasm` | 17,958 bytes | ~17.5 KB |
+| `market_oracle.wasm` | 26,970 bytes | ~26.3 KB |
+
+> Both contracts fit well within Soroban's ~64 KB deploy limit.
+> The release profile uses `opt-level = "z"`, `lto = true`,
+> `strip = "symbols"`, `codegen-units = 1`, and `panic = "abort"`
+> for minimal, deterministic binaries.
+
+## E2E Integration Tests
+
+Run with:
+```bash
+cargo test -p market-oracle --test e2e -- --nocapture
+```
+
+Covers full TarshishDEX workflows:
+- Admin initialization and transfer
+- User preference lifecycle (set, read, paginate, remove)
+- Publisher access grant/revoke and price publishing
+- Batch reads for frontend dashboards
+- Observation history tracking
+- Multi-user preference pagination
