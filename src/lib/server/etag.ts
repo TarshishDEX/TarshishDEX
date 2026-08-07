@@ -1,44 +1,31 @@
-import { createHash } from "crypto";
-
 /**
- * Generate a weak ETag from response data for conditional requests.
- * Clients send If-None-Match with the last ETag they received; if the
- * data hasn't changed, we return 304 Not Modified.
+ * ETag generation and validation utilities.
+ * Enables conditional requests (304 Not Modified) for API responses.
  */
 
 /**
- * Compute a SHA-256 based ETag for response data.
- * The ETag is a hex digest of the JSON-serialized data.
+ * Generate a weak ETag from a value.
+ * Uses a simple hash approach — for production, consider a proper
+ * hashing function like SHA-256 for larger payloads.
  */
-export function computeETag(data: unknown): string {
-  const json = typeof data === "string" ? data : JSON.stringify(data);
-  return createHash("sha256").update(json).digest("hex").slice(0, 16);
-}
-
-/**
- * Check if the client's If-None-Match header matches the current ETag.
- * Returns true if we should send a 304 Not Modified response.
- */
-export function isNotModified(request: Request, currentETag: string): boolean {
-  const ifNoneMatch = request.headers.get("if-none-match");
-  if (!ifNoneMatch) return false;
-
-  // Handle multiple ETags in the header
-  const tags = ifNoneMatch.split(",").map((t) => t.trim().replace(/^W\//, ""));
-  return tags.includes(currentETag);
-}
-
-/**
- * Apply ETag and Cache-Control headers to a response.
- * Returns a 304 Not Modified if the client already has the latest version.
- */
-export function applyETag(request: Request, response: Response, data: unknown): Response {
-  const etag = computeETag(data);
-
-  if (isNotModified(request, etag)) {
-    return new Response(null, { status: 304, headers: response.headers });
+export function generateETag(data: unknown): string {
+  const str = JSON.stringify(data);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash + char) | 0;
   }
+  return `W/"${Math.abs(hash).toString(36)}"`;
+}
 
-  response.headers.set("ETag", `"${etag}"`);
-  return response;
+/**
+ * Check if an ETag matches the If-None-Match request header.
+ * Returns true if the content hasn't changed (304 should be returned).
+ */
+export function etagMatches(etag: string, ifNoneMatch: string | null): boolean {
+  if (!ifNoneMatch) return false;
+  // Support both weak and strong ETags
+  const normalized = ifNoneMatch.replace(/^W\//, "");
+  const normalizedEtag = etag.replace(/^W\//, "");
+  return normalized === normalizedEtag || ifNoneMatch === "*";
 }
