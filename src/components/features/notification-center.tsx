@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface Notification {
@@ -11,8 +11,6 @@ interface Notification {
   timestamp: number;
   read: boolean;
 }
-
-const MAX_NOTIFICATIONS = 50;
 
 /**
  * In-memory notification center. Tracks swap completions, price alert
