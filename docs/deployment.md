@@ -2,8 +2,9 @@
 
 ## Soroban contracts — Stellar Testnet
 
-Status: **live** — both contracts deployed, initialized, and exercised on Stellar
-Testnet (ledger 3918793+, August 2026).
+Status: **live** — all three contracts deployed, initialized, and exercised on Stellar
+Testnet (ledger 3918793+, August 2026). The limit-order contract awaits its first
+deployment (WASM compiled and tested, pending Testnet deploy).
 
 The deployer account is `GC7J7IBB6FY55R4ZFA2UNCBNEF466CHD2R7RQRH2NHC2YPY6M355XURR`,
 created and funded via the Testnet friendbot (10,000 XLM).
@@ -23,7 +24,7 @@ STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh  # secret key
 
 The `Deploy` workflow automates the same flow: it installs the pinned
 `stellar-cli v27.1.0` tarball, builds the wasm artifacts, deploys +
-initializes both contracts, and uploads a manifest artifact.
+initializes all three contracts, and uploads a manifest artifact.
 
 Required repository secrets:
 
@@ -35,7 +36,7 @@ Required repository secrets:
 | `VERCEL_PROJECT_ID`      | Vercel project id (frontend job only)                     |
 
 The script (and workflow) optionally writes machine-readable contract IDs to
-`$CONTRACT_IDS_FILE` (`TRADING_PREFS_ID` / `ORACLE_ID` / `NETWORK` lines) for
+`$CONTRACT_IDS_FILE` (`TRADING_PREFS_ID` / `ORACLE_ID` / `LIMIT_ORDER_ID` / `NETWORK` lines) for
 CI consumers, right after deployment.
 
 Run **Actions → Deploy → Run workflow**, choosing the network and whether to
@@ -47,12 +48,14 @@ also deploy the frontend.
 | ------------------- | ---------------------------------------------------------- | ------- |
 | trading-preferences | `CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM` | Testnet |
 | market-oracle       | `CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V` | Testnet |
+| limit-order         | *pending deployment*                                       | Testnet |
 
 Copy the IDs into `.env.local`:
 
 ```bash
 NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
 NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
+NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=
 ```
 
 ### Contract-call transactions
@@ -83,6 +86,7 @@ Contract explorer:
 
 - https://lab.stellar.org/r/testnet/contract/CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
 - https://lab.stellar.org/r/testnet/contract/CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
+- https://lab.stellar.org/r/testnet/contract/ (limit-order — pending deployment)
 
 ## Frontend
 
