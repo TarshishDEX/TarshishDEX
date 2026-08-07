@@ -30,6 +30,7 @@ function getStoredTheme(): Theme {
 }
 
 function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") return;
   document.documentElement.classList.toggle("light", theme === "light");
   document.documentElement.style.colorScheme = theme;
 }
