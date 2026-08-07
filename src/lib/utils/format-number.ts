@@ -1,40 +1,40 @@
 /**
- * Extended number formatting utilities.
- * Adds relative-change, abbreviated, and asset-specific formatters.
+ * Number formatting utilities for UI display.
  */
 
-/** Format a number as relative change with direction indicator. */
-export function formatRelativeChange(current: number, previous: number): string {
-  if (previous === 0) return current >= 0 ? "+∞" : "-∞";
-  const pct = ((current - previous) / Math.abs(previous)) * 100;
-  const sign = pct >= 0 ? "+" : "";
-  return `${sign}${pct.toFixed(2)}%`;
+/**
+ * Format a number with thousand separators and optional decimal places.
+ */
+export function formatNumber(value: number, decimals = 2): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
 }
 
-/** Abbreviate large numbers with SI suffixes (K, M, B). */
-export function formatAbbreviated(value: number, decimals = 1): string {
-  if (Math.abs(value) >= 1e9) return `${(value / 1e9).toFixed(decimals)}B`;
-  if (Math.abs(value) >= 1e6) return `${(value / 1e6).toFixed(decimals)}M`;
-  if (Math.abs(value) >= 1e3) return `${(value / 1e3).toFixed(decimals)}K`;
-  return value.toFixed(decimals);
+/**
+ * Format a number as a percentage.
+ */
+export function formatPercent(value: number, decimals = 2): string {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(decimals)}%`;
 }
 
-/** Format a raw Stellar stroop amount to display units. */
-export function formatStroops(stroops: string): string {
-  const num = BigInt(stroops);
-  const divisor = 10n ** 7n;
-  const whole = num / divisor;
-  const fraction = num % divisor;
-  const fracStr = fraction.toString().padStart(7, "0").replace(/0+$/, "");
-  return fracStr ? `${whole}.${fracStr}` : whole.toString();
+/**
+ * Format a large number with abbreviations (K, M, B).
+ */
+export function formatCompact(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
-/** Format a duration in milliseconds to human-readable form. */
-export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  const seconds = ms / 1000;
-  if (seconds < 60) return `${seconds.toFixed(1)}s`;
-  const minutes = seconds / 60;
-  if (minutes < 60) return `${minutes.toFixed(1)}m`;
-  return `${(minutes / 60).toFixed(1)}h`;
+/**
+ * Format a number with configurable significant digits.
+ */
+export function formatSignificant(value: number, sigDigits = 4): string {
+  if (value === 0) return "0";
+  return new Intl.NumberFormat("en-US", {
+    maximumSignificantDigits: sigDigits,
+  }).format(value);
 }
