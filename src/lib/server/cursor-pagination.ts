@@ -1,51 +1,38 @@
 /**
- * Cursor-based pagination helpers for API list endpoints.
- * Horizon uses cursor-based pagination (not offset), so we expose
- * the same pattern to API consumers.
+ * Cursor-based pagination helpers.
+ * More efficient than offset-based pagination for large datasets.
  */
 
-export interface PaginationMeta {
-  cursor?: string;
-  limit: number;
-  hasMore: boolean;
-  nextCursor?: string;
-}
-
-export interface PaginatedResponse<T> {
+interface CursorPage<T> {
   items: T[];
-  pagination: PaginationMeta;
+  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 /**
- * Build a paginated response from a list of items.
- * Extracts the next cursor from the last item's ID (assumes Horizon-style IDs).
+ * Paginate an array using cursor-based pagination.
+ * Generates cursor strings from item IDs and returns the next page cursor.
  */
-export function buildPaginatedResponse<T extends { id: string }>(
+export function paginateWithCursor<T extends { id: string }>(
   items: T[],
+  cursor: string | null,
   limit: number
-): PaginatedResponse<T> {
-  const hasMore = items.length > limit;
-  const sliced = hasMore ? items.slice(0, limit) : items;
-
+): CursorPage<T> {
+  const startIndex = cursor ? items.findIndex((item) => item.id === cursor) + 1 : 0;
+  const page = items.slice(startIndex, startIndex + limit);
   return {
-    items: sliced,
-    pagination: {
-      cursor: sliced[0]?.id,
-      limit,
-      hasMore,
-      nextCursor: hasMore ? sliced[sliced.length - 1]?.id : undefined,
-    },
+    items: page,
+    nextCursor: page.length === limit && startIndex + limit < items.length ? page[page.length - 1].id : null,
+    hasMore: startIndex + limit < items.length,
   };
 }
 
-/**
- * Encode a pagination cursor for URL-safe transport.
- * Simple base64url encoding with no external deps.
- */
-export function encodeCursor(value: string): string {
-  return Buffer.from(value).toString("base64url");
+/** Encode a cursor for URL-safe transport. */
+export function encodeCursor(cursor: string): string {
+  return Buffer.from(cursor).toString("base64url");
 }
 
+/** Decode a cursor from a URL parameter. */
 export function decodeCursor(encoded: string): string {
   return Buffer.from(encoded, "base64url").toString("utf-8");
 }
