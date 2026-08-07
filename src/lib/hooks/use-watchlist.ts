@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { Token } from "@/lib/stellar/types";
 
 const STORAGE_KEY = "tarshishdex-watchlist";
