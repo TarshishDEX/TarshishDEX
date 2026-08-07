@@ -360,3 +360,13 @@ Or via Docker:
 ```bash
 docker compose up -d
 ```
+
+## Quick Start
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
