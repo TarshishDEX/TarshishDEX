@@ -1,40 +1,41 @@
 /**
- * Race a promise against a timeout. If `fn` doesn't resolve within
- * `timeoutMs`, the returned promise rejects with a TimeoutError.
- * The underlying promise continues executing but its result is discarded.
+ * Request timeout configuration and helpers.
+ * Prevents hanging API requests from consuming resources indefinitely.
  */
 
-export class TimeoutError extends Error {
-  constructor(ms: number) {
-    super(`Operation timed out after ${ms}ms`);
-    this.name = "TimeoutError";
-  }
+/** Default timeout for API requests (10 seconds). */
+export const DEFAULT_API_TIMEOUT_MS = 10_000;
+
+/** Timeout for Soroban RPC calls (30 seconds — contract calls can be slow). */
+export const SOROBAN_RPC_TIMEOUT_MS = 30_000;
+
+/** Timeout for Horizon API calls (15 seconds). */
+export const HORIZON_TIMEOUT_MS = 15_000;
+
+/**
+ * Create an AbortSignal that fires after a given timeout.
+ * Use with fetch() to cancel slow network requests.
+ */
+export function createTimeoutSignal(timeoutMs: number): AbortSignal {
+  return AbortSignal.timeout(timeoutMs);
 }
 
 /**
- * Execute an async function with a deadline. Uses AbortSignal when
- * supported so the underlying operation can be cancelled.
+ * Race a promise against a timeout — rejects with a timeout error
+ * if the promise doesn't resolve within the specified duration.
  */
 export async function withTimeout<T>(
-  fn: (signal: AbortSignal) => Promise<T>,
-  timeoutMs: number
+  promise: Promise<T>,
+  timeoutMs: number,
+  errorMessage = "Request timed out"
 ): Promise<T> {
-  const controller = new AbortController();
-
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    const id = setTimeout(() => {
-      controller.abort();
-      reject(new TimeoutError(timeoutMs));
-    }, timeoutMs);
-    // Unref the timer in Node.js so it doesn't keep the process alive
-    if (typeof id === "object" && "unref" in id) {
-      (id as unknown as NodeJS.Timeout).unref();
-    }
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
   });
-
   try {
-    return await Promise.race([fn(controller.signal), timeoutPromise]);
+    return await Promise.race([promise, timeout]);
   } finally {
-    controller.abort(); // Clean up in case fn resolves first
+    clearTimeout(timer!);
   }
 }
