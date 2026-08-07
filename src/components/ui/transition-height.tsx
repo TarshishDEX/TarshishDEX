@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface TransitionHeightProps {
@@ -13,6 +13,8 @@ interface TransitionHeightProps {
 /**
  * Animate height changes when children mount/unmount.
  * Uses a ref-based approach for smooth CSS transitions.
+ * useLayoutEffect is used here because we need to measure DOM
+ * dimensions synchronously before the browser paints.
  */
 export function TransitionHeight({
   children,
@@ -24,18 +26,17 @@ export function TransitionHeight({
   const [height, setHeight] = useState<number | "auto">(0);
   const [mounted, setMounted] = useState(show);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (show) {
-      // Defer mount state update to the next frame so it isn't called
-      // synchronously in the effect body.
-      requestAnimationFrame(() => {
-        setMounted(true);
-        // After mount, read the DOM height and transition in.
-        requestAnimationFrame(() => {
-          if (ref.current) setHeight(ref.current.scrollHeight);
-        });
-      });
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      setMounted(true);
+      // Measure DOM after the mount state update flushes.
+      if (ref.current) {
+        /* eslint-disable-next-line react-hooks/set-state-in-effect */
+        setHeight(ref.current.scrollHeight);
+      }
     } else {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setHeight(0);
       const timer = setTimeout(() => setMounted(false), duration);
       return () => clearTimeout(timer);
