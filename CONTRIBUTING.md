@@ -123,3 +123,11 @@ Please note that all contributors are expected to follow our [Code of Conduct](C
 ---
 
 Licensed under the [MIT License](LICENSE) — by contributing, you agree that your contributions are licensed under the same terms.
+
+## Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with clear commit messages
+4. Run tests: `npm test && npm run typecheck && npm run lint`
+5. Submit a PR against the `main` branch
