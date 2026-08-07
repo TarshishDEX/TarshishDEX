@@ -519,3 +519,238 @@ mod test {
         assert_eq!(client.get_order_count(), 0);
     }
 }
+
+// ── Gas benchmarking tests ─────────────────────────────────────────────
+
+#[cfg(test)]
+mod gas_benchmarks {
+    use super::*;
+    use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+
+    fn setup() -> (Env, Address, LimitOrderClient<'static>) {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        (env, admin, client)
+    }
+
+    #[test]
+    fn bench_initialize() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        client.initialize(&admin);
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order initialize: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_place_order_first() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order place_order (first): {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_place_order_subsequent() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &11_000_000,
+            &500_000,
+            &0,
+            &symbol_short!("buy"),
+        );
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order place_order (subsequent): {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_cancel_order() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        client.cancel_order(&user, &id);
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order cancel_order: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_mark_executed() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        client.mark_executed(&user, &id, &symbol_short!("tx_abc"));
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order mark_executed: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_get_order() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.get_order(&id);
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order get_order: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_get_user_orders() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        for _ in 0..3 {
+            client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+        }
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.get_user_orders(&user);
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order get_user_orders (3 orders): {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_paginated_orders() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        for _ in 0..3 {
+            client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+        }
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.paginated_orders(&10, &0);
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order paginated_orders (limit=10): {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_get_order_count() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.get_order_count();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order get_order_count: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_get_version() {
+        let (env, _admin, client) = setup();
+        client.set_version(&3);
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        let _ = client.get_version();
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order get_version: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_set_version() {
+        let (env, _admin, client) = setup();
+
+        let before = env.cost_estimate().budget().cpu_instruction_cost();
+        assert!(client.try_set_version(&5).is_ok());
+        let after = env.cost_estimate().budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] limit-order set_version: {cost} cpu instructions");
+    }
+}
