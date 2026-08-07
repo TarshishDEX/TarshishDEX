@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 
 type Theme = "dark" | "light";
 
@@ -36,14 +36,14 @@ function applyTheme(theme: Theme) {
 
 /** Provider that manages dark/light theme state and persists to localStorage. */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
-
-  // Hydrate from localStorage on mount (avoid flash of wrong theme).
-  useEffect(() => {
+  // Hydrate theme from localStorage in the lazy initialiser to avoid
+  // calling setState inside a useEffect. Also apply the theme class
+  // immediately in the initialiser to avoid a flash of wrong theme.
+  const [theme, setThemeState] = useState<Theme>(() => {
     const stored = getStoredTheme();
-    setThemeState(stored);
     applyTheme(stored);
-  }, []);
+    return stored;
+  });
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
