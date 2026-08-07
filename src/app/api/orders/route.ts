@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { parseAddress, parseLimit } from "@/lib/api/params";
+import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/orders?user=G...&limit=20&cursor=0
  *
- * Query limit orders for a user or paginated global list.
- * In production, this queries the Soroban limit-order contract via RPC.
- * For now, returns a placeholder structure showing the contract interface.
+ * Query limit orders for a user from the Soroban limit-order contract.
+ * When no user is provided, returns the global order count.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -20,24 +20,76 @@ export async function GET(request: Request) {
   try {
     if (user) {
       logger.info("limit orders queried", { user });
-      return NextResponse.json({
-        user,
-        orders: [],
-        nextCursor: null,
-        note: "Limit orders are placed via on-chain contract. Query the Soroban RPC for live data.",
-      });
+      const orders = await queryUserOrders(user);
+      return NextResponse.json({ user, orders, count: orders.length });
     }
 
-    logger.info("limit orders queried (global)", { limit, cursor });
+    const count = await queryOrderCount();
+    logger.info("limit orders count served", { count });
     return NextResponse.json({
-      orders: [],
-      nextCursor: null,
-      total: 0,
-      note: "Global order listing available via Soroban contract paginated_orders().",
+      count,
+      note: "Pass ?user=G... to fetch specific user orders.",
     });
   } catch (error) {
     logger.error("limit orders query failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to query limit orders" }, { status: 502 });
+    return NextResponse.json({ error: "Failed to query limit orders — contract may not be deployed" }, { status: 502 });
+  }
+}
+
+/**
+ * POST /api/orders
+ * Build a place_order Soroban transaction and return the XDR for wallet signing.
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { userAddress, base, counter, price, amount, expiryLedger, side } = body;
+
+    if (!userAddress || !base || !counter || !price || !amount || !side) {
+      return NextResponse.json({ error: "Missing required fields: userAddress, base, counter, price, amount, side" }, { status: 400 });
+    }
+
+    const { buildPlaceOrderTx } = await import("@/lib/soroban/limit-order");
+    const xdr = await buildPlaceOrderTx(userAddress, base, counter, Number(price), Number(amount), Number(expiryLedger ?? 0), side);
+
+    if (!xdr) {
+      return NextResponse.json({ error: "Failed to build transaction — contract may not be deployed" }, { status: 502 });
+    }
+
+    logger.info("place order tx built", { user: userAddress, base, counter });
+    return NextResponse.json({ xdr, method: "place_order" });
+  } catch (error) {
+    logger.error("place order build failed", { error: String(error) });
+    return NextResponse.json({ error: "Failed to build place order transaction" }, { status: 502 });
+  }
+}
+
+/**
+ * DELETE /api/orders
+ * Build a cancel_order or mark_executed transaction XDR for wallet signing.
+ * Body: { id, userAddress, txHash? }
+ */
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, userAddress, txHash } = body;
+
+    if (!id || !userAddress) {
+      return NextResponse.json({ error: "Missing required fields: id, userAddress" }, { status: 400 });
+    }
+
+    const { buildCancelOrExecuteTx } = await import("@/lib/soroban/limit-order");
+    const xdr = await buildCancelOrExecuteTx(userAddress, Number(id), txHash);
+
+    if (!xdr) {
+      return NextResponse.json({ error: "Failed to build transaction — contract may not be deployed" }, { status: 502 });
+    }
+
+    logger.info("cancel/execute tx built", { orderId: id, user: userAddress, action: txHash ? "mark_executed" : "cancel_order" });
+    return NextResponse.json({ xdr, method: txHash ? "mark_executed" : "cancel_order" });
+  } catch (error) {
+    logger.error("cancel/execute build failed", { error: String(error) });
+    return NextResponse.json({ error: "Failed to build cancel/execute transaction" }, { status: 502 });
   }
 }
 
