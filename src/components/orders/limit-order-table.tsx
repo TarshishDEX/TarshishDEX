@@ -4,10 +4,12 @@ import { useMemo, useState } from "react";
 import { useUserLimitOrders } from "@/lib/stellar/limit-order-queries";
 import { useOraclePrice } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
+import { signAndSubmitContractTx } from "@/lib/stellar/contract-submit";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/toast";
 import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";const SIDE_LABELS: Record<string, { label: string; tone: "primary" | "accent" }> = {
   buy: { label: "Buy", tone: "accent" },
@@ -61,8 +63,8 @@ function OraclePriceCell({
 }
 
 export function LimitOrderTable() {
-  const { address } = useWallet();
-  const { data: orders, isLoading, isError } = useUserLimitOrders(address);
+  const { address, networkPassphrase } = useWallet();
+  const { data: orders, isLoading, isError, refetch } = useUserLimitOrders(address);
   const [cancelling, setCancelling] = useState<Set<number>>(new Set());
 
   const sorted = useMemo(() => {
@@ -71,12 +73,29 @@ export function LimitOrderTable() {
   }, [orders]);
 
   async function handleCancel(id: number) {
+    if (!address) return;
     setCancelling((prev) => new Set(prev).add(id));
     try {
-      // In production, this calls the Soroban contract cancel_order()
-      await fetch(`/api/orders`, { method: "DELETE", body: JSON.stringify({ id }) });
-    } catch {
-      // Silently fail — user can retry
+      const res = await fetch(`/api/orders`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, userAddress: address }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to build cancel transaction");
+      }
+      const { xdr } = await res.json();
+      const result = await signAndSubmitContractTx(xdr, address, networkPassphrase);
+      if (result.success) {
+        toast.info(`Order # ${id} cancelled`);
+        void refetch();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to cancel order";
+      toast.error(message);
     } finally {
       setCancelling((prev) => {
         const next = new Set(prev);

@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/toast";
 import { cn, formatNumber } from "@/lib/utils";
 import {
   executeSwap,
   type SwapErrorKind,
   type SwapExecutionPhase,
 } from "@/lib/stellar/swap-execution";
+import { signAndSubmitContractTx } from "@/lib/stellar/contract-submit";
+import { useWallet } from "@/lib/stellar/wallet-store";
 import type { StellarAsset, SwapRoute } from "@/lib/stellar/types";
 
 const PHASE_LABELS: Record<SwapExecutionPhase, string> = {
@@ -61,6 +64,7 @@ export function SwapExecutionPanel({
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<SwapErrorKind | null>(null);
   const [orderMarked, setOrderMarked] = useState(false);
+  const wallet = useWallet();
 
   const busy = phase !== "idle" && phase !== "success" && phase !== "failed";
   const success = phase === "success";
@@ -68,6 +72,7 @@ export function SwapExecutionPanel({
   async function handleConfirm() {
     setError(null);
     setHash(null);
+    setOrderMarked(false);
     const result = await executeSwap(
       {
         address,
@@ -82,12 +87,24 @@ export function SwapExecutionPanel({
       setPhase,
       orderId
         ? async (txHash: string) => {
-            await fetch("/api/orders", {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: orderId, txHash }),
-            });
-            setOrderMarked(true);
+            try {
+              const res = await fetch("/api/orders", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: orderId, userAddress: address, txHash }),
+              });
+              if (!res.ok) throw new Error("Failed to build mark_executed transaction");
+              const { xdr } = await res.json();
+              const result = await signAndSubmitContractTx(xdr, address, wallet.networkPassphrase);
+              if (result.success) {
+                setOrderMarked(true);
+                toast.info(`Limit order # ${orderId} marked as executed`);
+              } else {
+                toast.error("Swap succeeded but order marking failed: " + result.error);
+              }
+            } catch (err) {
+              toast.error("Swap succeeded but order marking failed");
+            }
           }
         : undefined
     );

@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TokenSelector } from "@/components/swap/token-selector";
+import { useWallet } from "@/lib/stellar/wallet-store";
+import { signAndSubmitContractTx } from "@/lib/stellar/contract-submit";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { StellarAsset } from "@/lib/stellar/types";
 
@@ -21,6 +24,7 @@ const EXPIRY_OPTIONS = [
 ];
 
 export function LimitOrderForm() {
+  const { address, connect, networkPassphrase } = useWallet();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [base, setBase] = useState<StellarAsset | null>(XLM);
   const [counter, setCounter] = useState<StellarAsset | null>(USDC);
@@ -28,36 +32,73 @@ export function LimitOrderForm() {
   const [amount, setAmount] = useState("");
   const [expiryLedgers, setExpiryLedgers] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "building" | "signing" | "submitting">("idle");
 
   const disabled = !price || Number(price) <= 0 || !amount || Number(amount) <= 0 || !base || !counter;
 
   async function handlePlace() {
     if (disabled) return;
+
+    if (!address) {
+      const ok = await connect();
+      if (!ok) {
+        toast.error("Please connect your wallet to place limit orders.");
+        return;
+      }
+    }
+
     setSubmitting(true);
+    setPhase("building");
     try {
-      // In production, calls the Soroban contract place_order() via wallet signing
-      await fetch("/api/orders", {
+      // Step 1: Get the transaction XDR from the API
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          userAddress: address,
           base: base?.code,
           counter: counter?.code,
-          price: Number(price),
-          amount: Number(amount),
+          price: Math.floor(Number(price) * 1e7),
+          amount: Math.floor(Number(amount) * 1e7),
           expiryLedger: expiryLedgers,
           side,
         }),
       });
-      setPrice("");
-      setAmount("");
-    } catch {
-      // Retry allowed
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to build transaction");
+      }
+
+      const { xdr } = await res.json();
+      if (!xdr) throw new Error("Contract not deployed on this network");
+
+      // Step 2: Sign with wallet and submit
+      setPhase("signing");
+      const result = await signAndSubmitContractTx(xdr, address!, networkPassphrase);
+
+      if (result.success) {
+        toast.success(`Limit order placed successfully`);
+        setPrice("");
+        setAmount("");
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to place order";
+      toast.error(message);
     } finally {
       setSubmitting(false);
+      setPhase("idle");
     }
   }
 
   const total = price && amount ? (Number(price) * Number(amount)).toFixed(2) : "—";
+
+  const phaseLabel =
+    phase === "building" ? "Building transaction…" :
+    phase === "signing" ? "Signing in wallet…" :
+    phase === "submitting" ? "Submitting…" : undefined;
 
   return (
     <Card className="p-6">
@@ -178,11 +219,12 @@ export function LimitOrderForm() {
         isLoading={submitting}
         onClick={handlePlace}
       >
-        Place {side === "buy" ? "Buy" : "Sell"} Order
+        {phaseLabel ?? `Place ${side === "buy" ? "Buy" : "Sell"} Order`}
       </Button>
 
       <p className="text-foreground-faint mt-3 text-center text-xs">
         Orders are stored on-chain via the limit-order Soroban contract.
+        {!address && " Connect your wallet to get started."}
       </p>
     </Card>
   );
