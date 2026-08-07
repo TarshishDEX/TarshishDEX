@@ -52,3 +52,25 @@ Both contracts are deployed on Stellar Testnet and have undergone:
 
 We follow a coordinated disclosure process. Once a fix is deployed, we will
 credit the reporter (unless anonymity is requested) and publish an advisory.
+
+## Reporting a Vulnerability
+
+If you discover a security vulnerability in TarshishDEX, please report it
+responsibly. Do NOT open a public issue.
+
+Email: security@tarshishdex.com
+
+We will acknowledge your report within 48 hours and provide a timeline
+for resolution within 5 business days.
+
+## Supported Versions
+
+| Version | Supported |
+|---------|-----------|
+| 0.1.x   | ✅ |
+
+## Security Model
+
+TarshishDEX is a non-custodial DEX interface. Private keys never leave
+the user's wallet. Transactions are signed client-side via the Stellar
+Wallets Kit and broadcast directly to the Stellar network.
