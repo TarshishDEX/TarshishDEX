@@ -1,49 +1,33 @@
 /**
- * In-flight request deduplication.
- * When multiple identical requests arrive concurrently (e.g. same swap quote),
- * only one is forwarded to Horizon; the others wait for and share the result.
+ * Request deduplication utility.
+ * Prevents duplicate in-flight API calls for the same parameters
+ * by returning a shared promise for identical concurrent requests.
  */
 
-const inFlight = new Map<string, Promise<unknown>>();
+const inflight = new Map<string, Promise<unknown>>();
 
 /**
- * Execute `fn` and deduplicate concurrent calls with the same key.
- * If a request with the same key is already in-flight, the promise is
- * shared. The map entry is cleaned up after the promise settles.
+ * Deduplicate an async function call by key.
+ * If a call with the same key is already in-flight, returns the
+ * existing promise instead of starting a new one.
  */
-export async function deduplicateByKey<T>(
+export async function deduplicate<T>(
   key: string,
   fn: () => Promise<T>,
-  ttlMs = 5_000
+  ttlMs = 30_000
 ): Promise<T> {
-  const existing = inFlight.get(key);
-  if (existing) {
-    return existing as Promise<T>;
-  }
+  const existing = inflight.get(key);
+  if (existing) return existing as Promise<T>;
 
-  const promise = fn();
-  inFlight.set(key, promise);
+  const promise = fn().finally(() => {
+    setTimeout(() => inflight.delete(key), ttlMs);
+  });
 
-  // Auto-cleanup after TTL or resolution
-  const cleanup = () => {
-    if (inFlight.get(key) === promise) {
-      inFlight.delete(key);
-    }
-  };
-
-  setTimeout(cleanup, ttlMs);
-
-  try {
-    const result = await promise;
-    cleanup();
-    return result;
-  } catch (error) {
-    cleanup();
-    throw error;
-  }
+  inflight.set(key, promise);
+  return promise;
 }
 
-/** Get the number of currently in-flight deduplicated requests. */
-export function getInflightCount(): number {
-  return inFlight.size;
+/** Clear all deduplication entries. Useful in tests. */
+export function clearDedupCache(): void {
+  inflight.clear();
 }
