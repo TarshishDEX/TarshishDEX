@@ -31,3 +31,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Circuit breaker and request timeout for Horizon calls
 - Zod validation for all API inputs
 - Graceful shutdown handling
+
+## [0.1.0] - 2026-08-07
+
+### Added
+- Initial production release of TarshishDEX
+- Swap interface with Stellar native DEX integration
+- Market overview with orderbook depth visualization
+- Portfolio tracking with balance table and trade history
+- Asset browser with search and filtering
+- Analytics with candlestick charts and volume data
+- Wallet connection via Stellar Wallets Kit
+- On-chain trading preferences via Soroban smart contracts
+- Price alerts, keyboard shortcuts, notification center
+- Dark/light theme support
+- PWA with offline support
+- Comprehensive test suite with Vitest and Playwright
+
+### Security
+- Rate limiting on API routes
+- Security headers (CSP, HSTS, X-Frame-Options, etc.)
+- Input sanitization and validation
+- CORS middleware
+- Circuit breaker for external calls
+- Request timeout protection
+
+### Infrastructure
+- Docker multi-stage build
+- GitHub Actions CI/CD pipeline
+- Soroban contract compilation and testing
+- Health check endpoint
+- Graceful shutdown handling
