@@ -11,3 +11,8 @@ scripts/*.sh
 # Binary media
 docs/videos/*.webm
 docs/videos/*.mp4
+.next
+node_modules
+coverage
+public/sw.js
+*.md
