@@ -20,6 +20,11 @@ export function getMarketOracleContractId(): string | null {
   return process.env.NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID ?? null;
 }
 
+/** Limit-order contract (on-chain order registry). */
+export function getLimitOrderContractId(): string | null {
+  return process.env.NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID ?? null;
+}
+
 /** Lazily-created Soroban RPC client for the active network. */
 let rpcServer: rpc.Server | null = null;
 
