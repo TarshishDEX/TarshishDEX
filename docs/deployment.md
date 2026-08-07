@@ -3,8 +3,7 @@
 ## Soroban contracts — Stellar Testnet
 
 Status: **live** — all three contracts deployed, initialized, and exercised on Stellar
-Testnet (ledger 3918793+, August 2026). The limit-order contract awaits its first
-deployment (WASM compiled and tested, pending Testnet deploy).
+Testnet (August 2026).
 
 The deployer account is `GC7J7IBB6FY55R4ZFA2UNCBNEF466CHD2R7RQRH2NHC2YPY6M355XURR`,
 created and funded via the Testnet friendbot (10,000 XLM).
@@ -48,14 +47,14 @@ also deploy the frontend.
 | ------------------- | ---------------------------------------------------------- | ------- |
 | trading-preferences | `CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM` | Testnet |
 | market-oracle       | `CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V` | Testnet |
-| limit-order         | *pending deployment*                                       | Testnet |
+| limit-order         | `CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM` | Testnet |
 
 Copy the IDs into `.env.local`:
 
 ```bash
 NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
 NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
-NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=
+NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM
 ```
 
 ### Contract-call transactions
@@ -71,6 +70,9 @@ Every hash below is verifiable on [Stellar Expert](https://stellar.expert/explor
 | `initialize` (market-oracle)               | `beddffc3…`               | `beddffc39187adc1dbd31febdd6ba465770eae47b78110962971c7c8b0c536d8` |
 | `set_publisher` (market-oracle)            | `991d2b30…`               | `991d2b30e68d0ed3b1b13f044274e70b7c3ce88418dd2c6967dedfacd16ee179` |
 | `publish` observation (market-oracle)      | `b975861d…`               | `b975861d1b0a8ac70eb95e2040b55b97a5e5ae516227dc434d830ea4133671b6` |
+| Deploy `limit-order`                       | `e787e735…`               | `e787e7358104081251511f27b843057064defefe76e5cf885ca0ae184bb71244` |
+| Create `limit-order`                       | `df8342f9…`               | `df8342f94e7033fcc20fa20cfa56d9931c37e5f92b3b7150fdd82e39dec29e20` |
+| `initialize` (limit-order)                 | `ab29a3ee…`               | `ab29a3eec2d139e4f1c39bf25b67c1e6a376841790f5f434b5fa4699057db733` |
 
 Explorer links:
 
@@ -81,12 +83,15 @@ Explorer links:
 - https://stellar.expert/explorer/testnet/tx/beddffc39187adc1dbd31febdd6ba465770eae47b78110962971c7c8b0c536d8
 - https://stellar.expert/explorer/testnet/tx/991d2b30e68d0ed3b1b13f044274e70b7c3ce88418dd2c6967dedfacd16ee179
 - https://stellar.expert/explorer/testnet/tx/b975861d1b0a8ac70eb95e2040b55b97a5e5ae516227dc434d830ea4133671b6
+- https://stellar.expert/explorer/testnet/tx/e787e7358104081251511f27b843057064defefe76e5cf885ca0ae184bb71244
+- https://stellar.expert/explorer/testnet/tx/df8342f94e7033fcc20fa20cfa56d9931c37e5f92b3b7150fdd82e39dec29e20
+- https://stellar.expert/explorer/testnet/tx/ab29a3eec2d139e4f1c39bf25b67c1e6a376841790f5f434b5fa4699057db733
 
 Contract explorer:
 
 - https://lab.stellar.org/r/testnet/contract/CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
 - https://lab.stellar.org/r/testnet/contract/CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
-- https://lab.stellar.org/r/testnet/contract/ (limit-order — pending deployment)
+- https://lab.stellar.org/r/testnet/contract/CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM
 
 ## Frontend
 
