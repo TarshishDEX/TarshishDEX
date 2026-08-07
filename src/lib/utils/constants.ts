@@ -1,37 +1,31 @@
-/**
- * Application-wide constants.
- * Centralizes magic numbers so they're easy to find and change.
- */
+/** Application-wide constants. */
 
-/** Maximum slippage in basis points (100%). */
-export const MAX_SLIPPAGE_BPS = 10_000;
+/** Default slippage tolerance in basis points (0.5%). */
+export const DEFAULT_SLIPPAGE_BPS = 50;
 
-/** Default slippage in basis points (1%). */
-export const DEFAULT_SLIPPAGE_BPS = 100;
+/** Maximum allowed slippage in basis points (5%). */
+export const MAX_SLIPPAGE_BPS = 500;
 
-/** Maximum assets in a swap route. */
-export const MAX_ROUTE_HOPS = 5;
+/** Default quote expiration time in milliseconds (30 seconds). */
+export const QUOTE_EXPIRATION_MS = 30_000;
 
-/** Default number of orderbook levels to fetch. */
-export const DEFAULT_ORDERBOOK_DEPTH = 50;
+/** Polling interval for live data refreshes. */
+export const LIVE_REFRESH_INTERVAL_MS = 10_000;
 
-/** Maximum number of trade history entries. */
-export const MAX_TRADE_HISTORY = 200;
+/** Maximum number of assets displayed per page. */
+export const ASSETS_PER_PAGE = 50;
 
-/** Minimum XLM reserve for a Stellar account (in stroops). */
-export const MIN_XLM_RESERVE_STROOPS = 1_000_000n; // 1 XLM
+/** Maximum number of trade history entries shown. */
+export const MAX_TRADE_HISTORY = 100;
 
-/** Maximum entries in the token watchlist. */
-export const MAX_WATCHLIST_SIZE = 20;
+/** Stellar native asset identifier. */
+export const XLM_NATIVE = "native";
 
-/** Default quote refresh interval in milliseconds. */
-export const DEFAULT_QUOTE_REFRESH_MS = 15_000;
+/** Horizon API rate limit (requests per second). */
+export const HORIZON_RATE_LIMIT = 10;
 
-/** Maximum asset code length (Stellar protocol limit). */
-export const MAX_ASSET_CODE_LENGTH = 12;
+/** Testnet network passphrase. */
+export const STELLAR_TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
 
-/** Stellar public key length. */
-export const STELLAR_PUBLIC_KEY_LENGTH = 56;
-
-/** App name for metadata and headers. */
-export const APP_NAME = "TarshishDEX";
+/** Public network passphrase. */
+export const STELLAR_PUBLIC_PASSPHRASE = "Public Global Stellar Network ; September 2015";
