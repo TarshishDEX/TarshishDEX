@@ -21,9 +21,12 @@ export function useCountdown(seconds: number, onComplete?: () => void) {
     return () => clearInterval(id);
   }, [remaining, onComplete]);
 
-  const reset = useCallback((newSeconds?: number) => {
-    setRemaining(newSeconds ?? seconds);
-  }, [seconds]);
+  const reset = useCallback(
+    (newSeconds?: number) => {
+      setRemaining(newSeconds ?? seconds);
+    },
+    [seconds]
+  );
 
   const formatted = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
 

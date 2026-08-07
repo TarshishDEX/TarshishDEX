@@ -18,8 +18,7 @@ export interface OnChainPreferences {
 
 /** Result of a contract write — distinguishes cancellation from failure. */
 export type ContractWriteResult =
-  | { ok: true; hash: string }
-  | { ok: false; reason: "not-configured" | "cancelled" | "failed" };
+  { ok: true; hash: string } | { ok: false; reason: "not-configured" | "cancelled" | "failed" };
 
 /**
  * Build the Preferences struct ScVal. Rust structs encode as an ScMap keyed
@@ -98,11 +97,7 @@ export async function batchReadTradingPreferences(
     const tx = await contract.AssembledTransaction.build({
       contractId,
       method: "batch_get_preferences",
-      args: [
-        xdr.ScVal.scvVec(
-          addresses.map((addr) => new Address(addr).toScVal())
-        ),
-      ],
+      args: [xdr.ScVal.scvVec(addresses.map((addr) => new Address(addr).toScVal()))],
       publicKey: NULL_ACCOUNT,
       networkPassphrase: network.passphrase,
       rpcUrl: network.rpcUrl,

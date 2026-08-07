@@ -18,12 +18,15 @@ export function unique<T>(arr: T[]): T[] {
 
 /** Group array elements by a key function. */
 export function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, T[]> {
-  return arr.reduce((acc, item) => {
-    const key = keyFn(item);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
+  return arr.reduce(
+    (acc, item) => {
+      const key = keyFn(item);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    },
+    {} as Record<string, T[]>
+  );
 }
 
 /** Create a range array [start, end) with optional step. */

@@ -14,9 +14,7 @@ const PREFERRED_ORDER: SupportedType[] = ["application/json", "text/plain", "tex
 export function negotiateContentType(acceptHeader: string | null): SupportedType {
   if (!acceptHeader) return "application/json";
 
-  const accepted = acceptHeader
-    .split(",")
-    .map((s) => s.split(";")[0].trim().toLowerCase());
+  const accepted = acceptHeader.split(",").map((s) => s.split(";")[0].trim().toLowerCase());
 
   for (const preferred of PREFERRED_ORDER) {
     if (accepted.includes(preferred)) return preferred;

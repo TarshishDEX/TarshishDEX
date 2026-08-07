@@ -46,10 +46,7 @@ export function formatToken(
 /**
  * Format a percentage change with locale-aware sign.
  */
-export function formatPercentageChange(
-  value: number,
-  locale: CurrencyLocale = "auto"
-): string {
+export function formatPercentageChange(value: number, locale: CurrencyLocale = "auto"): string {
   const resolved =
     locale === "auto" ? (typeof navigator !== "undefined" ? navigator.language : "en-US") : locale;
 

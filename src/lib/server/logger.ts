@@ -54,9 +54,7 @@ function emit(level: LogLevel, msg: string, extra?: Record<string, unknown>): vo
   };
 
   const line =
-    process.env.NODE_ENV === "production"
-      ? JSON.stringify(entry)
-      : JSON.stringify(entry, null, 2);
+    process.env.NODE_ENV === "production" ? JSON.stringify(entry) : JSON.stringify(entry, null, 2);
 
   if (level === "error") {
     process.stderr.write(line + "\n");

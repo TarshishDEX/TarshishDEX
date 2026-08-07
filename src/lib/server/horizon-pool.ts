@@ -22,9 +22,7 @@ export function getPooledHorizonServer(): Horizon.Server {
   if (!horizonServer) {
     const network = getActiveNetwork();
     const override = process.env.HORIZON_URL?.trim().replace(/\/+$/, "");
-    const url = override && /^https?:\/\//.test(override)
-      ? override
-      : network.horizonUrl;
+    const url = override && /^https?:\/\//.test(override) ? override : network.horizonUrl;
 
     horizonServer = new Horizon.Server(url, {
       allowHttp: process.env.NODE_ENV !== "production",

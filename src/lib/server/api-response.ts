@@ -16,11 +16,7 @@ export function apiSuccess<T>(data: T, status = 200): NextResponse<ApiSuccess<T>
 }
 
 /** Return a structured error with an optional machine-readable code. */
-export function apiError(
-  error: string,
-  status = 400,
-  code?: string
-): NextResponse<ApiError> {
+export function apiError(error: string, status = 400, code?: string): NextResponse<ApiError> {
   return NextResponse.json({ ok: false, error, ...(code ? { code } : {}) }, { status });
 }
 

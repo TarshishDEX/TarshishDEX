@@ -29,14 +29,22 @@ export function useLocalStorageValue(
   const update = useCallback(
     (v: string) => {
       setValue(v);
-      try { localStorage.setItem(key, v); } catch { /* ignore */ }
+      try {
+        localStorage.setItem(key, v);
+      } catch {
+        /* ignore */
+      }
     },
     [key]
   );
 
   const remove = useCallback(() => {
     setValue(initialValue);
-    try { localStorage.removeItem(key); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
   }, [key, initialValue]);
 
   return [value, update, remove];

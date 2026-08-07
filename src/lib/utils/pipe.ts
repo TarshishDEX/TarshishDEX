@@ -8,9 +8,7 @@ export function pipe<T>(...fns: Array<(arg: T) => T>): (arg: T) => T {
 }
 
 /** Async version of pipe. */
-export function pipeAsync<T>(
-  ...fns: Array<(arg: T) => T | Promise<T>>
-): (arg: T) => Promise<T> {
+export function pipeAsync<T>(...fns: Array<(arg: T) => T | Promise<T>>): (arg: T) => Promise<T> {
   return async (arg: T) => {
     let result = arg;
     for (const fn of fns) {

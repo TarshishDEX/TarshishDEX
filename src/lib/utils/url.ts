@@ -3,7 +3,10 @@
  */
 
 /** Build a URL with query parameters from a Record. */
-export function buildUrl(base: string, params: Record<string, string | number | undefined>): string {
+export function buildUrl(
+  base: string,
+  params: Record<string, string | number | undefined>
+): string {
   const url = new URL(base);
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== "") {

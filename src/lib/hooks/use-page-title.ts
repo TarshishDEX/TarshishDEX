@@ -8,7 +8,9 @@ import { useEffect } from "react";
 export function usePageTitle(title: string): void {
   useEffect(() => {
     const previous = document.title;
-    document.title = title ? `${title} · TarshishDEX` : "TarshishDEX — Stellar Decentralized Exchange";
+    document.title = title
+      ? `${title} · TarshishDEX`
+      : "TarshishDEX — Stellar Decentralized Exchange";
     return () => {
       document.title = previous;
     };

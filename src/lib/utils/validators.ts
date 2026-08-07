@@ -24,7 +24,9 @@ export function isValidHexColor(color: string): boolean {
 
 /** Validate a domain name. */
 export function isValidDomain(domain: string): boolean {
-  return /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/.test(domain);
+  return /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/.test(
+    domain
+  );
 }
 
 /** Validate a percentage (0-100). */

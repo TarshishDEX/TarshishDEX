@@ -19,10 +19,7 @@ export function computeETag(data: unknown): string {
  * Check if the client's If-None-Match header matches the current ETag.
  * Returns true if we should send a 304 Not Modified response.
  */
-export function isNotModified(
-  request: Request,
-  currentETag: string
-): boolean {
+export function isNotModified(request: Request, currentETag: string): boolean {
   const ifNoneMatch = request.headers.get("if-none-match");
   if (!ifNoneMatch) return false;
 
@@ -35,11 +32,7 @@ export function isNotModified(
  * Apply ETag and Cache-Control headers to a response.
  * Returns a 304 Not Modified if the client already has the latest version.
  */
-export function applyETag(
-  request: Request,
-  response: Response,
-  data: unknown
-): Response {
+export function applyETag(request: Request, response: Response, data: unknown): Response {
   const etag = computeETag(data);
 
   if (isNotModified(request, etag)) {

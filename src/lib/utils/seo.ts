@@ -14,11 +14,7 @@ interface PageSeoOptions {
  * Build consistent SEO metadata for any page.
  * Falls back to sensible defaults for the TarshishDEX brand.
  */
-export function buildPageMetadata({
-  title,
-  description,
-  path = "/",
-}: PageSeoOptions): Metadata {
+export function buildPageMetadata({ title, description, path = "/" }: PageSeoOptions): Metadata {
   const url = `${BASE_URL}${path}`;
   const fullTitle = `${title} · TarshishDEX`;
 

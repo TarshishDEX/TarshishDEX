@@ -30,16 +30,23 @@ export function isEmpty(obj: Record<string, unknown>): boolean {
 }
 
 /** Deep merge two objects (source into target). Arrays are replaced, not merged. */
-export function deepMerge<T extends Record<string, unknown>>(
-  target: T,
-  source: Partial<T>
-): T {
+export function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
   for (const key of Object.keys(source) as (keyof T)[]) {
     const sv = source[key];
     const tv = result[key];
-    if (sv && typeof sv === "object" && !Array.isArray(sv) && tv && typeof tv === "object" && !Array.isArray(tv)) {
-      result[key] = deepMerge(tv as Record<string, unknown>, sv as Record<string, unknown>) as T[keyof T];
+    if (
+      sv &&
+      typeof sv === "object" &&
+      !Array.isArray(sv) &&
+      tv &&
+      typeof tv === "object" &&
+      !Array.isArray(tv)
+    ) {
+      result[key] = deepMerge(
+        tv as Record<string, unknown>,
+        sv as Record<string, unknown>
+      ) as T[keyof T];
     } else {
       result[key] = sv as T[keyof T];
     }
