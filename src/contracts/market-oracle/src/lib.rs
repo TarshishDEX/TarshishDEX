@@ -344,6 +344,7 @@ impl MarketOracle {
     }
 
     /// List all currently valid observations (for analytics).
+    /// For large numbers of pairs, prefer `paginated_observations`.
     pub fn all_observations(env: Env) -> Vec<(Symbol, Symbol, Observation)> {
         let current_ledger = env.ledger().sequence();
         let pairs: Vec<(Symbol, Symbol)> = env
@@ -364,6 +365,55 @@ impl MarketOracle {
             }
         }
         out
+    }
+
+    /// Paginated version of all_observations for large pair counts.
+    /// Returns (results, next_cursor). Cursor is `None` when no more pages.
+    /// `limit` is capped at 50 to keep gas predictable.
+    pub fn paginated_observations(
+        env: Env,
+        limit: u32,
+        cursor: u32,
+    ) -> (Vec<(Symbol, Symbol, Observation)>, Option<u32>) {
+        let max_limit = limit.min(50);
+        let current_ledger = env.ledger().sequence();
+        let pairs: Vec<(Symbol, Symbol)> = env
+            .storage()
+            .instance()
+            .get(&DataKey::Pairs)
+            .unwrap_or_else(|| Vec::new(&env));
+
+        let total = pairs.len() as u32;
+        let mut idx: u32 = cursor;
+        if idx >= total {
+            return (Vec::new(&env), None);
+        }
+
+        let mut out = Vec::new(&env);
+        let mut collected: u32 = 0;
+
+        while collected < max_limit && idx < total {
+            let (base, counter) = pairs.get(idx).unwrap();
+            if let Some(observation) = env
+                .storage()
+                .persistent()
+                .get::<_, Observation>(&DataKey::Observation(base.clone(), counter.clone()))
+            {
+                if current_ledger.saturating_sub(observation.ledger) <= STALE_THRESHOLD {
+                    out.push_back((base.clone(), counter.clone(), observation));
+                    collected = collected.saturating_add(1);
+                }
+            }
+            idx = idx.saturating_add(1);
+        }
+
+        let next = if idx < total {
+            Some(idx)
+        } else {
+            None
+        };
+
+        (out, next)
     }
 
     /// Set the contract version for migration tracking. Admin only.
@@ -595,6 +645,40 @@ mod test {
         assert!(client.try_set_version(&3).is_ok());
         assert_eq!(client.get_version(), 3);
     }
+
+    #[test]
+    fn paginated_returns_page_and_cursor() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+        client.publish(
+            &publisher,
+            &symbol_short!("BTC"),
+            &symbol_short!("USDC"),
+            &50_000_000,
+        );
+
+        let (page1, cursor1) = client.paginated_observations(&1, &0);
+        assert_eq!(page1.len(), 1);
+        assert!(cursor1.is_some());
+
+        let (page2, cursor2) = client.paginated_observations(&10, &cursor1.unwrap());
+        assert!(page2.len() >= 1);
+        assert!(cursor2.is_none());
+    }
 }
 
 // ── Gas benchmarking tests ─────────────────────────────────────────────
@@ -656,7 +740,6 @@ mod gas_benchmarks {
     #[test]
     fn bench_publish_subsequent() {
         let (env, _admin, publisher, client) = setup();
-        // First publish to create the pair
         client.publish(
             &publisher,
             &symbol_short!("XLM"),
@@ -691,6 +774,30 @@ mod gas_benchmarks {
         let after = env.budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_observation: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_get_observation_history() {
+        let (env, _admin, publisher, client) = setup();
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &11_000_000,
+        );
+
+        let before = env.budget().cpu_instruction_cost();
+        let _ =
+            client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        let after = env.budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] get_observation_history: {cost} cpu instructions");
     }
 
     #[test]
@@ -759,6 +866,23 @@ mod gas_benchmarks {
         let after = env.budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] all_observations: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_paginated_observations() {
+        let (env, _admin, publisher, client) = setup();
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+
+        let before = env.budget().cpu_instruction_cost();
+        let _ = client.paginated_observations(&10, &0);
+        let after = env.budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] paginated_observations (limit=10): {cost} cpu instructions");
     }
 
     #[test]
