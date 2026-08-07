@@ -1,41 +1,36 @@
 /**
- * Common HTTP response header builders.
+ * Response header utilities.
+ * Applies security and performance headers consistently across API routes.
  */
 
-/** Headers for SSE (Server-Sent Events) streams. */
-export function sseHeaders(): HeadersInit {
-  return {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache, no-transform",
-    Connection: "keep-alive",
-  };
+/**
+ * Apply standard security headers to a Response.
+ * Returns the same Response with headers appended.
+ */
+export function applySecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "DENY");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
-/** Headers to prevent caching of dynamic responses. */
-export function noCacheHeaders(): HeadersInit {
-  return {
-    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-    Pragma: "no-cache",
-    Expires: "0",
-  };
-}
-
-/** CORS headers for public API endpoints. */
-export function corsHeaders(origin = "*"): HeadersInit {
-  return {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Request-Id",
-    "Access-Control-Max-Age": "86400",
-  };
-}
-
-/** Security headers suitable for API responses. */
-export function securityHeaders(): HeadersInit {
-  return {
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-  };
+/**
+ * Apply performance headers for CDN and browser caching.
+ */
+export function applyCacheHeaders(response: Response, maxAge: number): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", `public, max-age=${maxAge}, s-maxage=${maxAge}`);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
