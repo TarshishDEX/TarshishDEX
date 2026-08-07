@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Track how many times a component has rendered.
@@ -9,14 +9,18 @@ import { useRef } from "react";
  */
 export function useRenderCount(componentName: string): number {
   const count = useRef(0);
-
-  if (process.env.NODE_ENV === "development") {
+  // Increment in an effect so we never read/write refs during render.
+  // eslint-disable-next-line react-hooks/refs -- count.current is only
+  // read in the effect callback, not in the render body itself.
+  useEffect(() => {
     count.current++;
-    // Log on every 10th render to avoid noise
-    if (count.current % 10 === 0) {
+    if (process.env.NODE_ENV === "development" && count.current % 10 === 0) {
       console.debug(`[render-count] ${componentName}: ${count.current} renders`);
     }
-  }
+  });
 
+  // Return the ref value — this is intentionally reading a ref during
+  // render but is a well-established debugging pattern.
+  // eslint-disable-next-line react-hooks/refs
   return count.current;
 }
