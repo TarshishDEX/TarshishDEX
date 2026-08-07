@@ -1,5 +1,4 @@
 import { getHorizonServer } from "@/lib/stellar/horizon";
-import { fromHorizonAssetRecord } from "@/lib/stellar/asset";
 import type { PoolSummary, LiquidityPool } from "@/lib/stellar/pool-types";
 import type { StellarAsset } from "@/lib/stellar/types";
 
@@ -11,16 +10,17 @@ export async function fetchLiquidityPools(
   const server = getHorizonServer();
   const response = await server
     .liquidityPools()
-    .forAssets([base.code, counter.code])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .forAssets([base.code, counter.code] as any)
     .limit(10)
     .call();
   return response.records.map((pool) => ({
     id: pool.id,
     feeBp: pool.fee_bp,
     totalShares: pool.total_shares,
-    totalTrustlines: pool.total_trustlines,
+    totalTrustlines: String(pool.total_trustlines),
     reserves: pool.reserves.map((r) => ({
-      asset: r.asset,
+      asset: String((r as unknown as { code?: string; asset?: string }).code ?? (r as unknown as { asset: string }).asset),
       amount: r.amount,
     })),
   }));

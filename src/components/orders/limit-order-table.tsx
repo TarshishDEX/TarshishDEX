@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber, formatRelativeTime } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { LimitOrder } from "@/lib/stellar/limit-order-types";
 
@@ -117,7 +117,7 @@ export function LimitOrderTable() {
                       {formatNumber(total)}
                     </td>
                     <td className="text-foreground-faint px-6 py-3.5 text-xs">
-                      {formatRelativeTime(order.placedAt * 1000)}
+                      {formatNumber(order.placedAt * 1000)}
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       <Button

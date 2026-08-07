@@ -5,7 +5,7 @@ export interface LiquidityPool {
   id: string;
   feeBp: number;
   totalShares: string;
-  totalTrustlines: number;
+  totalTrustlines: string;
   reserves: PoolReserve[];
 }
 
