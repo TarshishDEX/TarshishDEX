@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Button } from "@/components/ui/button";
 
 describe("Button", () => {
@@ -9,10 +8,10 @@ describe("Button", () => {
     expect(screen.getByText("Click me")).toBeInTheDocument();
   });
 
-  it("fires onClick handler", async () => {
+  it("fires onClick handler", () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Click</Button>);
-    await userEvent.click(screen.getByText("Click"));
+    fireEvent.click(screen.getByText("Click"));
     expect(onClick).toHaveBeenCalledOnce();
   });
 
