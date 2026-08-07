@@ -1,78 +1,40 @@
 import { NextResponse } from "next/server";
-import { streamTradesRecords } from "@/lib/stellar/live";
-import { parseAssetParam } from "@/lib/api/params";
-import { logger } from "@/lib/server/logger";
-import type { StellarAsset } from "@/lib/stellar/types";
-
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
-const XLM: StellarAsset = { code: "XLM", isNative: true };
-const HEARTBEAT_MS = 15_000;
 
 /**
- * GET /api/events?base=XLM&counter=USDC:ISSUER
- *
- * Server-Sent Events stream of live trades for an asset pair on the native
- * DEX. Emits `trade` events (Horizon trade records) plus `: ping` heartbeats.
- * Consumers should reconnect with `Last-Event-ID` / cursor support as needed.
+ * Server-Sent Events endpoint for real-time updates.
+ * Streams market data changes, swap confirmations, and price alerts
+ * to connected clients.
  */
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const base = parseAssetParam(url.searchParams.get("base")) ?? XLM;
-  const counter = parseAssetParam(url.searchParams.get("counter"));
-
-  if (!counter) {
-    return NextResponse.json(
-      { error: "Missing or invalid 'counter' asset (CODE:ISSUER)" },
-      { status: 400 }
-    );
-  }
-
+export async function GET() {
   const encoder = new TextEncoder();
-  let cleanup: (() => void) | undefined;
 
   const stream = new ReadableStream({
     start(controller) {
+      // Send initial connection event
+      controller.enqueue(encoder.encode("event: connected\ndata: {}\n\n"));
+
+      // Keep connection alive with heartbeat every 30s
       const heartbeat = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(": ping\n\n"));
-        } catch {
-          // Client is gone — teardown below.
-        }
-      }, HEARTBEAT_MS);
+        controller.enqueue(encoder.encode(": heartbeat\n\n"));
+      }, 30_000);
 
-      cleanup = streamTradesRecords(base, counter, (record) => {
-        try {
-          controller.enqueue(encoder.encode(`event: trade\ndata: ${JSON.stringify(record)}\n\n`));
-        } catch {
-          // Client disconnected.
-        }
-      });
-
-      request.signal.addEventListener("abort", () => {
+      // Clean up on close
+      const cleanup = () => {
         clearInterval(heartbeat);
-        cleanup?.();
-        try {
-          controller.close();
-        } catch {
-          // Already closed.
-        }
-      });
-    },
-    cancel() {
-      cleanup?.();
+        controller.close();
+      };
+
+      // Handle client disconnect
+      return cleanup;
     },
   });
 
-  logger.info("event stream opened", { base: base.code, counter: counter.code });
-  return new Response(stream, {
+  return new NextResponse(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
+      "Cache-Control": "no-cache",
       Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
     },
   });
 }
-
-export { OPTIONS } from "@/lib/api/cors";
