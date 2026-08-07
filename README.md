@@ -188,6 +188,9 @@ See [`.env.example`](.env.example) for the full set:
 | `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID      | Deployed `trading-preferences` Soroban contract               |
 | `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID`       | Testnet ID      | Deployed `market-oracle` Soroban contract                     |
 
+For a staging/QA setup with Testnet and debug logging, start from
+[`.env.staging.example`](.env.staging.example).
+
 ## 🐳 Docker
 
 ```bash
