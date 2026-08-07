@@ -96,7 +96,8 @@ export function buildSwapOperations(
  */
 export async function executeSwap(
   params: SwapExecutionParams,
-  onPhase?: (phase: SwapExecutionPhase) => void
+  onPhase?: (phase: SwapExecutionPhase) => void,
+  onSuccess?: (hash: string) => Promise<void>
 ): Promise<SwapExecutionState> {
   const report = (phase: SwapExecutionPhase) => onPhase?.(phase);
   const network = getActiveNetwork();
@@ -133,6 +134,13 @@ export async function executeSwap(
     const result = await server.submitTransaction(parsed);
 
     report("success");
+    if (onSuccess) {
+      try {
+        await onSuccess(result.hash);
+      } catch {
+        // Non-fatal: order marking failed but swap succeeded
+      }
+    }
     return {
       phase: "success",
       hash: result.hash,

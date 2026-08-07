@@ -44,6 +44,7 @@ export function SwapExecutionPanel({
   amountIn,
   quote,
   onReset,
+  orderId,
 }: {
   address: string;
   input: StellarAsset;
@@ -51,6 +52,8 @@ export function SwapExecutionPanel({
   amountIn: string;
   quote: SwapRoute;
   onReset: () => void;
+  /** Optional limit order ID — marked as executed on swap success. */
+  orderId?: number;
 }) {
   const [phase, setPhase] = useState<SwapExecutionPhase>("idle");
   const [hash, setHash] = useState<string | null>(null);
@@ -72,6 +75,8 @@ export function SwapExecutionPanel({
         amountIn,
         minReceived: quote.minReceived,
         path: quote.path,
+        method: quote.method,
+        orderId,
       },
       setPhase
     );
