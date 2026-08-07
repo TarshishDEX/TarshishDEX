@@ -98,4 +98,6 @@ Contract explorer:
 
 ### Live demo
 
-Pending — to be filled once hosted: `https://tarshishdex.vercel.app`
+✅ **Live**: [tarshishdex.vercel.app](https://tarshishdex.vercel.app)
+
+Health check: `https://tarshishdex.vercel.app/api/health` → `{"status":"ok","service":"tarshishdex","network":"testnet"}`
