@@ -117,7 +117,7 @@ export async function batchReadTradingPreferences(
         }));
       },
     });
-    const { result } = await tx.simulate();
+    await tx.simulate();
     // Fallback: simple approach
     for (const addr of addresses) results.set(addr, null);
     return results;
