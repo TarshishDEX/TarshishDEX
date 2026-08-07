@@ -18,17 +18,15 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       <Logo className="h-10 w-auto opacity-60" />
       <div>
         <p className="font-mono text-6xl font-bold text-red-500/20">500</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-foreground">
+        <h1 className="font-display text-foreground mt-2 text-2xl font-semibold">
           Something went wrong
         </h1>
-        <p className="mt-2 max-w-md text-sm text-foreground-faint">
-          An unexpected error occurred. The issue has been logged and we&apos;ll
-          investigate. Try refreshing or going back.
+        <p className="text-foreground-faint mt-2 max-w-md text-sm">
+          An unexpected error occurred. The issue has been logged and we&apos;ll investigate. Try
+          refreshing or going back.
         </p>
         {error.digest && (
-          <p className="mt-1 font-mono text-xs text-foreground/30">
-            Error ID: {error.digest}
-          </p>
+          <p className="text-foreground/30 mt-1 font-mono text-xs">Error ID: {error.digest}</p>
         )}
       </div>
       <button
