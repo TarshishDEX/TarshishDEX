@@ -1,80 +1,44 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { logger } from "@/lib/server/logger";
 
-/**
- * Simple in-memory rate limiter keyed by IP + route prefix.
- * Production should replace this with a Redis-backed store, but for a
- * self-hosted DEX frontend the in-memory approach is sufficient and adds
- * zero external dependencies.
- */
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
+interface RateLimitStore {
+  [ip: string]: { count: number; resetTime: number };
 }
 
-const store = new Map<string, RateLimitEntry>();
+const store: RateLimitStore = {};
+const WINDOW_MS = 60_000; // 1 minute
+const MAX_REQUESTS = 60; // 60 requests per minute per IP
 
-// Clean up expired entries every 60s so the map doesn't grow unbounded.
-const CLEANUP_INTERVAL_MS = 60_000;
-let lastCleanup = Date.now();
-
-function cleanup() {
+/** Clean up expired entries periodically. */
+setInterval(() => {
   const now = Date.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
-  lastCleanup = now;
-  for (const [key, entry] of store) {
-    if (now > entry.resetAt) store.delete(key);
+  for (const key of Object.keys(store)) {
+    if (store[key].resetTime < now) {
+      delete store[key];
+    }
   }
-}
+}, 60_000);
 
 /**
- * Rate-limit API routes. Defaults:
- *  - 60 requests per 60 seconds for general API endpoints
- *  - 10 requests per 60 seconds for swap/quote (the most expensive route)
+ * Apply rate limiting to API requests based on client IP.
+ * Returns a 429 response if the limit is exceeded.
  */
-export function rateLimitMiddleware(request: NextRequest) {
-  cleanup();
-
-  const path = request.nextUrl.pathname;
-  const isSwapQuote = path === "/api/swap/quote";
-  const maxRequests = isSwapQuote ? 10 : 60;
-  const windowMs = 60_000;
-
-  // Derive a client key from X-Forwarded-For or the connecting IP.
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "anonymous";
-  const key = `${ip}:${path}`;
-
+export function rateLimitMiddleware(request: NextRequest): NextResponse | null {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const now = Date.now();
-  const entry = store.get(key);
 
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return NextResponse.next();
+  if (!store[ip] || store[ip].resetTime < now) {
+    store[ip] = { count: 1, resetTime: now + WINDOW_MS };
+    return null;
   }
 
-  entry.count++;
-  if (entry.count > maxRequests) {
-    logger.warn("rate limit exceeded", { ip, path, count: entry.count });
+  store[ip].count++;
+
+  if (store[ip].count > MAX_REQUESTS) {
     return NextResponse.json(
-      { error: "Too many requests. Please try again shortly." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((entry.resetAt - now) / 1000)),
-          "X-RateLimit-Limit": String(maxRequests),
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": String(Math.ceil(entry.resetAt / 1000)),
-        },
-      }
+      { error: "Too many requests. Please try again later.", retryAfter: Math.ceil((store[ip].resetTime - now) / 1000) },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((store[ip].resetTime - now) / 1000)) } }
     );
   }
 
-  const response = NextResponse.next();
-  response.headers.set("X-RateLimit-Limit", String(maxRequests));
-  response.headers.set("X-RateLimit-Remaining", String(maxRequests - entry.count));
-  response.headers.set("X-RateLimit-Reset", String(Math.ceil(entry.resetAt / 1000)));
-  return response;
+  return null;
 }
