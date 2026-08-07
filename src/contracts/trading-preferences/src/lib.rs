@@ -64,6 +64,8 @@ pub enum DataKey {
     Version,
     PreferenceCount,
     Preferences(Address),
+    /// Ordered list of accounts that have set preferences (for pagination).
+    PreferencesList,
 }
 
 #[contractevent]
@@ -171,6 +173,19 @@ impl TradingPreferences {
             env.storage()
                 .instance()
                 .set(&DataKey::PreferenceCount, &count.saturating_add(1));
+
+            // Track account for pagination — skip duplicates.
+            let mut list: Vec<Address> = env
+                .storage()
+                .instance()
+                .get(&DataKey::PreferencesList)
+                .unwrap_or_else(|| Vec::new(&env));
+            if !list.contains(&account) {
+                list.push_back(account.clone());
+                env.storage()
+                    .instance()
+                    .set(&DataKey::PreferencesList, &list);
+            }
         }
 
         PreferencesChanged {
@@ -209,6 +224,19 @@ impl TradingPreferences {
             env.storage()
                 .instance()
                 .set(&DataKey::PreferenceCount, &count.saturating_sub(1));
+
+            // Remove from pagination list.
+            let mut list: Vec<Address> = env
+                .storage()
+                .instance()
+                .get(&DataKey::PreferencesList)
+                .unwrap_or_else(|| Vec::new(&env));
+            if let Some(pos) = list.first_index_of(&account) {
+                list.remove(pos);
+                env.storage()
+                    .instance()
+                    .set(&DataKey::PreferencesList, &list);
+            }
         }
 
         PreferencesChanged {
@@ -259,6 +287,46 @@ impl TradingPreferences {
             results.push_back((account.clone(), prefs));
         }
         results
+    }
+
+    /// Paginated version of preference reads. Returns (results, next_cursor).
+    /// Cursor is `None` when no more pages. `limit` is capped at 50.
+    pub fn paginated_get_preferences(
+        env: Env,
+        limit: u32,
+        cursor: u32,
+    ) -> (Vec<(Address, Preferences)>, Option<u32>) {
+        let max_limit = limit.min(50);
+        let list: Vec<Address> = env
+            .storage()
+            .instance()
+            .get(&DataKey::PreferencesList)
+            .unwrap_or_else(|| Vec::new(&env));
+
+        let total = list.len() as u32;
+        let mut idx: u32 = cursor;
+        if idx >= total {
+            return (Vec::new(&env), None);
+        }
+
+        let mut out = Vec::new(&env);
+        let mut collected: u32 = 0;
+        let defaults = Preferences::defaults(&env);
+
+        while collected < max_limit && idx < total {
+            let account = list.get(idx).unwrap();
+            let prefs = env
+                .storage()
+                .persistent()
+                .get(&DataKey::Preferences(account.clone()))
+                .unwrap_or_else(|| defaults.clone());
+            out.push_back((account.clone(), prefs));
+            collected = collected.saturating_add(1);
+            idx = idx.saturating_add(1);
+        }
+
+        let next = if idx < total { Some(idx) } else { None };
+        (out, next)
     }
 
     /// Return the total count of accounts that have set preferences.
@@ -459,6 +527,34 @@ mod test {
     }
 
     #[test]
+    fn paginated_returns_pages_and_cursor() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account1 = Address::generate(&env);
+        let account2 = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_preferences(&account1, &default_prefs(&env));
+        client.set_preferences(&account2, &default_prefs(&env));
+
+        let (page1, cursor1) = client.paginated_get_preferences(&1, &0);
+        assert_eq!(page1.len(), 1);
+        assert!(cursor1.is_some());
+
+        let (page2, cursor2) = client.paginated_get_preferences(&10, &cursor1.unwrap());
+        assert_eq!(page2.len(), 1);
+        assert!(cursor2.is_none());
+
+        // Empty page past end
+        let (page3, cursor3) = client.paginated_get_preferences(&10, &99);
+        assert_eq!(page3.len(), 0);
+        assert!(cursor3.is_none());
+    }
+
+    #[test]
     fn rejects_invalid_routing_mode() {
         let env = Env::default();
         env.mock_all_auths();
@@ -613,6 +709,19 @@ mod gas_benchmarks {
         let after = env.budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
+    }
+
+    #[test]
+    fn bench_paginated_get_preferences() {
+        let (env, _admin, account, client) = setup();
+        let p = prefs(&env);
+        client.set_preferences(&account, &p);
+
+        let before = env.budget().cpu_instruction_cost();
+        let _ = client.paginated_get_preferences(&10, &0);
+        let after = env.budget().cpu_instruction_cost();
+        let cost = after.saturating_sub(before);
+        println!("[bench] paginated_get_preferences (limit=10): {cost} cpu instructions");
     }
 
     #[test]
