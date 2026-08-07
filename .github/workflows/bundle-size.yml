@@ -1,0 +1,79 @@
+name: "Bundle Size"
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  analyze:
+    name: Analyze bundle size
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze
+        run: |
+          npm run build
+          echo "=== Next.js bundle sizes ==="
+          du -sh .next/static/chunks/*.js 2>/dev/null | sort -rh | head -20 || true
+          echo "=== WASM sizes ==="
+          ls -lh src/contracts/target/wasm32v1-none/release/*.wasm 2>/dev/null || echo "No WASM artifacts (contracts not built in this job)"
+
+      - name: Report WASM size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const wasmDir = 'src/contracts/target/wasm32v1-none/release';
+            if (!fs.existsSync(wasmDir)) {
+              console.log('No WASM dir — skipping report');
+              return;
+            }
+            const files = fs.readdirSync(wasmDir).filter(f => f.endsWith('.wasm'));
+            const rows = files.map(f => {
+              const size = fs.statSync(`${wasmDir}/${f}`).size;
+              const pct = ((size / 65536) * 100).toFixed(1);
+              return `| \`${f}\` | ${(size / 1024).toFixed(1)} KB | ${pct}% |`;
+            });
+            const table = [
+              '| WASM | Size | % of 64KB limit |',
+              '|------|------|-----------------|',
+              ...rows,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('WASM Bundle Size Report'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body: `## 📦 WASM Bundle Size Report\n\n${table}\n\n⚠️ Any WASM over 64 KB will fail to deploy.`,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: `## 📦 WASM Bundle Size Report\n\n${table}\n\n⚠️ Any WASM over 64 KB will fail to deploy.`,
+              });
+            }
