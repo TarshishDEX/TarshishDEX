@@ -114,9 +114,7 @@ impl TradingPreferences {
         env.storage().instance().set(&DataKey::Initialized, &true);
         env.storage().instance().set(&DataKey::Admin, &admin);
         // Extend TTL on instance entries so admin data persists
-        env.storage()
-            .instance()
-            .extend_ttl(0, TTL_LEDGERS);
+        env.storage().instance().extend_ttl(0, TTL_LEDGERS);
         Initialized {
             admin: admin.clone(),
         }
@@ -130,11 +128,7 @@ impl TradingPreferences {
     /// # Gas notes
     /// Routing mode validation uses `==` on Symbol references (not clones).
     /// Preference count uses a single read→compute→write cycle.
-    pub fn set_preferences(
-        env: Env,
-        account: Address,
-        prefs: Preferences,
-    ) -> Result<(), Error> {
+    pub fn set_preferences(env: Env, account: Address, prefs: Preferences) -> Result<(), Error> {
         account.require_auth();
 
         // Validate slippage — fast range check.
@@ -272,10 +266,7 @@ impl TradingPreferences {
 
     /// Read preferences for multiple accounts in a single call.
     /// Reduces round-trips for UI dashboards that show many accounts.
-    pub fn batch_get_preferences(
-        env: Env,
-        accounts: Vec<Address>,
-    ) -> Vec<(Address, Preferences)> {
+    pub fn batch_get_preferences(env: Env, accounts: Vec<Address>) -> Vec<(Address, Preferences)> {
         let mut results = Vec::new(&env);
         let defaults = Preferences::defaults(&env);
         for account in accounts.iter() {
@@ -352,10 +343,7 @@ impl TradingPreferences {
 
     /// Read the current contract version. Returns 0 if unset.
     pub fn get_version(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&DataKey::Version)
-            .unwrap_or(0)
+        env.storage().instance().get(&DataKey::Version).unwrap_or(0)
     }
 }
 
@@ -600,7 +588,11 @@ mod gas_benchmarks {
             routing_mode: symbol_short!("auto"),
             allowed_assets: Vec::from_array(
                 env,
-                [symbol_short!("USDC"), symbol_short!("XLM"), symbol_short!("EURMTL")],
+                [
+                    symbol_short!("USDC"),
+                    symbol_short!("XLM"),
+                    symbol_short!("EURMTL"),
+                ],
             ),
         }
     }

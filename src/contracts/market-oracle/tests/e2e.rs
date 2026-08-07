@@ -3,11 +3,7 @@
 //! exercises a full user workflow: admin setup, user preferences,
 //! publisher price feeds, and frontend read paths.
 
-use soroban_sdk::{
-    symbol_short,
-    testutils::Address as _,
-    Address, Env, Symbol, Vec,
-};
+use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env, Symbol, Vec};
 
 use market_oracle::{MarketOracle, MarketOracleClient};
 use trading_preferences::{TradingPreferences, TradingPreferencesClient};
@@ -43,7 +39,11 @@ fn full_user_workflow() {
         routing_mode: symbol_short!("direct"),
         allowed_assets: Vec::from_array(
             &env,
-            [symbol_short!("XLM"), symbol_short!("USDC"), symbol_short!("BTC")],
+            [
+                symbol_short!("XLM"),
+                symbol_short!("USDC"),
+                symbol_short!("BTC"),
+            ],
         ),
     };
     tp.set_preferences(&user, &prefs);

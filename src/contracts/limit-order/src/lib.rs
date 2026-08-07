@@ -275,12 +275,7 @@ impl LimitOrder {
     }
 
     /// Mark an order as executed (called by frontend after successful swap).
-    pub fn mark_executed(
-        env: Env,
-        owner: Address,
-        id: u64,
-        tx_hash: Symbol,
-    ) -> Result<(), Error> {
+    pub fn mark_executed(env: Env, owner: Address, id: u64, tx_hash: Symbol) -> Result<(), Error> {
         owner.require_auth();
         let key = DataKey::Order(id);
         let order: Order = env
@@ -322,11 +317,7 @@ impl LimitOrder {
     }
 
     /// Paginated list of all active order IDs.
-    pub fn paginated_orders(
-        env: Env,
-        limit: u32,
-        cursor: u32,
-    ) -> (Vec<u64>, Option<u32>) {
+    pub fn paginated_orders(env: Env, limit: u32, cursor: u32) -> (Vec<u64>, Option<u32>) {
         let max_limit = limit.min(50);
         let list: Vec<u64> = env
             .storage()
@@ -375,10 +366,7 @@ impl LimitOrder {
 
     /// Get contract version.
     pub fn get_version(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&DataKey::Version)
-            .unwrap_or(0)
+        env.storage().instance().get(&DataKey::Version).unwrap_or(0)
     }
 }
 

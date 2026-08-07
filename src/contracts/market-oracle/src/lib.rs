@@ -151,11 +151,7 @@ impl MarketOracle {
     }
 
     /// Admin: grant or revoke a publisher's write access.
-    pub fn set_publisher(
-        env: Env,
-        publisher: Address,
-        allowed: bool,
-    ) -> Result<(), Error> {
+    pub fn set_publisher(env: Env, publisher: Address, allowed: bool) -> Result<(), Error> {
         let admin: Address = env
             .storage()
             .instance()
@@ -239,7 +235,9 @@ impl MarketOracle {
         // Store latest observation
         let obs_key = DataKey::Observation(base.clone(), counter.clone());
         env.storage().persistent().set(&obs_key, &observation);
-        env.storage().persistent().extend_ttl(&obs_key, 0, TTL_LEDGERS);
+        env.storage()
+            .persistent()
+            .extend_ttl(&obs_key, 0, TTL_LEDGERS);
 
         // Index-based ring buffer for history — O(1) writes.
         let hist_key = DataKey::History(base.clone(), counter.clone());
@@ -249,11 +247,7 @@ impl MarketOracle {
             .persistent()
             .get(&hist_key)
             .unwrap_or_else(|| Vec::new(&env));
-        let write_idx: u32 = env
-            .storage()
-            .persistent()
-            .get(&idx_key)
-            .unwrap_or(0);
+        let write_idx: u32 = env.storage().persistent().get(&idx_key).unwrap_or(0);
 
         if history.len() < MAX_HISTORY {
             history.push_back(observation.clone());
@@ -265,9 +259,13 @@ impl MarketOracle {
         let next_idx = (write_idx + 1) % MAX_HISTORY;
 
         env.storage().persistent().set(&hist_key, &history);
-        env.storage().persistent().extend_ttl(&hist_key, 0, TTL_LEDGERS);
+        env.storage()
+            .persistent()
+            .extend_ttl(&hist_key, 0, TTL_LEDGERS);
         env.storage().persistent().set(&idx_key, &next_idx);
-        env.storage().persistent().extend_ttl(&idx_key, 0, TTL_LEDGERS);
+        env.storage()
+            .persistent()
+            .extend_ttl(&idx_key, 0, TTL_LEDGERS);
 
         // Track unique pairs — deduplicate to prevent unbounded growth.
         // For small pair counts (<100), linear scan is cheaper than a map lookup.
@@ -318,11 +316,7 @@ impl MarketOracle {
     }
 
     /// Read the observation history for a pair (up to MAX_HISTORY entries).
-    pub fn get_observation_history(
-        env: Env,
-        base: Symbol,
-        counter: Symbol,
-    ) -> Vec<Observation> {
+    pub fn get_observation_history(env: Env, base: Symbol, counter: Symbol) -> Vec<Observation> {
         env.storage()
             .persistent()
             .get(&DataKey::History(base, counter))
@@ -413,11 +407,7 @@ impl MarketOracle {
             idx = idx.saturating_add(1);
         }
 
-        let next = if idx < total {
-            Some(idx)
-        } else {
-            None
-        };
+        let next = if idx < total { Some(idx) } else { None };
 
         (out, next)
     }
@@ -437,10 +427,7 @@ impl MarketOracle {
 
     /// Read the current contract version. Returns 0 if unset.
     pub fn get_version(env: Env) -> u32 {
-        env.storage()
-            .instance()
-            .get(&DataKey::Version)
-            .unwrap_or(0)
+        env.storage().instance().get(&DataKey::Version).unwrap_or(0)
     }
 }
 
@@ -517,8 +504,7 @@ mod test {
         assert_eq!(obs.price, 12_345_000);
         assert_eq!(obs.publisher, publisher);
 
-        let stored = client
-            .get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        let stored = client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
         assert_eq!(stored, Some(obs));
     }
 
@@ -633,8 +619,7 @@ mod test {
             &11_000_000,
         );
 
-        let history =
-            client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        let history = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
         assert_eq!(history.len(), 2);
     }
 
@@ -695,12 +680,7 @@ mod gas_benchmarks {
     use super::*;
     use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
 
-    fn setup() -> (
-        Env,
-        Address,
-        Address,
-        MarketOracleClient<'static>,
-    ) {
+    fn setup() -> (Env, Address, Address, MarketOracleClient<'static>) {
         let env = Env::default();
         env.mock_all_auths();
         let admin = Address::generate(&env);
@@ -799,8 +779,7 @@ mod gas_benchmarks {
         );
 
         let before = env.cost_estimate().budget().cpu_instruction_cost();
-        let _ =
-            client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        let _ = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
         let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_observation_history: {cost} cpu instructions");
