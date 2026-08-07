@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ── TarshishDEX — Soroban contract deployment (Stellar Testnet) ─────────
-# Deploys the trading-preferences and market-oracle contracts, initializes
-# them, and prints the contract IDs + transaction hashes for documentation.
+# Deploys all three Soroban contracts (trading-preferences, market-oracle,
+# limit-order), initializes them, and prints the contract IDs for .env.local.
 #
 # Prerequisites:
 #   - stellar-cli installed (https://developers.stellar.org/docs/tools/cli)
@@ -26,6 +26,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WASM_DIR="$ROOT/src/contracts/target/wasm32v1-none/release"
 TRADING_PREFS_WASM="$WASM_DIR/trading_preferences.wasm"
 ORACLE_WASM="$WASM_DIR/market_oracle.wasm"
+LIMIT_ORDER_WASM="$WASM_DIR/limit_order.wasm"
 
 if [[ -n "${STELLAR_IDENTITY:-}" ]]; then
   SOURCE_FLAG=(--source-account "$STELLAR_IDENTITY")
@@ -39,7 +40,7 @@ else
   exit 1
 fi
 
-if [[ ! -f "$TRADING_PREFS_WASM" || ! -f "$ORACLE_WASM" ]]; then
+if [[ ! -f "$TRADING_PREFS_WASM" || ! -f "$ORACLE_WASM" || ! -f "$LIMIT_ORDER_WASM" ]]; then
   echo "ERROR: wasm artifacts missing — build them first:" >&2
   echo "  cd src/contracts && cargo build --workspace --target wasm32v1-none --release" >&2
   exit 1
@@ -53,6 +54,10 @@ echo "▶ Deploying market-oracle to $NETWORK"
 ORACLE_ID="$(stellar contract deploy --wasm "$ORACLE_WASM" "${SOURCE_FLAG[@]}" --network "$NETWORK" | tr -d '[:space:]')"
 echo "  contract id: $ORACLE_ID"
 
+echo "▶ Deploying limit-order to $NETWORK"
+LIMIT_ORDER_ID="$(stellar contract deploy --wasm "$LIMIT_ORDER_WASM" "${SOURCE_FLAG[@]}" --network "$NETWORK" | tr -d '[:space:]')"
+echo "  contract id: $LIMIT_ORDER_ID"
+
 # Persist the IDs immediately after deploy (before initialize), so CI can
 # capture them even if a later step fails — and a retry won't silently
 # orphan deployed-but-unrecorded contracts.
@@ -60,6 +65,7 @@ if [[ -n "${CONTRACT_IDS_FILE:-}" ]]; then
   cat > "$CONTRACT_IDS_FILE" <<EOF
 TRADING_PREFS_ID=$TRADING_ID
 ORACLE_ID=$ORACLE_ID
+LIMIT_ORDER_ID=$LIMIT_ORDER_ID
 NETWORK=$NETWORK
 EOF
 fi
@@ -84,15 +90,21 @@ echo "▶ Initializing market-oracle (admin: $ADMIN_ADDR)"
 stellar contract invoke --id "$ORACLE_ID" "${SOURCE_FLAG[@]}" --network "$NETWORK" --send=yes \
   -- initialize --admin "$ADMIN_ADDR"
 
+echo "▶ Initializing limit-order (admin: $ADMIN_ADDR)"
+stellar contract invoke --id "$LIMIT_ORDER_ID" "${SOURCE_FLAG[@]}" --network "$NETWORK" --send=yes \
+  -- initialize --admin "$ADMIN_ADDR"
+
 cat <<EOF
 
 ┌─ Deployed contracts ─────────────────────────────────────────────
 │ trading-preferences: $TRADING_ID
 │ market-oracle:       $ORACLE_ID
+│ limit-order:         $LIMIT_ORDER_ID
 │ network:             $NETWORK
 └──────────────────────────────────────────────────────────────────
 
 Copy the IDs into .env.local:
   NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=$TRADING_ID
   NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=$ORACLE_ID
+  NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=$LIMIT_ORDER_ID
 EOF
