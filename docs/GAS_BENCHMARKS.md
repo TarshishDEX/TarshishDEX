@@ -26,12 +26,13 @@ typically < 5,000 CPU instructions for simple storage reads.
 | Function | CPU Instructions | Notes |
 |---|---|---|
 | `initialize` | 25,465 | One-time; 2 instance writes + TTL extend |
-| `publish` (first obs per pair) | 131,271 | Auth check + 4 persistent writes + 1 instance write + event |
-| `publish` (subsequent) | 51,341 | Overwrites existing entries; no new pair tracking |
+| `publish` (first obs per pair) | 132,463 | Auth check + 4 persistent writes + 1 instance write + event |
+| `publish` (subsequent) | 22,898 | Overwrites existing entries; ~83% cheaper than first |
 | `get_observation` | ~0* | Single persistent read + staleness check |
-| `get_observation_history` | ~0* | Persistent vec read |
+| `get_observation_history` | ~0* | Persistent vec read (benchmark added v0.2.1) |
 | `batch_get_observations` (3 pairs) | ~0* | 3 persistent reads + staleness filtering |
 | `all_observations` | ~0* | Instance read + N persistent reads |
+| `paginated_observations` (limit=10) | ~0* | Cursor-based; max 50 per page; safe for large datasets |
 | `set_publisher` (grant) | 14,286 | 1 persistent write + 1 instance read/write + event |
 | `set_publisher` (revoke) | 3,423 | Same as grant but less work (overwrite) |
 | `get_publisher_count` | ~0* | Single instance read |
@@ -54,12 +55,20 @@ typically < 5,000 CPU instructions for simple storage reads.
 1. **O(1) ring buffer** — Replaced `Vec::remove(0)` (O(n) shift) with
    index-based wrapping for observation history. `MAX_HISTORY=16` entries,
    write position tracked separately
-2. **Deduplicated pair tracking** — Uses `push_back` without contains check:
-   duplicate entries are harmlessly overwritten in storage
+2. **Deduplicated pair tracking** — Uses `contains` check before `push_back`
+   to prevent unbounded growth in `all_observations()`
 3. **Admin cache** — Same pattern as trading-preferences
 4. **Publisher auth cache** — Publisher authorization reads stored in local
    variable before storage writes in `publish()`
 5. **Atomic publisher count** — Same read→compute→write pattern
+6. **Paginated observations** — `paginated_observations(limit, cursor)` with
+   max 50 per page for predictable gas with large pair counts
+
+### Deprecated API Note
+Benchmarks currently use the deprecated `env.budget().cpu_instruction_cost()`
+API. The replacement `env.cost_estimate().budget()` API differs between SDK
+versions. Update when upgrading to a Soroban SDK version where
+the old API is removed.
 
 ## Running Benchmarks
 
