@@ -23,6 +23,9 @@ export function AnimatedNumber({
 }: AnimatedNumberProps) {
   const [display, setDisplay] = useState(value);
   const [flash, setFlash] = useState(false);
+  // Track the direction of the last change for flash styling.
+  // Updated inside the effect, never read during render.
+  const [direction, setDirection] = useState<"up" | "down" | null>(null);
   const prevRef = useRef(value);
   const rafRef = useRef<number>(0);
 
@@ -31,7 +34,9 @@ export function AnimatedNumber({
 
     const start = prevRef.current;
     const startTime = performance.now();
+    const isUp = value > start;
 
+    setDirection(isUp ? "up" : "down");
     setFlash(true);
     const timer = setTimeout(() => setFlash(false), 600);
 
@@ -59,8 +64,8 @@ export function AnimatedNumber({
     <span
       className={cn(
         "tabular-nums transition-colors duration-300",
-        flash && value > prevRef.current && "text-success",
-        flash && value < prevRef.current && "text-danger",
+        flash && direction === "up" && "text-success",
+        flash && direction === "down" && "text-danger",
         className
       )}
       aria-live="polite"
