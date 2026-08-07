@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { vi, beforeAll, afterAll } from "vitest";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
@@ -19,7 +20,8 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/image", () => ({
   default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; width?: number; height?: number }) => {
     const { fill, width, height, ...rest } = props;
-    return <img {...rest} />;
+    // eslint-disable-next-line jsx-a11y/alt-text
+    return <img alt="" {...rest} />;
   },
 }));
 
