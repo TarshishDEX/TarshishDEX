@@ -459,10 +459,8 @@ mod test {
         assert_eq!(obs.publisher, publisher);
 
         let stored = client
-            .get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"))
-            .unwrap()
-            .unwrap();
-        assert_eq!(stored, obs);
+            .get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        assert_eq!(stored, Some(obs));
     }
 
     #[test]
@@ -632,7 +630,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.initialize(&admin);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] initialize: {cost} cpu instructions");
     }
 
@@ -648,7 +646,7 @@ mod gas_benchmarks {
             &10_000_000,
         );
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] publish (first): {cost} cpu instructions");
     }
 
@@ -671,7 +669,7 @@ mod gas_benchmarks {
             &11_000_000,
         );
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] publish (subsequent): {cost} cpu instructions");
     }
 
@@ -688,7 +686,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_observation: {cost} cpu instructions");
     }
 
@@ -700,7 +698,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.set_publisher(&new_pub, &true);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_publisher (grant): {cost} cpu instructions");
     }
 
@@ -713,7 +711,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.set_publisher(&new_pub, &false);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_publisher (revoke): {cost} cpu instructions");
     }
 
@@ -739,7 +737,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.batch_get_observations(&pairs);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] batch_get_observations (3 pairs): {cost} cpu instructions");
     }
 
@@ -756,7 +754,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.all_observations();
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] all_observations: {cost} cpu instructions");
     }
 
@@ -767,7 +765,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_publisher_count();
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_publisher_count: {cost} cpu instructions");
     }
 
@@ -779,7 +777,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_version();
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_version: {cost} cpu instructions");
     }
 
@@ -790,7 +788,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         assert!(client.try_set_version(&5).is_ok());
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
     }
 }

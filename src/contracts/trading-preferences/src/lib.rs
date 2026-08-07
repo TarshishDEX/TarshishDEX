@@ -520,7 +520,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.initialize(&admin);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] initialize: {cost} cpu instructions");
     }
 
@@ -532,7 +532,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.set_preferences(&account, &p);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_preferences (new): {cost} cpu instructions");
     }
 
@@ -548,7 +548,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.set_preferences(&account, &updated);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_preferences (update): {cost} cpu instructions");
     }
 
@@ -561,7 +561,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_preferences(&account);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_preferences: {cost} cpu instructions");
     }
 
@@ -574,7 +574,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         client.remove_preferences(&account);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] remove_preferences: {cost} cpu instructions");
     }
 
@@ -589,7 +589,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.batch_get_preferences(&accounts);
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] batch_get_preferences (10 accts): {cost} cpu instructions");
     }
 
@@ -600,7 +600,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_preference_count();
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_preference_count: {cost} cpu instructions");
     }
 
@@ -611,7 +611,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         assert!(client.try_set_version(&5).is_ok());
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
     }
 
@@ -623,7 +623,7 @@ mod gas_benchmarks {
         let before = env.budget().cpu_instruction_cost();
         let _ = client.get_version();
         let after = env.budget().cpu_instruction_cost();
-        let cost = before - after;
+        let cost = after.saturating_sub(before);
         println!("[bench] get_version: {cost} cpu instructions");
     }
 }
