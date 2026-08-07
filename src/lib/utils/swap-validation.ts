@@ -1,73 +1,36 @@
 /**
- * Client-side swap input validation helpers.
- * Validate amounts before they hit the routing engine to prevent obviously
- * malformed inputs and give the user clear feedback.
+ * Swap input validation utilities.
+ * Ensures user inputs are safe before submitting transactions.
  */
-
-const MAX_DECIMALS = 7; // Stellar's 7-decimal precision
-const MAX_AMOUNT = 9_999_999_999; // ~10B — prevents absurd inputs
-
-export interface ValidationResult {
-  valid: boolean;
-  error?: string;
-}
 
 /**
- * Validate a raw swap amount string. Rejects:
- * - Empty strings
- * - Non-numeric content (except decimal point)
- * - Negative or zero values
- * - More than 7 decimal places (Stellar precision)
- * - Values exceeding 10 billion (guard against overflow)
+ * Validate a swap amount string.
+ * Returns the parsed number or null if invalid.
  */
-export function validateSwapAmount(raw: string): ValidationResult {
-  const trimmed = raw.trim();
-
-  if (!trimmed) {
-    return { valid: false, error: "Enter an amount" };
-  }
-
-  if (!/^\d*\.?\d*$/.test(trimmed)) {
-    return { valid: false, error: "Only numbers are allowed" };
-  }
+export function validateSwapAmount(input: string): number | null {
+  const trimmed = input.trim();
+  if (!trimmed || trimmed === ".") return null;
 
   const num = Number(trimmed);
+  if (!Number.isFinite(num) || num <= 0) return null;
 
-  if (Number.isNaN(num)) {
-    return { valid: false, error: "Invalid number" };
-  }
+  // Prevent unreasonably large numbers
+  if (num > 1e15) return null;
 
-  if (num <= 0) {
-    return { valid: false, error: "Amount must be greater than 0" };
-  }
-
-  if (trimmed.includes(".")) {
-    const decimals = trimmed.split(".")[1].length;
-    if (decimals > MAX_DECIMALS) {
-      return { valid: false, error: `Maximum ${MAX_DECIMALS} decimal places` };
-    }
-  }
-
-  if (num > MAX_AMOUNT) {
-    return { valid: false, error: "Amount too large" };
-  }
-
-  return { valid: true };
+  return num;
 }
 
 /**
- * Check if a swap amount exceeds the user's available balance.
+ * Validate a Stellar account ID format.
+ * Basic format check — full validation requires Horizon lookup.
  */
-export function exceedsBalance(amount: string, balance: string | null): boolean {
-  if (!balance) return false;
-  return Number(amount) > Number(balance);
+export function isValidAccountId(id: string): boolean {
+  return /^G[A-Z2-7]{55}$/.test(id);
 }
 
 /**
- * Compute the maximum input decimals allowed from the raw string.
- * Returns the count of decimal places, capped at 7.
+ * Validate a Stellar asset code.
  */
-export function maxDecimalsFromString(raw: string): number {
-  if (!raw.includes(".")) return 0;
-  return Math.min(raw.split(".")[1].length, MAX_DECIMALS);
+export function isValidAssetCode(code: string): boolean {
+  return /^[A-Za-z0-9]{1,12}$/.test(code);
 }
