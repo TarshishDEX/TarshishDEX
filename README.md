@@ -6,8 +6,9 @@
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-70%20passing-2ea44f)
+![Tests](https://img.shields.io/badge/tests-171%20passing-2ea44f)
 ![Coverage](https://img.shields.io/badge/coverage-new%20modules%20100%25-2ea44f)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-18%20workflows-0ea5e9)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
@@ -20,9 +21,9 @@
 
 ---
 
-TarshishDEX is a complete decentralized trading platform for the **Stellar network** — intelligent trade execution, liquidity insights, portfolio management, market analytics, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
+TarshishDEX is a complete decentralized trading platform for the **Stellar network** — intelligent trade execution, liquidity insights, portfolio management, market analytics, on-chain limit orders, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
 
-Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem.
+Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem. **All three Soroban smart contracts are live on Testnet** — trading preferences, market oracle, and limit-order registry — with 66 contract tests and comprehensive gas benchmarks.
 
 ## ✨ Highlights
 
@@ -35,6 +36,8 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | 👥 **Multi-account portfolios** | Connect multiple wallets, switch accounts, compare performance.                                |
 | 📡 **Live market data**         | Real-time orderbook depth and trades via Horizon SSE streams.                                  |
 | 🧩 **On-chain preferences**     | Per-account slippage, routing mode, and asset allow-lists stored in Soroban contracts.         |
+| 📋 **Limit orders**             | On-chain limit order registry — place, cancel, paginate orders with Soroban persistence.       |
+| 📡 **Price oracle**             | Admin-gated publisher feed for on-chain price observations with 16-entry ring-buffer history.  |
 | 📦 **Developer API**            | Read-only REST + SSE endpoints for builders on Stellar's native DEX.                           |
 
 ## 🧰 Tech Stack
@@ -48,9 +51,9 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | Data fetching   | TanStack Query + Horizon SSE streams                                         |
 | State           | zustand                                                                      |
 | Charts          | Recharts / lightweight-charts                                                |
-| Testing         | Vitest + React Testing Library; Rust `cargo test` for contracts              |
+| Testing         | Vitest (105 tests) + Playwright E2E; Rust `cargo test` (66 contract tests)   |
 | Quality         | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy      |
-| CI/CD           | GitHub Actions (frontend gates + Soroban contract gates)                     |
+| CI/CD           | 18 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression…)  |
 | Deployment      | Docker (multi-stage standalone image) + docker-compose + Vercel              |
 
 ## 🚀 Getting Started
@@ -101,9 +104,8 @@ TarshishDEX is organized as a clean, layered system — the UI consumes a framew
 │  · orderbook · simulation · routing · swap-execution         │
 │  · prices · history · live (SSE) · account · asset           │
 │  · wallet-kit / wallet-store · horizon · config              │
-├─────────────────────────────────────────────────────────────┤
-│  Soroban clients (lib/soroban/) — trading-preferences,       │
-│  market-oracle (Rust contracts in src/contracts/)            │
+├─────────────────────────────────────────────────────────────┤  │  Soroban clients (lib/soroban/) — trading-preferences,       │
+  │  market-oracle, limit-order (3 Rust contracts)               │
 └─────────────────────────────────────────────────────────────┘
                        │
                        ▼
@@ -187,6 +189,7 @@ See [`.env.example`](.env.example) for the full set:
 | `NEXT_PUBLIC_APP_URL`                         | —               | Public base URL of the deployed app                           |
 | `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID      | Deployed `trading-preferences` Soroban contract               |
 | `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID`       | Testnet ID      | Deployed `market-oracle` Soroban contract                     |
+| `NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID`         | Testnet ID      | Deployed `limit-order` Soroban contract                       |
 
 ## 🐳 Docker
 
@@ -198,20 +201,22 @@ The image is multi-stage with `output: "standalone"`, runs as a **non-root user*
 
 ## 🔗 Soroban Smart Contracts
 
-The [`src/contracts/`](src/contracts) directory is a Cargo workspace of Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events — **both are live on Stellar Testnet**.
+The [`src/contracts/`](src/contracts) directory is a Cargo workspace of three Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events — **all three are live on Stellar Testnet**.
 
 | Contract                                                   | Purpose                                                            | Storage                                               |
 | ---------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
 | [`trading-preferences`](src/contracts/trading-preferences) | Per-account slippage tolerance, routing mode, and asset allow-list | Persistent per-account (TTL-managed)                  |
 | [`market-oracle`](src/contracts/market-oracle)             | Admin-gated price observation feed for analytics                   | Persistent pair observations + instance pair registry |
+| [`limit-order`](src/contracts/limit-order)                 | On-chain limit order registry with expiry and execution tracking   | Persistent per-order + per-user indexing              |
 
-Both contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
+All three contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
 
 - `#[contract]` / `#[contractimpl]` / `#[contracttype]` / `#[contracterror]` macros
 - `#[contractevent]` typed events published via the generated `Event::publish(&env)` method
 - Authorization via `Address::require_auth` (per-account writes; admin-gated publisher grants)
 - TTL-managed persistent storage (`extend_ttl`) and instance storage for configuration
 - Unit tests with `Env::default()` + `mock_all_auths()` + generated clients (`try_*` variants for error assertions)
+- Gas benchmarks for every write operation using `env.cost_estimate().budget()` (see [Gas Benchmarks](docs/GAS_BENCHMARKS.md))
 
 ### Build & test contracts
 
@@ -219,10 +224,21 @@ Both contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
 cd src/contracts
 cargo build --workspace                       # native (dev)
 cargo build --target wasm32v1-none --release  # wasm artifacts (Soroban v27 target)
-cargo test --workspace                        # 11 unit tests
+cargo test --workspace                        # 66 tests (16 limit-order + 24 market-oracle + 21 trading-preferences + 5 E2E)
+cargo test --workspace -- gas_benchmarks --nocapture  # gas benchmarks
 cargo fmt --all -- --check                    # formatting gate
 cargo clippy --all-targets -- -D warnings
 ```
+
+### WASM sizes
+
+| Contract | Size | % of 64KB limit |
+|---|---|---|
+| `trading-preferences.wasm` | 17.5 KB | 27.4% |
+| `limit-order.wasm` | 24.4 KB | 38.1% |
+| `market-oracle.wasm` | 26.4 KB | 41.3% |
+
+> All comfortably under Soroban's deploy limit. Combined: 70 KB across 3 contracts. See [Gas Benchmarks](docs/GAS_BENCHMARKS.md) for per-function CPU instruction costs and estimated on-chain XLM fees.
 
 ## 👛 Wallet Usage
 
@@ -236,15 +252,17 @@ TarshishDEX connects through **Freighter** (and any other wallet in the StellarW
 
 ## 🔌 Contract Interaction
 
-Both contracts are **live on Stellar Testnet** (see [Deployment](#deployment) below). Set the contract IDs in `.env.local`:
+All three contracts are **live on Stellar Testnet** (see [Deployment](#deployment) below). Set the contract IDs in `.env.local`:
 
 ```bash
 NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
 NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
+NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM
 ```
 
 - **Swap page → On-chain preferences** — reads the connected account's stored slippage/routing from the `trading-preferences` contract and writes updates via the wallet (`set_preferences`), showing the transaction hash on success.
 - **API / analytics** — market analytics can consume `market-oracle` observations through the Soroban client in `src/lib/soroban/`.
+- **Limit orders** — the `limit-order` contract persists user orders on-chain; the frontend queries them for the swap page and portfolio dashboard.
 - **CLI examples** (live contract IDs on Testnet):
 
 ```bash
@@ -281,7 +299,7 @@ Captures for the submission checklist live in [`docs/screenshots/`](docs/screens
 | 5   | [`transaction-result.png`](docs/screenshots/transaction-result.png)                         | Second real on-chain transaction (publish → PricePublished) |
 | 6   | [`mobile-responsive.png`](docs/screenshots/mobile-responsive.png)                           | Swap page at 390×844 viewport                               |
 | 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
-| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 70 tests passing (9 files)                |
+| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 105 tests passing (20 files)              |
 
 ## 🗺 Roadmap
 
@@ -305,7 +323,7 @@ cargo build --workspace --target wasm32v1-none --release
 STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
 ```
 
-The script deploys and initializes both contracts, then prints their IDs. **Both contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md).
+The script deploys and initializes all three contracts, then prints their IDs. **All three contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md).
 
 ### Contracts via CI (GitHub Actions)
 
@@ -313,7 +331,7 @@ The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or
 
 1. Add the **`STELLAR_SOURCE_ACCOUNT`** repository secret (the deployer's `S...` secret key — must be funded on the target network).
 2. Run **Actions → Deploy → Run workflow**, pick the network (default `testnet`).
-3. The job builds the wasm, deploys + initializes both contracts, uploads a deployment manifest artifact, and prints the fresh contract IDs in the summary.
+3. The job builds the wasm, deploys + initializes all three contracts, uploads a deployment manifest artifact, and prints the fresh contract IDs in the summary.
 
 ### Frontend
 
