@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,13 @@ const NAV_ITEMS = [
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const initialPathname = useRef(pathname);
 
-  // Close on route change
+  // Close on route change (skip initial render to avoid cascading renders)
   useEffect(() => {
-    setOpen(false);
+    if (pathname !== initialPathname.current) {
+      setOpen(false);
+    }
   }, [pathname]);
 
   // Close on Escape
