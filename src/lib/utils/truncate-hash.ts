@@ -1,19 +1,22 @@
 /**
- * Transaction hash formatting utilities.
+ * Hash truncation for display purposes.
+ * Used for transaction hashes, account IDs, and other long hex/base32 strings.
  */
 
-/** Truncate a tx hash for display: 0xabcd…1234 */
-export function truncateHash(hash: string, prefix = 6, suffix = 4): string {
-  if (hash.length <= prefix + suffix + 1) return hash;
-  return `${hash.slice(0, prefix)}…${hash.slice(-suffix)}`;
+/**
+ * Truncate a hash/address for display: "GABCD...WXYZ".
+ */
+export function truncateHash(hash: string, prefixLen = 4, suffixLen = 4): string {
+  if (hash.length <= prefixLen + suffixLen + 3) return hash;
+  return `${hash.slice(0, prefixLen)}…${hash.slice(-suffixLen)}`;
 }
 
-/** Format a tx hash as an explorer-friendly short reference. */
-export function shortTxRef(hash: string): string {
-  return hash.slice(0, 8);
+/** Truncate a Stellar account ID for compact display. */
+export function truncateAccountId(id: string): string {
+  return truncateHash(id, 6, 6);
 }
 
-/** Check if a string looks like a Stellar transaction hash (64 hex chars). */
-export function isTxHash(value: string): boolean {
-  return /^[0-9a-fA-F]{64}$/.test(value);
+/** Truncate a transaction hash for compact display. */
+export function truncateTxHash(hash: string): string {
+  return truncateHash(hash, 6, 4);
 }
