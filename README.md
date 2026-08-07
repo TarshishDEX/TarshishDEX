@@ -370,3 +370,14 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Tech Stack
+
+- **Framework**: Next.js 16
+- **Language**: TypeScript 5
+- **Blockchain**: Stellar (Horizon API + Soroban RPC)
+- **Styling**: Tailwind CSS 4
+- **Charts**: lightweight-charts + recharts
+- **Wallet**: Stellar Wallets Kit + Freighter
+- **Testing**: Vitest + Playwright
+- **CI/CD**: GitHub Actions
