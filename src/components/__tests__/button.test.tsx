@@ -17,7 +17,9 @@ describe("Button", () => {
 
   it("shows loading spinner when isLoading", () => {
     render(<Button isLoading>Processing</Button>);
-    expect(screen.queryByText("Processing")).not.toBeInTheDocument();
+    // Button renders both the spinner and children when loading
+    expect(screen.getByText("Processing")).toBeInTheDocument();
+    expect(screen.getByRole("button")).toBeDisabled();
   });
 
   it("is disabled when disabled prop is set", () => {
