@@ -6,26 +6,27 @@ import type { Token } from "@/lib/stellar/types";
 const STORAGE_KEY = "tarshishdex-watchlist";
 const MAX_WATCHLIST = 20;
 
+function loadFromStorage(): Token[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Token[];
+      if (Array.isArray(parsed)) return parsed.slice(0, MAX_WATCHLIST);
+    }
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  return [];
+}
+
 /**
  * Persistent watchlist of favorite tokens stored in localStorage.
  * Supports add, remove, toggle, and reorder operations.
  */
 export function useWatchlist() {
-  const [tokens, setTokens] = useState<Token[]>([]);
-
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Token[];
-        if (Array.isArray(parsed)) setTokens(parsed.slice(0, MAX_WATCHLIST));
-      }
-    } catch {
-      // Corrupted storage — reset
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, []);
+  // Initialise from localStorage in the lazy initialiser to avoid
+  // calling setState inside a useEffect.
+  const [tokens, setTokens] = useState<Token[]>(() => loadFromStorage());
 
   const persist = useCallback((updated: Token[]) => {
     setTokens(updated);
