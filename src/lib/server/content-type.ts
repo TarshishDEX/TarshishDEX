@@ -1,38 +1,34 @@
 /**
- * Content-Type negotiation helper for API routes.
- * Parses Accept headers and selects the best response format.
+ * Content-Type negotiation and validation utilities.
  */
 
-type SupportedType = "application/json" | "text/plain" | "text/html";
-
-const PREFERRED_ORDER: SupportedType[] = ["application/json", "text/plain", "text/html"];
+/** Common content types used in API responses. */
+export const CONTENT_TYPES = {
+  JSON: "application/json; charset=utf-8",
+  HTML: "text/html; charset=utf-8",
+  PLAIN: "text/plain; charset=utf-8",
+  CSV: "text/csv; charset=utf-8",
+  EVENT_STREAM: "text/event-stream",
+} as const;
 
 /**
- * Parse the Accept header and select the best supported content type.
- * Defaults to application/json when nothing matches.
+ * Check if the request accepts a given content type.
+ * Basic implementation — for production consider a full content negotiation library.
  */
-export function negotiateContentType(acceptHeader: string | null): SupportedType {
-  if (!acceptHeader) return "application/json";
-
-  const accepted = acceptHeader.split(",").map((s) => s.split(";")[0].trim().toLowerCase());
-
-  for (const preferred of PREFERRED_ORDER) {
-    if (accepted.includes(preferred)) return preferred;
-    if (accepted.includes("*/*")) return preferred;
-  }
-
-  return "application/json";
+export function acceptsContentType(request: Request, contentType: string): boolean {
+  const accept = request.headers.get("accept");
+  if (!accept) return true;
+  if (accept === "*/*") return true;
+  return accept.includes(contentType.split(";")[0]);
 }
 
-/** Build a Content-Type header string with charset. */
-export function contentTypeHeader(type: SupportedType): string {
-  return `${type}; charset=utf-8`;
+/** Set the Content-Type header on a Response. */
+export function setContentType(response: Response, contentType: string): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Content-Type", contentType);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
-
-/** Common content-type header values. */
-export const ContentTypes = {
-  JSON: "application/json; charset=utf-8",
-  TEXT: "text/plain; charset=utf-8",
-  HTML: "text/html; charset=utf-8",
-  SSE: "text/event-stream",
-} as const;
