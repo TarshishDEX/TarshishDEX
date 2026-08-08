@@ -139,6 +139,7 @@ impl LimitOrder {
     }
 
     /// Place a new limit order. Owner must authorize.
+    #[allow(clippy::too_many_arguments)]
     pub fn place_order(
         env: Env,
         owner: Address,
@@ -325,7 +326,7 @@ impl LimitOrder {
             .get(&DataKey::OrderList)
             .unwrap_or_else(|| Vec::new(&env));
 
-        let total = list.len() as u32;
+        let total = list.len();
         let mut idx = cursor;
         if idx >= total {
             return (Vec::new(&env), None);

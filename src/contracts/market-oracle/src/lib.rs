@@ -253,7 +253,7 @@ impl MarketOracle {
             history.push_back(observation.clone());
         } else {
             // Overwrite oldest entry (index-based wrap — no O(n) remove).
-            let idx = (write_idx % MAX_HISTORY) as u32;
+            let idx = write_idx % MAX_HISTORY;
             history.set(idx, observation.clone());
         }
         let next_idx = (write_idx + 1) % MAX_HISTORY;
@@ -274,7 +274,7 @@ impl MarketOracle {
             .instance()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
-        if (pairs.len() as u32) >= MAX_TRACKED_PAIRS {
+        if pairs.len() >= MAX_TRACKED_PAIRS {
             return Err(Error::TooManyPairs);
         }
         if !pairs.contains(&(base.clone(), counter.clone())) {
@@ -383,7 +383,7 @@ impl MarketOracle {
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
 
-        let total = pairs.len() as u32;
+        let total = pairs.len();
         let mut idx: u32 = cursor;
         if idx >= total {
             return (Vec::new(&env), None);
@@ -667,7 +667,7 @@ mod test {
         assert!(cursor1.is_some());
 
         let (page2, cursor2) = client.paginated_observations(&10, &cursor1.unwrap());
-        assert!(page2.len() >= 1);
+        assert!(!page2.is_empty());
         assert!(cursor2.is_none());
     }
 }

@@ -294,7 +294,7 @@ impl TradingPreferences {
             .get(&DataKey::PreferencesList)
             .unwrap_or_else(|| Vec::new(&env));
 
-        let total = list.len() as u32;
+        let total = list.len();
         let mut idx: u32 = cursor;
         if idx >= total {
             return (Vec::new(&env), None);
