@@ -49,7 +49,24 @@
     "latin",
     "Grotesk",
     "JetBrains",
-    "Inter"
+    "Inter",
+    "clippy",
+    "nocapture",
+    "CBCFZA",
+    "IONESTWX",
+    "UAPNQD",
+    "INECNDXP",
+    "YVXUOR",
+    "CBWISHEEE",
+    "WFXUPYX",
+    "HFOM",
+    "PQUXYCCTMZ",
+    "VNEOIKOZSUS",
+    "CATBY",
+    "SWWQVI",
+    "LDQT",
+    "HVPL",
+    "LIWPJNM"
   ],
   "ignorePaths": ["node_modules", ".next", "package-lock.json", "src/contracts/target", "coverage"]
 }
