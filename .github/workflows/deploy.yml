@@ -30,7 +30,7 @@ jobs:
       trading_preferences_id: ${{ steps.deploy.outputs.TRADING_PREFS_ID }}
       market_oracle_id: ${{ steps.deploy.outputs.ORACLE_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -101,7 +101,7 @@ jobs:
       NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID: ${{ needs.contracts.outputs.trading_preferences_id }}
       NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID: ${{ needs.contracts.outputs.market_oracle_id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node
         uses: actions/setup-node@v4
