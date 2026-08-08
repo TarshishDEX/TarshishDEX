@@ -22,4 +22,5 @@ jobs:
       - name: Install cspell
         run: npm install -g cspell@latest
       - name: Run spell check
-        run: cspell "**/*.{ts,tsx,md,yml,yaml}" --no-progress --gitignore
+        run: |
+          cspell "**/*.ts" "**/*.tsx" "**/*.md" "**/*.yml" --no-progress
