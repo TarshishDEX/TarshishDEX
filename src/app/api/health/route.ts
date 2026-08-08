@@ -8,6 +8,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: "ok",
+      service: "tarshishdex",
       timestamp: Date.now(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV,
