@@ -13,27 +13,27 @@ test.describe("TarshishDEX — page rendering", () => {
 
   test("swap page loads the swap widget", async ({ page }) => {
     await page.goto("/swap");
-    await expect(page.locator("text=Swap")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /swap/i }).first()).toBeVisible();
   });
 
   test("markets page loads the market table", async ({ page }) => {
     await page.goto("/markets");
-    await expect(page.locator("text=Markets")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /markets/i }).first()).toBeVisible();
   });
 
   test("assets page loads the asset browser", async ({ page }) => {
     await page.goto("/assets");
-    await expect(page.locator("text=Assets")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /assets/i }).first()).toBeVisible();
   });
 
   test("analytics page loads the price chart", async ({ page }) => {
     await page.goto("/analytics");
-    await expect(page.locator("text=Analytics")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /analytics/i }).first()).toBeVisible();
   });
 
   test("portfolio page loads", async ({ page }) => {
     await page.goto("/portfolio");
-    await expect(page.locator("text=Portfolio")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /portfolio/i }).first()).toBeVisible();
   });
 
   test("health API returns ok", async ({ request }) => {
