@@ -39,7 +39,8 @@ export default defineConfig({
       name: "mobile-chrome",
       use: { ...devices["Pixel 5"] },
     },
-  ],  webServer: process.env.CI
+  ],
+  webServer: process.env.CI
     ? undefined
     : {
         command: "npm run dev",
