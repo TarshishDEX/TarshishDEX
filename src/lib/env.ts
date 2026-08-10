@@ -10,9 +10,17 @@ const optionalVars = [
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID",
   "NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID",
+  "NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID",
+  "NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS",
   "LOG_LEVEL",
   "HORIZON_URL",
 ] as const;
+
+/** Stellar contract ID format: 56-char base32 starting with C. */
+const CONTRACT_ID_PATTERN = /^C[A-Z2-7]{55}$/;
+
+/** Stellar public key format: 56-char base32 starting with G. */
+const PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
 export function validateEnv(): { valid: boolean; missing: string[] } {
   const missing: string[] = [];
@@ -31,6 +39,29 @@ export function validateEnv(): { valid: boolean; missing: string[] } {
     if (!process.env[key]) {
       console.warn(`[env] Optional environment variable not set: ${key}`);
     }
+  }
+
+  // Validate contract ID format if set
+  const contractIdVars = [
+    "NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID",
+    "NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID",
+    "NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID",
+  ];
+  for (const key of contractIdVars) {
+    const value = process.env[key];
+    if (value && !CONTRACT_ID_PATTERN.test(value)) {
+      console.error(
+        `[env] Invalid contract ID format for ${key}: expected 56-char base32 starting with C, got "${value}"`
+      );
+    }
+  }
+
+  // Validate fee collector address format if set
+  const feeAddr = process.env.NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS;
+  if (feeAddr && !PUBLIC_KEY_PATTERN.test(feeAddr)) {
+    console.error(
+      `[env] Invalid fee collector address: expected 56-char Stellar public key starting with G`
+    );
   }
 
   return { valid: missing.length === 0, missing };
