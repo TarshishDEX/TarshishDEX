@@ -29,6 +29,7 @@ jobs:
     outputs:
       trading_preferences_id: ${{ steps.deploy.outputs.TRADING_PREFS_ID }}
       market_oracle_id: ${{ steps.deploy.outputs.ORACLE_ID }}
+      limit_order_id: ${{ steps.deploy.outputs.LIMIT_ORDER_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -73,6 +74,7 @@ jobs:
           source /tmp/contract-ids.env
           echo "TRADING_PREFS_ID=${TRADING_PREFS_ID}" >> "$GITHUB_OUTPUT"
           echo "ORACLE_ID=${ORACLE_ID}" >> "$GITHUB_OUTPUT"
+          echo "LIMIT_ORDER_ID=${LIMIT_ORDER_ID}" >> "$GITHUB_OUTPUT"
 
       - name: Upload deployment manifest
         uses: actions/upload-artifact@v4
@@ -100,6 +102,7 @@ jobs:
       NEXT_PUBLIC_STELLAR_NETWORK: ${{ inputs.network }}
       NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID: ${{ needs.contracts.outputs.trading_preferences_id }}
       NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID: ${{ needs.contracts.outputs.market_oracle_id }}
+      NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID: ${{ needs.contracts.outputs.limit_order_id }}
     steps:
       - uses: actions/checkout@v4
 
