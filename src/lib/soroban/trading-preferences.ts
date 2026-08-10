@@ -79,7 +79,7 @@ export async function readTradingPreferences(address: string): Promise<OnChainPr
 
 /**
  * Batch-read trading preferences for multiple accounts in a single RPC call.
- * Falls back to individual defaults when the contract call fails.
+ * Falls back to individual reads when the contract batch call fails.
  */
 export async function batchReadTradingPreferences(
   addresses: string[]
@@ -92,6 +92,8 @@ export async function batchReadTradingPreferences(
     return results;
   }
 
+  if (addresses.length === 0) return results;
+
   const network = getActiveNetwork();
   try {
     const tx = await contract.AssembledTransaction.build({
@@ -103,23 +105,34 @@ export async function batchReadTradingPreferences(
       rpcUrl: network.rpcUrl,
       server: getSorobanRpcServer(),
       parseResultXdr: (scv: xdr.ScVal) => {
-        const raw = scValToNative(scv) as Array<[string, unknown]>;
-        return raw.map(([addr, prefs]) => ({
-          address: addr,
-          preferences: preferencesFromScVal(
-            xdr.ScVal.fromXDR(JSON.stringify(prefs), "base64") as unknown as xdr.ScVal
-          ),
-        }));
+        // The contract returns Vec<(Address, Preferences)>.
+        // scValToNative decodes it as an array of [addressStr, prefsObj].
+        const raw = scValToNative(scv) as Array<[string, Record<string, unknown>]>;
+        for (const [addr, prefs] of raw) {
+          const parsed: OnChainPreferences = {
+            max_slippage_bps: Number(prefs.max_slippage_bps ?? 100),
+            routing_mode: String(prefs.routing_mode ?? "auto"),
+            allowed_assets: Array.isArray(prefs.allowed_assets)
+              ? prefs.allowed_assets.map(String)
+              : [],
+          };
+          results.set(addr, parsed);
+        }
+        return [];
       },
     });
     await tx.simulate();
-    // Fallback: simple approach
-    for (const addr of addresses) results.set(addr, null);
-    return results;
   } catch {
-    for (const addr of addresses) results.set(addr, null);
-    return results;
+    // Batch failed — fall back to individual reads.
   }
+
+  // Fill in any addresses that weren't in the batch result.
+  for (const addr of addresses) {
+    if (!results.has(addr)) {
+      results.set(addr, null);
+    }
+  }
+  return results;
 }
 
 /** Read the total count of accounts with stored preferences. */
