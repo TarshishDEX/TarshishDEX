@@ -60,5 +60,9 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "protobufjs": "7.6.5",
+    "uuid": "11.1.1"
   }
 }
