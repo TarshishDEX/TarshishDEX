@@ -26,10 +26,18 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 };
 
 const ENDPOINT_CONFIGS: Record<string, RateLimitConfig> = {
+  // Write endpoints — strictest limits
   "/api/orders": { maxRequests: 30, windowMs: 60_000 },
+  // Read-heavy endpoints — generous but bounded
   "/api/swap/quote": { maxRequests: 60, windowMs: 60_000 },
   "/api/market/stats": { maxRequests: 120, windowMs: 60_000 },
   "/api/market/pools": { maxRequests: 60, windowMs: 60_000 },
+  "/api/events": { maxRequests: 5, windowMs: 60_000 }, // SSE connections
+  "/api/market/orderbook": { maxRequests: 60, windowMs: 60_000 },
+  "/api/market/candles": { maxRequests: 60, windowMs: 60_000 },
+  "/api/assets": { maxRequests: 120, windowMs: 60_000 },
+  "/api/portfolio": { maxRequests: 60, windowMs: 60_000 },
+  "/api/trades": { maxRequests: 60, windowMs: 60_000 },
 };
 
 const store = new Map<string, WindowEntry>();
