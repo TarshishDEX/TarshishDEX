@@ -246,6 +246,7 @@ impl LimitOrder {
     }
 
     /// Cancel an order. Only the order owner may cancel.
+    /// Also cleans the order ID from OrderList and UserOrders indexes.
     pub fn cancel_order(env: Env, owner: Address, id: u64) -> Result<(), Error> {
         owner.require_auth();
         let key = DataKey::Order(id);
@@ -259,23 +260,14 @@ impl LimitOrder {
         }
         env.storage().persistent().remove(&key);
 
-        // Update count
-        let count: u32 = env
-            .storage()
-            .instance()
-            .get(&DataKey::OrderCount)
-            .unwrap_or(0);
-        if count > 0 {
-            env.storage()
-                .instance()
-                .set(&DataKey::OrderCount, &count.saturating_sub(1));
-        }
+        Self::remove_from_indexes(&env, &owner, id);
 
         OrderCancelled { owner, id }.publish(&env);
         Ok(())
     }
 
     /// Mark an order as executed (called by frontend after successful swap).
+    /// Also cleans the order ID from OrderList and UserOrders indexes.
     pub fn mark_executed(env: Env, owner: Address, id: u64, tx_hash: Symbol) -> Result<(), Error> {
         owner.require_auth();
         let key = DataKey::Order(id);
@@ -289,6 +281,39 @@ impl LimitOrder {
         }
         env.storage().persistent().remove(&key);
 
+        Self::remove_from_indexes(&env, &owner, id);
+
+        OrderExecuted { owner, id, tx_hash }.publish(&env);
+        Ok(())
+    }
+
+    /// Internal helper: remove an order ID from OrderList and UserOrders vectors.
+    fn remove_from_indexes(env: &Env, owner: &Address, id: u64) {
+        // Remove from global OrderList
+        let mut list: Vec<u64> = env
+            .storage()
+            .instance()
+            .get(&DataKey::OrderList)
+            .unwrap_or_else(|| Vec::new(env));
+        if let Some(pos) = list.first_index_of(&id) {
+            list.remove(pos);
+            env.storage().instance().set(&DataKey::OrderList, &list);
+        }
+
+        // Remove from per-user UserOrders
+        let mut user_list: Vec<u64> = env
+            .storage()
+            .persistent()
+            .get(&DataKey::UserOrders(owner.clone()))
+            .unwrap_or_else(|| Vec::new(env));
+        if let Some(pos) = user_list.first_index_of(&id) {
+            user_list.remove(pos);
+            env.storage()
+                .persistent()
+                .set(&DataKey::UserOrders(owner.clone()), &user_list);
+        }
+
+        // Decrement count
         let count: u32 = env
             .storage()
             .instance()
@@ -299,9 +324,6 @@ impl LimitOrder {
                 .instance()
                 .set(&DataKey::OrderCount, &count.saturating_sub(1));
         }
-
-        OrderExecuted { owner, id, tx_hash }.publish(&env);
-        Ok(())
     }
 
     /// Read a single order by ID.
@@ -506,6 +528,47 @@ mod test {
         assert_eq!(client.get_order_count(), 1);
         client.cancel_order(&user, &id);
         assert_eq!(client.get_order_count(), 0);
+    }
+
+    #[test]
+    fn cancel_cleans_user_orders_list() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let id1 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        let id2 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &11_000_000,
+            &500_000,
+            &0,
+            &symbol_short!("buy"),
+        );
+
+        let orders = client.get_user_orders(&user);
+        assert_eq!(orders.len(), 2);
+
+        client.cancel_order(&user, &id1);
+        let orders_after = client.get_user_orders(&user);
+        assert_eq!(orders_after.len(), 1);
+        assert_eq!(orders_after.get(0).unwrap(), id2);
+
+        client.cancel_order(&user, &id2);
+        assert_eq!(client.get_user_orders(&user).len(), 0);
     }
 }
 
