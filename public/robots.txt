@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tarshishdex.com/sitemap.xml
+Sitemap: https://tarshishdex.vercel.app/sitemap.xml
