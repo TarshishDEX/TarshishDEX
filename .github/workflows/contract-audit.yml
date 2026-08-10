@@ -1,0 +1,75 @@
+name: "Contract Security Audit"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+      - ".github/workflows/contract-audit.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+  schedule:
+    - cron: "0 10 * * 1" # Every Monday at 10:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  cargo-audit:
+    name: Cargo Audit (vulnerability scan)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run cargo-audit
+        run: cargo audit --deny warnings
+
+  cargo-deny:
+    name: Cargo Deny (license + dependency check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo registry
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      - name: Check licenses
+        run: cargo deny check licenses
+
+      - name: Check bans
+        run: cargo deny check bans
+
+      - name: Check advisories
+        run: cargo deny check advisories
