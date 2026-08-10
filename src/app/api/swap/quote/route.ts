@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { findBestRoute } from "@/lib/stellar/routing";
-import { parseAmount, parseAssetParam, parseSlippage } from "@/lib/api/params";
+import { swapQuoteParamsSchema } from "@/lib/api/schemas";
 import { logger } from "@/lib/server/logger";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
+import { buildErrorResponse } from "@/lib/server/api-error";
+import type { StellarAsset } from "@/lib/stellar/types";
 
 export const dynamic = "force-dynamic";
 
@@ -22,20 +24,31 @@ export const GET = apiHandler(async (request) => {
   }
 
   const url = new URL(request.url);
-  const input = parseAssetParam(url.searchParams.get("input"));
-  const output = parseAssetParam(url.searchParams.get("output"));
-  const amount = parseAmount(url.searchParams.get("amount"));
-  const slippage = parseSlippage(url.searchParams.get("slippage"));
 
-  if (!input || !output) {
-    return NextResponse.json(
-      { error: "Missing or invalid 'input'/'output' assets (CODE:ISSUER)" },
-      { status: 400 }
-    );
+  // Validate with Zod schema first (rich error messages)
+  const parsed = swapQuoteParamsSchema.safeParse({
+    input: url.searchParams.get("input"),
+    output: url.searchParams.get("output"),
+    amount: url.searchParams.get("amount"),
+    slippage: url.searchParams.get("slippage"),
+  });
+
+  if (!parsed.success) {
+    const details = parsed.error.issues.map((issue) => ({
+      field: issue.path.join("."),
+      message: issue.message,
+    }));
+    return NextResponse.json(buildErrorResponse(400, "Invalid parameters", details), {
+      status: 400,
+    });
   }
-  if (!amount) {
-    return NextResponse.json({ error: "Missing or invalid 'amount'" }, { status: 400 });
-  }
+
+  const { input, output, amount, slippage } = parsed.data as {
+    input: StellarAsset;
+    output: StellarAsset;
+    amount: string;
+    slippage: number;
+  };
 
   try {
     const route = await findBestRoute(input, output, amount, slippage);
@@ -43,8 +56,8 @@ export const GET = apiHandler(async (request) => {
       return NextResponse.json({ error: "No viable route found for this pair" }, { status: 404 });
     }
     logger.info("swap quote served", {
-      input: input.code,
-      output: output.code,
+      input: (input as StellarAsset).code,
+      output: (output as StellarAsset).code,
       method: route.method,
     });
     return NextResponse.json(route);
