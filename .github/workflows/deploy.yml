@@ -78,7 +78,7 @@ jobs:
           echo "LIMIT_ORDER_ID=${LIMIT_ORDER_ID}" >> "$GITHUB_OUTPUT"
 
       - name: Upload deployment manifest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: contract-ids
           path: |
