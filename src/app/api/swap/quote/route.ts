@@ -3,6 +3,7 @@ import { findBestRoute } from "@/lib/stellar/routing";
 import { parseAmount, parseAssetParam, parseSlippage } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { apiHandler } from "@/lib/server/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * GET /api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1
  * Best-route quote with price impact, minimum received, and fee estimate.
  */
-export async function GET(request: Request) {
+export const GET = apiHandler(async (request) => {
   const ip = getClientIp(request);
   const rateLimit = checkRateLimit(ip, "/api/swap/quote");
   if (!rateLimit.allowed) {
@@ -51,6 +52,6 @@ export async function GET(request: Request) {
     logger.error("swap quote failed", { error: String(error) });
     return NextResponse.json({ error: "Failed to compute swap quote" }, { status: 502 });
   }
-}
+});
 
 export { OPTIONS } from "@/lib/api/cors";

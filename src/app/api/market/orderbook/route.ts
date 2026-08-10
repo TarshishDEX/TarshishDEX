@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { parseAssetParam, parseLimit } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { apiHandler } from "@/lib/server/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
  * GET /api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20
  * Orderbook depth for a base/counter pair on Stellar's native DEX.
  */
-export async function GET(request: Request) {
+export const GET = apiHandler(async (request) => {
   const url = new URL(request.url);
   const selling = parseAssetParam(url.searchParams.get("selling"));
   const buying = parseAssetParam(url.searchParams.get("buying"));
@@ -33,6 +34,6 @@ export async function GET(request: Request) {
     logger.error("orderbook fetch failed", { error: String(error) });
     return NextResponse.json({ error: "Failed to fetch orderbook" }, { status: 502 });
   }
-}
+});
 
 export { OPTIONS } from "@/lib/api/cors";

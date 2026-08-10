@@ -3,6 +3,7 @@ import { logger } from "@/lib/server/logger";
 import { parseAddress } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { apiHandler } from "@/lib/server/api-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ function withRateLimit(request: Request): NextResponse | null {
  * Query limit orders for a user from the Soroban limit-order contract.
  * When no user is provided, returns the global order count.
  */
-export async function GET(request: Request) {
+export const GET = apiHandler(async (request) => {
   const rateLimit = withRateLimit(request);
   if (rateLimit) return rateLimit;
 
@@ -51,13 +52,13 @@ export async function GET(request: Request) {
       { status: 502 }
     );
   }
-}
+});
 
 /**
  * POST /api/orders
  * Build a place_order Soroban transaction and return the XDR for wallet signing.
  */
-export async function POST(request: Request) {
+export const POST = apiHandler(async (request) => {
   const rateLimit = withRateLimit(request);
   if (rateLimit) return rateLimit;
 
@@ -96,14 +97,14 @@ export async function POST(request: Request) {
     logger.error("place order build failed", { error: String(error) });
     return NextResponse.json({ error: "Failed to build place order transaction" }, { status: 502 });
   }
-}
+});
 
 /**
  * DELETE /api/orders
  * Build a cancel_order or mark_executed transaction XDR for wallet signing.
  * Body: { id, userAddress, txHash? }
  */
-export async function DELETE(request: Request) {
+export const DELETE = apiHandler(async (request) => {
   const rateLimit = withRateLimit(request);
   if (rateLimit) return rateLimit;
 
@@ -141,6 +142,6 @@ export async function DELETE(request: Request) {
       { status: 502 }
     );
   }
-}
+});
 
 export { OPTIONS } from "@/lib/api/cors";
