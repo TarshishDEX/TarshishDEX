@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { normalizeOperation, formatSwapSummary, fetchTradeHistory } from "@/lib/stellar/history";
-import type { TradeHistoryEntry } from "@/lib/stellar/history";
-
 // ── Mock Horizon ───────────────────────────────────────────────────────
 const { mockOperationsCall } = vi.hoisted(() => ({
   mockOperationsCall: vi.fn(),

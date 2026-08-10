@@ -4,8 +4,6 @@ import {
   fetchXlmBalance,
   fetchPortfolioSummary,
 } from "@/lib/stellar/account";
-import type { PortfolioSummary } from "@/lib/stellar/account";
-
 // ── Mock Horizon ───────────────────────────────────────────────────────
 const { mockAccountCall, mockOrderbookCall } = vi.hoisted(() => ({
   mockAccountCall: vi.fn(),
