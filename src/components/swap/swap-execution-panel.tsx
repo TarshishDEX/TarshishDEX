@@ -102,7 +102,7 @@ export function SwapExecutionPanel({
               } else {
                 toast.error("Swap succeeded but order marking failed: " + result.error);
               }
-            } catch (err) {
+            } catch {
               toast.error("Swap succeeded but order marking failed");
             }
           }

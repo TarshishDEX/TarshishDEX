@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
-import { parseAddress, parseLimit } from "@/lib/api/params";
+import { parseAddress } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
 
@@ -30,8 +30,6 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const user = parseAddress(url.searchParams.get("user") ?? "");
-  const limit = parseLimit(url.searchParams.get("limit"), 20, 50);
-  const cursor = parseInt(url.searchParams.get("cursor") ?? "0", 10);
 
   try {
     if (user) {

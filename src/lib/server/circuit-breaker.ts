@@ -22,7 +22,7 @@ export async function withCircuitBreaker<T>(
   fn: () => Promise<T>,
   options: { threshold?: number; windowMs?: number; timeoutMs?: number } = {}
 ): Promise<T> {
-  const { threshold = 5, windowMs = 30_000, timeoutMs = 60_000 } = options;
+  const { threshold = 5, timeoutMs = 60_000 } = options;
 
   let breaker = breakers.get(name);
   if (!breaker) {

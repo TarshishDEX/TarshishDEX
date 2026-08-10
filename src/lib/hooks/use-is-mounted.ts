@@ -10,10 +10,10 @@ export function useIsMounted(): boolean {
   const [mounted, setMounted] = useState(false);
 
   useLayoutEffect(() => {
-    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     return () => {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(false);
     };
   }, []);

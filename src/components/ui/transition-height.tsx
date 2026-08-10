@@ -28,15 +28,15 @@ export function TransitionHeight({
 
   useLayoutEffect(() => {
     if (show) {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true);
       // Measure DOM after the mount state update flushes.
       if (ref.current) {
-        /* eslint-disable-next-line react-hooks/set-state-in-effect */
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHeight(ref.current.scrollHeight);
       }
     } else {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect */
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHeight(0);
       const timer = setTimeout(() => setMounted(false), duration);
       return () => clearTimeout(timer);
