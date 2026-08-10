@@ -2,10 +2,13 @@
  * Fee collector for TarshishDEX swaps.
  * Collects a configurable fee in basis points on each executed swap.
  * Revenue mechanism: 5 bps default, configurable per route method.
+ *
+ * The fee collector address defaults to the project treasury but can be
+ * overridden via NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS for deployments.
  */
 
 const DEFAULT_FEE_BPS = 5;
-const FEE_COLLECTOR = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
+const DEFAULT_FEE_COLLECTOR = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
 
 /** Fee configuration per route method. */
 export const ROUTE_FEES: Record<string, number> = {
@@ -27,9 +30,13 @@ export function calculateFee(amountIn: string, method: string): string {
   return ((amount * bps) / 10_000).toFixed(7);
 }
 
-/** Fee collector destination address. */
+/**
+ * Fee collector destination address.
+ * Configurable via NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS; falls back to the
+ * project treasury on Testnet.
+ */
 export function getFeeCollector(): string {
-  return FEE_COLLECTOR;
+  return process.env.NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS ?? DEFAULT_FEE_COLLECTOR;
 }
 
 export { DEFAULT_FEE_BPS };
