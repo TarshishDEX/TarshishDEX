@@ -37,7 +37,7 @@ export async function fetchTradeHistory(address: string, limit = 40): Promise<Tr
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeOperation(op: any): TradeHistoryEntry | null {
+export function normalizeOperation(op: any): TradeHistoryEntry | null {
   const base = {
     id: op.id,
     source: op.source_account ?? op.account ?? "",
@@ -99,7 +99,7 @@ function normalizeOperation(op: any): TradeHistoryEntry | null {
   }
 }
 
-function formatSwapSummary(op: {
+export function formatSwapSummary(op: {
   source_amount?: string;
   source_asset_code?: string;
   source_asset_type?: string;
