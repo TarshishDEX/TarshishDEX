@@ -22,6 +22,18 @@
 set -euo pipefail
 
 NETWORK="${STELLAR_NETWORK:-testnet}"
+
+# Mainnet safety check
+if [[ "$NETWORK" = "public" ]]; then
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║  ⚠️  DEPLOYING TO STELLAR MAINNET — REAL-VALUE TRANSACTIONS  ║"
+  echo "║  Are you sure? Set STELLAR_MAINNET_CONFIRM=yes to proceed.   ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  if [[ "${STELLAR_MAINNET_CONFIRM:-}" != "yes" ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WASM_DIR="$ROOT/src/contracts/target/wasm32v1-none/release"
 TRADING_PREFS_WASM="$WASM_DIR/trading_preferences.wasm"

@@ -34,10 +34,24 @@ export const STELLAR_DECIMALS = 7;
 /** Approximate minimum network fee per operation (XLM). */
 export const BASE_FEE_XLM = "0.00001";
 
-/** Resolve the active network, overridable via NEXT_PUBLIC_STELLAR_NETWORK. */
+/** Resolve the active network, overridable via NEXT_PUBLIC_STELLAR_NETWORK.
+ *
+ * ⚠️  MAINNET WARNING: Setting NEXT_PUBLIC_STELLAR_NETWORK=public enables
+ * real-value transactions on Stellar Mainnet. Ensure you have:
+ *  - Configured NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS with your treasury
+ *  - Deployed your own Soroban contracts and updated the contract ID env vars
+ *  - Reviewed all security settings (CSP, HSTS, rate limits)
+ */
 export function getActiveNetwork(): NetworkConfig {
   const override = process.env.NEXT_PUBLIC_STELLAR_NETWORK;
-  if (override === "public") return NETWORKS.public;
+  if (override === "public") {
+    if (typeof console !== "undefined") {
+      console.warn(
+        "⚠️  TarshishDEX running on STELLAR MAINNET — real-value transactions enabled."
+      );
+    }
+    return NETWORKS.public;
+  }
   return NETWORKS.testnet;
 }
 

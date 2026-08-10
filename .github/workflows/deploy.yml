@@ -66,6 +66,7 @@ jobs:
           STELLAR_NETWORK: ${{ inputs.network }}
           STELLAR_SOURCE_ACCOUNT: ${{ secrets.STELLAR_SOURCE_ACCOUNT }}
           CONTRACT_IDS_FILE: /tmp/contract-ids.env
+          STELLAR_MAINNET_CONFIRM: ${{ inputs.network == 'public' && 'yes' || '' }}
         run: |
           # pipefail so a failing deploy script fails this step (not tee's exit code).
           set -o pipefail
