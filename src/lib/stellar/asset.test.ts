@@ -59,6 +59,14 @@ describe("toSdkAsset", () => {
   it("throws when an issued asset is missing an issuer", () => {
     expect(() => toSdkAsset({ code: "USDC" })).toThrow();
   });
+
+  it("treats XLM code without issuer as native", () => {
+    expect(toSdkAsset({ code: "XLM" }).isNative()).toBe(true);
+  });
+
+  it("throws for non-XLM code without issuer", () => {
+    expect(() => toSdkAsset({ code: "EURMTL" })).toThrow("missing an issuer");
+  });
 });
 
 describe("fromHorizonAssetRecord", () => {

@@ -54,6 +54,15 @@ describe("simulateOrderbookFill", () => {
     const ob = makeOrderbook([]);
     expect(simulateOrderbookFill("10", ob)).toBeNull();
   });
+
+  it("handles zero amountIn", () => {
+    const ob = makeOrderbook([[1, 100]]);
+    const result = simulateOrderbookFill("0", ob);
+    expect(result).not.toBeNull();
+    expect(result!.output).toBe("0");
+    expect(result!.fullyFilled).toBe(true);
+    expect(result!.avgPrice).toBe(0);
+  });
 });
 
 describe("computePriceImpact", () => {
@@ -92,5 +101,17 @@ describe("buildWarnings", () => {
     const fill = { output: "5", avgPrice: 1, fullyFilled: false };
     const warnings = buildWarnings(fill, 0, 1);
     expect(warnings.some((w) => w.includes("partially fill"))).toBe(true);
+  });
+
+  it("flags extreme price impact above 5%", () => {
+    const fill = { output: "90", avgPrice: 0.9, fullyFilled: true };
+    const warnings = buildWarnings(fill, 6, 10);
+    expect(warnings.some((w) => w.includes("Extreme price impact"))).toBe(true);
+  });
+
+  it("returns empty warnings for clean fill", () => {
+    const fill = { output: "100", avgPrice: 1, fullyFilled: true };
+    const warnings = buildWarnings(fill, 0, 1);
+    expect(warnings).toEqual([]);
   });
 });
