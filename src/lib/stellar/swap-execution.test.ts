@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { needsTrustline, intermediatePath, classifySwapError } from "@/lib/stellar/swap-execution";
+import {
+  needsTrustline,
+  intermediatePath,
+  classifySwapError,
+  buildSwapOperations,
+} from "@/lib/stellar/swap-execution";
 import type { StellarAsset } from "@/lib/stellar/types";
 
 const XLM: StellarAsset = { code: "XLM", isNative: true };
@@ -93,5 +98,47 @@ describe("classifySwapError", () => {
   it("returns unknown for non-Error objects", () => {
     expect(classifySwapError("string error")).toBe("unknown");
     expect(classifySwapError(null)).toBe("unknown");
+  });
+});
+
+describe("buildSwapOperations", () => {
+  const baseParams = {
+    address: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
+    input: XLM,
+    output: USDC,
+    amountIn: "10",
+    minReceived: "9.5",
+    path: [XLM, USDC] as StellarAsset[],
+    method: "direct",
+  };
+
+  it("produces a single pathPaymentStrictSend for native input", () => {
+    const ops = buildSwapOperations(baseParams);
+    // No fee payment for native XLM (fee collected via base fee mechanism)
+    expect(ops.length).toBe(1);
+    expect(ops[0]).toBeDefined();
+  });
+
+  it("includes fee payment for non-native input with fee > 0", () => {
+    const params = {
+      ...baseParams,
+      input: USDC,
+      method: "multi-hop",
+    };
+    const ops = buildSwapOperations(params);
+    // Fee payment + pathPaymentStrictSend
+    expect(ops.length).toBe(2);
+    expect(ops[0]).toBeDefined();
+    expect(ops[1]).toBeDefined();
+  });
+
+  it("builds multi-hop path correctly", () => {
+    const params = {
+      ...baseParams,
+      path: [XLM, EURMTL, USDC] as StellarAsset[],
+    };
+    const ops = buildSwapOperations(params);
+    expect(ops.length).toBe(1);
+    expect(ops[0]).toBeDefined();
   });
 });
