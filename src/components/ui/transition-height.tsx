@@ -35,6 +35,7 @@ export function TransitionHeight({
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setHeight(ref.current.scrollHeight);
       }
+      return;
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setHeight(0);
