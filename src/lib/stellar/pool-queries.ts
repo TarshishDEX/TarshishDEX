@@ -40,13 +40,15 @@ export async function fetchLiquidityPools(
 /** Build a pool summary from a raw Horizon pool record. */
 export function buildPoolSummary(pool: LiquidityPool): PoolSummary | null {
   if (pool.reserves.length < 2) return null;
-  const baseReserve = Number(pool.reserves[0].amount);
-  const counterReserve = Number(pool.reserves[1].amount);
+  const r0 = pool.reserves[0]!;
+  const r1 = pool.reserves[1]!;
+  const baseReserve = Number(r0.amount);
+  const counterReserve = Number(r1.amount);
   if (baseReserve <= 0 || counterReserve <= 0) return null;
   return {
     id: pool.id,
-    base: { code: pool.reserves[0].asset.split(":")[0] || "unknown" },
-    counter: { code: pool.reserves[1].asset.split(":")[0] || "unknown" },
+    base: { code: r0.asset.split(":")[0] || "unknown" },
+    counter: { code: r1.asset.split(":")[0] || "unknown" },
     feeBp: pool.feeBp,
     baseReserve,
     counterReserve,

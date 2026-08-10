@@ -19,7 +19,7 @@ export function acceptsContentType(request: Request, contentType: string): boole
   const accept = request.headers.get("accept");
   if (!accept) return true;
   if (accept === "*/*") return true;
-  return accept.includes(contentType.split(";")[0]);
+  return accept.includes(contentType.split(";")[0]!);
 }
 
 /** Set the Content-Type header on a Response. */

@@ -19,8 +19,8 @@ const TIMEFRAMES = [
 ];
 
 export function PriceChartPanel() {
-  const [token, setToken] = useState<Token>(KNOWN_TOKENS[1]); // USDC
-  const [timeframe, setTimeframe] = useState(TIMEFRAMES[2]); // 1M
+  const [token, setToken] = useState<Token>(KNOWN_TOKENS[1]!); // USDC
+  const [timeframe, setTimeframe] = useState(TIMEFRAMES[2]!); // 1M
 
   const {
     data: candles,
@@ -30,8 +30,8 @@ export function PriceChartPanel() {
 
   const stats = useMemo(() => {
     if (!candles || candles.length === 0) return null;
-    const first = candles[0];
-    const last = candles[candles.length - 1];
+    const first = candles[0]!;
+    const last = candles[candles.length - 1]!;
     const change = first.open > 0 ? ((last.close - first.open) / first.open) * 100 : 0;
     const high = Math.max(...candles.map((c) => c.high));
     const low = Math.min(...candles.map((c) => c.low));

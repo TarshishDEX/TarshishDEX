@@ -53,7 +53,8 @@ export function ToastViewport() {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && toasts.length > 0) {
-        dismiss(toasts[toasts.length - 1].id);
+        const last = toasts[toasts.length - 1];
+        if (last) dismiss(last.id);
       }
     };
     document.addEventListener("keydown", handleKey);

@@ -37,9 +37,9 @@ export function DropdownMenu({ trigger, items, onSelect, align = "right" }: Drop
         e.preventDefault();
         setActiveIndex((i) => Math.max(i - 1, 0));
       }
-      if (e.key === "Enter" && activeIndex >= 0) {
+      if (e.key === "Enter" && activeIndex >= 0 && items[activeIndex]) {
         e.preventDefault();
-        onSelect(items[activeIndex].id);
+        onSelect(items[activeIndex]!.id);
         setOpen(false);
       }
     }

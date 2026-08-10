@@ -30,8 +30,8 @@ export async function fetchOrderbook(
   const bids = response.bids.map(toLevel);
   const asks = response.asks.map(toLevel);
 
-  const bestBid = bids.length > 0 ? bids[0].price : null;
-  const bestAsk = asks.length > 0 ? asks[0].price : null;
+  const bestBid = bids.length > 0 ? bids[0]!.price : null;
+  const bestAsk = asks.length > 0 ? asks[0]!.price : null;
   const midPrice =
     bestBid !== null && bestAsk !== null
       ? Number(new BigNumber(bestBid.toString()).plus(bestAsk.toString()).dividedBy(2).toString())

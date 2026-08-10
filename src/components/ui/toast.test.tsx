@@ -19,18 +19,18 @@ describe("useToastStore.push", () => {
 
     const toasts = useToastStore.getState().toasts;
     expect(toasts).toHaveLength(2);
-    expect(toasts[0].message).toBe("hello");
-    expect(toasts[0].tone).toBe("success");
-    expect(toasts[1].message).toBe("world");
-    expect(toasts[1].tone).toBe("error");
+    expect(toasts[0]!.message).toBe("hello");
+    expect(toasts[0]!.tone).toBe("success");
+    expect(toasts[1]!.message).toBe("world");
+    expect(toasts[1]!.tone).toBe("error");
     // Ids come from a module-level counter, so they only need to be distinct
     // and ordered — not absolute (earlier suites may have consumed some).
-    expect(toasts[1].id).toBeGreaterThan(toasts[0].id);
+    expect(toasts[1]!.id).toBeGreaterThan(toasts[0]!.id);
   });
 
   it("defaults the tone to info", () => {
     useToastStore.getState().push("plain");
-    expect(useToastStore.getState().toasts[0].tone).toBe("info");
+    expect(useToastStore.getState().toasts[0]!.tone).toBe("info");
   });
 
   it("auto-dismisses a toast after 5 seconds", () => {
@@ -56,7 +56,10 @@ describe("useToastStore.dismiss", () => {
 
     // Capture the real ids — the module-level counter is not reset between
     // suites, so hardcoding an id would silently target the wrong toast.
-    const [a, b, c] = useToastStore.getState().toasts;
+    const toasts = useToastStore.getState().toasts;
+    const a = toasts[0]!;
+    const b = toasts[1]!;
+    const c = toasts[2]!;
     useToastStore.getState().dismiss(b.id);
 
     const messages = useToastStore.getState().toasts.map((t) => t.message);

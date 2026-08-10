@@ -93,7 +93,7 @@ export function checkRateLimit(
   entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
 
   if (entry.timestamps.length >= config.maxRequests) {
-    const oldest = entry.timestamps[0];
+    const oldest = entry.timestamps[0]!;
     const retryAfter = Math.ceil((oldest + config.windowMs - now) / 1000);
     return { allowed: false, retryAfter: Math.max(1, retryAfter) };
   }
@@ -109,7 +109,7 @@ export function checkRateLimit(
 export function getClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    return forwarded.split(",")[0].trim();
+    return forwarded.split(",")[0]!.trim();
   }
   return "127.0.0.1";
 }

@@ -12,7 +12,7 @@ export function getAllowedOrigin(request: NextRequest): string {
   const origin = request.headers.get("origin");
   if (origin && ALLOWED_ORIGINS.includes(origin)) return origin;
   if (process.env.NODE_ENV === "development") return origin ?? "*";
-  return ALLOWED_ORIGINS[0];
+  return ALLOWED_ORIGINS[0]!;
 }
 
 export function OPTIONS() {
