@@ -6,8 +6,8 @@
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-302%20passing-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-22.6%25%20statements-2ea44f)
+![Tests](https://img.shields.io/badge/tests-371%20passing-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-26.9%25%20statements-2ea44f)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-19%20workflows-0ea5e9)
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
@@ -47,8 +47,8 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 |------|--------|
 | TypeScript | **4 strict flags** — `strict` + `noUncheckedIndexedAccess` + `noImplicitReturns` + `noFallthroughCasesInSwitch` |
 | ESLint | 0 errors |
-| Tests | **302 passing** (27 test files) |
-| Coverage | 22.57% statements — 20+ modules at **100%** line/branch/function |
+| Tests | **371 passing** (30 test files) |
+| Coverage | 26.86% statements — 25+ modules at **100%** line/branch/function |
 | npm vulns | **0 critical** (30 total, all transitive dev) |
 | CI workflows | **19** (lint, typecheck, E2E, secret scan, gas regression, contract audit, bundle size, lighthouse, deploy…) |
 | CSP headers | Applied in middleware — no `unsafe-eval` |
