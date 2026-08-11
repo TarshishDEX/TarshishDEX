@@ -6,12 +6,13 @@
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-171%20passing-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-new%20modules%20100%25-2ea44f)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-18%20workflows-0ea5e9)
+![Tests](https://img.shields.io/badge/tests-302%20passing-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-22.6%25%20overall-2ea44f)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-19%20workflows-0ea5e9)
+![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
-![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![TypeScript strict](https://img.shields.io/badge/TypeScript-4%20strict%20flags-3178C6?logo=typescript&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
 [![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
 
@@ -23,7 +24,7 @@
 
 TarshishDEX is a complete decentralized trading platform for the **Stellar network** — intelligent trade execution, liquidity insights, portfolio management, market analytics, on-chain limit orders, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
 
-Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem. **All three Soroban smart contracts are live on Testnet** — trading preferences, market oracle, and limit-order registry — with 66 contract tests and comprehensive gas benchmarks.
+Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem. **All three Soroban smart contracts are live on Testnet** — trading preferences, market oracle, and limit-order registry — with comprehensive test suites and gas benchmarks well under the 64 KB deploy limit.
 
 ## ✨ Highlights
 
@@ -40,20 +41,34 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | 📡 **Price oracle**             | Admin-gated publisher feed for on-chain price observations with 16-entry ring-buffer history.  |
 | 📦 **Developer API**            | Read-only REST + SSE endpoints for builders on Stellar's native DEX.                           |
 
+## 🏆 Quality Scoreboard
+
+| Gate | Status |
+|------|--------|
+| TypeScript | **4 strict flags** — `strict` + `noUncheckedIndexedAccess` + `noImplicitReturns` + `noFallthroughCasesInSwitch` |
+| ESLint | 0 errors |
+| Tests | **302 passing** (27 test files) |
+| Coverage | 22.6% overall — 20+ modules at **100%** line/branch/function |
+| npm vulns | **0 critical** (30 total, all transitive dev) |
+| CI workflows | **19** (lint, typecheck, E2E, secret scan, gas regression, contract audit, bundle size, lighthouse, deploy…) |
+| CSP headers | Applied in middleware — no `unsafe-eval` |
+| PWA | SVG icons, network-first service worker |
+| Build | Next.js standalone, non-root Docker |
+
 ## 🧰 Tech Stack
 
 | Layer           | Technology                                                                   |
 | --------------- | ---------------------------------------------------------------------------- |
-| Framework       | Next.js 16 (App Router), React 19, TypeScript (strict)                       |
+| Framework       | Next.js 16 (App Router), React 19, TypeScript (4 strict flags)               |
 | Styling         | Tailwind CSS v4 (custom dark DeFi design system)                             |
 | Blockchain      | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
 | Smart contracts | Soroban SDK (Rust, `#![no_std]`, `wasm32v1-none`)                            |
 | Data fetching   | TanStack Query + Horizon SSE streams                                         |
 | State           | zustand                                                                      |
-| Charts          | Recharts / lightweight-charts                                                |
-| Testing         | Vitest (105 tests) + Playwright E2E; Rust `cargo test` (66 contract tests)   |
+| Charts          | lightweight-charts + Recharts                                                |
+| Testing         | Vitest (302 tests) + Playwright E2E; Rust `cargo test`                       |
 | Quality         | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy      |
-| CI/CD           | 18 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression…)  |
+| CI/CD           | 19 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression…)  |
 | Deployment      | Docker (multi-stage standalone image) + docker-compose + Vercel              |
 
 ## 🚀 Getting Started
@@ -68,9 +83,12 @@ npm run dev
 
 # Quality gates
 npm run lint          # ESLint
-npm run typecheck     # strict TypeScript
-npm test              # Vitest suite
+npm run typecheck     # strict TypeScript (4 flags)
+npm test              # Vitest suite (302 tests)
 npm run format:check  # Prettier
+
+# Full verification
+bash scripts/quality-gates.sh
 ```
 
 ## 🗂 Project Structure
@@ -85,9 +103,9 @@ src/
 │   └── analytics/        # Market analytics & charts
 ├── components/
 │   ├── layout/           # Header, footer, navigation shell
-│   ├── ui/               # Design-system primitives (Button, Card, Badge…)
+│   ├── ui/               # Design-system primitives (60+ components)
 │   └── brand/            # Logo & brand marks
-├── lib/                  # Stellar services, Soroban clients, utilities
+├── lib/                  # Stellar services, Soroban clients, utilities (30+ modules)
 └── contracts/            # Soroban smart contracts (Rust workspace)
 ```
 
@@ -104,8 +122,9 @@ TarshishDEX is organized as a clean, layered system — the UI consumes a framew
 │  · orderbook · simulation · routing · swap-execution         │
 │  · prices · history · live (SSE) · account · asset           │
 │  · wallet-kit / wallet-store · horizon · config              │
-├─────────────────────────────────────────────────────────────┤  │  Soroban clients (lib/soroban/) — trading-preferences,       │
-  │  market-oracle, limit-order (3 Rust contracts)               │
+├─────────────────────────────────────────────────────────────┤
+│  Soroban clients (lib/soroban/) — trading-preferences,       │
+│  market-oracle, limit-order (3 Rust contracts)               │
 └─────────────────────────────────────────────────────────────┘
                        │
                        ▼
@@ -155,7 +174,20 @@ The three route strategies are evaluated concurrently (`Promise.all`), and `sele
 | `tokens.ts` / `catalog.ts`          | Token metadata, discovery catalog, issuer info                             |
 | `queries.ts`                        | TanStack Query hooks wiring services to the UI                             |
 
-Pure logic (routing, simulation, swap execution, assets) is extracted for unit testing — see the `*.test.ts` files alongside the modules.
+Pure logic (routing, simulation, swap execution, assets, prices, account, history, tokens) is extracted for unit testing — 20+ modules at 100% line/branch/function coverage.
+
+## 🛡️ Security
+
+- **CSP headers** applied via middleware — `script-src` without `unsafe-eval`
+- **HSTS** + X-Frame-Options + X-Content-Type-Options
+- **Rate limiting** on all API endpoints with configurable window/limit
+- **Circuit breaker** pattern for Horizon/Soroban RPC calls
+- **Zod validation** for all API inputs with structured error responses
+- **Input sanitization** across all user-facing inputs
+- **Non-root Docker** user in production image
+- **Mainnet safety gates** — deploy script requires confirmation; runtime console warning when on public network
+- **Global API error handler** with correlation IDs for consistent error responses
+- **19 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, and contract security audit
 
 ## 📡 Developer API
 
@@ -186,7 +218,7 @@ See [`.env.example`](.env.example) for the full set:
 | `NEXT_PUBLIC_STELLAR_NETWORK`                 | `testnet`       | Active network (`testnet` \| `public`)                        |
 | `HORIZON_URL`                                 | network default | Server-side Horizon URL override                              |
 | `LOG_LEVEL`                                   | `info`          | Server log threshold (`debug` \| `info` \| `warn` \| `error`) |
-| `NEXT_PUBLIC_APP_URL`                         | —               | Public base URL of the deployed app                           |
+| `NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS`           | —               | Treasury address for fee collection                           |
 | `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID      | Deployed `trading-preferences` Soroban contract               |
 | `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID`       | Testnet ID      | Deployed `market-oracle` Soroban contract                     |
 | `NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID`         | Testnet ID      | Deployed `limit-order` Soroban contract                       |
@@ -224,7 +256,7 @@ All three contracts demonstrate the Soroban v27 SDK patterns used across Tarshis
 cd src/contracts
 cargo build --workspace                       # native (dev)
 cargo build --target wasm32v1-none --release  # wasm artifacts (Soroban v27 target)
-cargo test --workspace                        # 66 tests (16 limit-order + 24 market-oracle + 21 trading-preferences + 5 E2E)
+cargo test --workspace                        # full contract test suite
 cargo test --workspace -- gas_benchmarks --nocapture  # gas benchmarks
 cargo fmt --all -- --check                    # formatting gate
 cargo clippy --all-targets -- -D warnings
@@ -299,7 +331,7 @@ Captures for the submission checklist live in [`docs/screenshots/`](docs/screens
 | 5   | [`transaction-result.png`](docs/screenshots/transaction-result.png)                         | Second real on-chain transaction (publish → PricePublished) |
 | 6   | [`mobile-responsive.png`](docs/screenshots/mobile-responsive.png)                           | Swap page at 390×844 viewport                               |
 | 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
-| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 105 tests passing (20 files)              |
+| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 302 tests passing (27 files)              |
 
 ## 🗺 Roadmap
 
@@ -311,7 +343,7 @@ Captures for the submission checklist live in [`docs/screenshots/`](docs/screens
 | 4     | Wallet integration (Freighter/StellarWalletsKit), live sync          | ✅ Done |
 | 5     | Soroban contracts, CI/CD hardening, documentation                    | ✅ Done |
 | 6     | Developer API (REST + SSE), server logging, Docker deployment        | ✅ Done |
-| 7     | Audit hardening: persistence, contract calls, toasts, deploy tooling | ✅ Done |
+| 7     | Battle-hardening: security audit, test coverage, strict TS, vuln fix | ✅ Done |
 
 ## 🚢 Deployment
 
@@ -324,6 +356,8 @@ STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
 ```
 
 The script deploys and initializes all three contracts, then prints their IDs. **All three contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md).
+
+> ⚠️ **Mainnet deployment** requires `STELLAR_MAINNET_CONFIRM=yes` and uses the public network passphrase.
 
 ### Contracts via CI (GitHub Actions)
 
@@ -350,11 +384,9 @@ Recorded against the live deploy with `scripts/capture-demo-video.mjs` (Playwrig
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, quality gates, and pull-request workflow — and note that all contributors are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## 🧭 Development Principles
+## 📋 Changelog
 
-- **Production-ready architecture** — modular blockchain services, secure configuration, comprehensive error handling.
-- **Tested by default** — unit tests for pure logic and components; CI gates every merge.
-- **Professional open-source standards** — conventional commits, documented modules, accessibility-minded UI.
+See [CHANGELOG.md](CHANGELOG.md) for detailed release notes. The latest release ([v0.2.0](CHANGELOG.md#020--2026-08-11--battle-hardening-release)) documents all 34 commits of security hardening, test coverage improvements, and quality gates added during the battle-hardening audit.
 
 ## 📄 License
 
@@ -365,40 +397,6 @@ Licensed under the [MIT License](LICENSE). TarshishDEX is a demonstration projec
 - **Stellar Development Foundation** — the Stellar network, Horizon, Soroban, and tooling.
 - **SDF StellarWalletsKit ecosystem** — wallet abstraction (`@creit.tech/stellar-wallets-kit`) and Freighter.
 - Open-source libraries: Next.js, React, TanStack Query, zustand, Recharts, lightweight-charts, Tailwind CSS.
-
-## Production
-
-```bash
-npm run build
-npm start
-```
-
-Or via Docker:
-
-```bash
-docker compose up -d
-```
-
-## Quick Start
-
-```bash
-npm ci
-cp .env.example .env.local
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Tech Stack
-
-- **Framework**: Next.js 16
-- **Language**: TypeScript 5
-- **Blockchain**: Stellar (Horizon API + Soroban RPC)
-- **Styling**: Tailwind CSS 4
-- **Charts**: lightweight-charts + recharts
-- **Wallet**: Stellar Wallets Kit + Freighter
-- **Testing**: Vitest + Playwright
-- **CI/CD**: GitHub Actions
 
 ---
 
