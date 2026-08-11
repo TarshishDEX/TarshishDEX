@@ -58,7 +58,7 @@ export const GET = apiHandler(async (request) => {
     logger.error("limit orders query failed", { error: String(error) });
     return NextResponse.json(
       buildErrorResponse(
-        ErrorCode.CONTRACT_NOT_DEPLOYED,
+        ErrorCode.ORDERS_QUERY_FAILED,
         502,
         "Failed to query limit orders — contract may not be deployed",
       ),

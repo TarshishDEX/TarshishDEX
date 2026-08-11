@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchPortfolioSummary } from "@/lib/stellar/account";
 import { parseAddress } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
@@ -12,6 +13,15 @@ export const dynamic = "force-dynamic";
  * Portfolio summary (valuation, allocation, balances) for a Stellar account.
  */
 export const GET = apiHandler(async (request, { params }: { params: Promise<{ address: string }> }) => {
+  const ip = getClientId(request);
+  const rateLimit = checkRateLimit(ip, { maxRequests: 100, windowMs: 60_000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const { address } = await params;
   const validAddress = parseAddress(address);
   if (!validAddress) {

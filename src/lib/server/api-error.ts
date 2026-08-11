@@ -1,7 +1,5 @@
 /**
  * Structured API error response shape used across all API routes.
- * Extends the base error with optional validation details and a unique
- * error ID for traceability in logs.
  *
  * Every error response follows this envelope — no route returns
  * flat `{ error: "..." }` strings. Clients can safely depend on
@@ -22,18 +20,16 @@ export interface ApiErrorResponse {
  * Canonical error codes used across every API route.
  *
  * Each code maps to a specific failure mode — clients can switch on
- * these without parsing human-readable messages.  New routes add their
- * own domain-specific codes here so the full catalogue is visible in
- * one place.
+ * these without parsing human-readable messages. Only codes that are
+ * actually returned by at least one route are listed; reserved codes
+ * are for features on the roadmap.
  */
 export const ErrorCode = {
   // ── Generic / transport-level ──────────────────────────────────────
   BAD_REQUEST: "BAD_REQUEST",
   VALIDATION_ERROR: "VALIDATION_ERROR",
-  NOT_FOUND: "NOT_FOUND",
   RATE_LIMITED: "RATE_LIMITED",
   INTERNAL_ERROR: "INTERNAL_ERROR",
-  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
 
   // ── Asset catalog ──────────────────────────────────────────────────
   ASSET_FETCH_FAILED: "ASSET_FETCH_FAILED",
@@ -58,11 +54,11 @@ export const ErrorCode = {
   ORDERS_BUILD_FAILED: "ORDERS_BUILD_FAILED",
   CONTRACT_NOT_DEPLOYED: "CONTRACT_NOT_DEPLOYED",
 
-  // ── Legacy / HTTP-status fallback ──────────────────────────────────
+  // ── Reserved for upcoming features ─────────────────────────────────
+  /** Reserved: wallet-authenticated endpoints (roadmap). */
   UNAUTHORIZED: "UNAUTHORIZED",
-  FORBIDDEN: "FORBIDDEN",
-  CONFLICT: "CONFLICT",
-  HORIZON_ERROR: "HORIZON_ERROR",
+  /** Reserved: maintenance-mode / downtime responses. */
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

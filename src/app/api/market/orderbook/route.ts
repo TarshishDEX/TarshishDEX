@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { parseAssetParam, parseLimit } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
@@ -12,6 +13,15 @@ export const dynamic = "force-dynamic";
  * Orderbook depth for a base/counter pair on Stellar's native DEX.
  */
 export const GET = apiHandler(async (request) => {
+  const ip = getClientId(request);
+  const rateLimit = checkRateLimit(ip, { maxRequests: 100, windowMs: 60_000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const url = new URL(request.url);
   const selling = parseAssetParam(url.searchParams.get("selling"));
   const buying = parseAssetParam(url.searchParams.get("buying"));

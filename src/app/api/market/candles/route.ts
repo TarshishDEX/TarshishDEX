@@ -3,6 +3,7 @@ import { fetchCandles } from "@/lib/stellar/prices";
 import { toToken } from "@/lib/stellar/tokens";
 import { parseAssetParam, parseDurationMs } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
@@ -16,6 +17,15 @@ const DAY_MS = 86_400_000;
  * OHLCV candles for a pair from Horizon trade aggregations.
  */
 export const GET = apiHandler(async (request) => {
+  const ip = getClientId(request);
+  const rateLimit = checkRateLimit(ip, { maxRequests: 100, windowMs: 60_000 });
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const url = new URL(request.url);
   const baseParam = parseAssetParam(url.searchParams.get("base"));
   const counterParam = parseAssetParam(url.searchParams.get("counter"));
