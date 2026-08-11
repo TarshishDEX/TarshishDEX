@@ -1,12 +1,34 @@
 {
   "name": "TarshishDEX — Stellar DEX",
   "short_name": "TarshishDEX",
-  "description": "Decentralized trading on Stellar's native DEX",
+  "description": "Decentralized trading on Stellar's native DEX — swap, limit orders, and market analytics",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#06090f",
   "theme_color": "#06090f",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "categories": ["finance", "defi"],
+  "lang": "en",
+  "scope": "/",
+  "id": "tarshishdex",
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-swap.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Swap interface"
+    },
+    {
+      "src": "/screenshots/mobile-markets.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Markets on mobile"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.svg",
