@@ -1,18 +1,46 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 
 /**
- * Global middleware — applies security headers (CSP, HSTS, CORS, etc.) and
- * request tracing to all /api/* routes.
- *
- * Consolidates the previous split between middleware.ts and
- * lib/server/security.ts — all security headers live in one place now.
+ * Global middleware — applies security headers (CSP, HSTS, CORS, etc.),
+ * rate limiting, and request tracing to all /api/* routes.
  */
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.pathname;
   if (!url.startsWith("/api/")) return NextResponse.next();
 
+  // ── Rate limiting (100 req / 60s per IP) ──────────────────────────
+  const clientId = getClientId(new Request(request.url, { headers: request.headers }));
+  const rateLimit = checkRateLimit(clientId, {
+    maxRequests: 100,
+    windowMs: 60_000,
+    keyPrefix: "api",
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": "100",
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(rateLimit.resetAt),
+          "Retry-After": String(
+            Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
+          ),
+        },
+      }
+    );
+  }
+
   const requestId = request.headers.get("x-request-id") ?? crypto.randomUUID();
   const response = NextResponse.next();
+
+  // ── Rate limit headers on all API responses ───────────────────────
+  response.headers.set("X-RateLimit-Limit", "100");
+  response.headers.set("X-RateLimit-Remaining", String(rateLimit.remaining));
+  response.headers.set("X-RateLimit-Reset", String(rateLimit.resetAt));
 
   // ── Identity & tracing ────────────────────────────────────────────
   response.headers.set("X-Request-Id", requestId);

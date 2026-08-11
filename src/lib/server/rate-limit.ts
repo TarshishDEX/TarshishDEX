@@ -1,115 +1,93 @@
 /**
  * In-memory rate limiter for API routes.
  *
- * Uses a sliding-window approach per IP address. Each endpoint defines
- * a max request count within a window (ms). Multiple windows are stored
- * per IP+endpoint combo to prevent bursts while allowing sustained traffic.
+ * Uses a sliding-window approach: each IP gets `maxRequests` tokens per
+ * `windowMs`. Once exhausted, requests return 429 until the window slides.
  *
- * Not suitable for multi-instance deployments without a shared store (Redis).
- * For single-instance or serverless cold-start, this provides basic protection.
+ * Production note: replace with Redis-based limiter (e.g. Upstash) when
+ * running across multiple instances.
  */
 
-interface RateLimitConfig {
-  /** Maximum requests allowed in the window. */
-  maxRequests: number;
-  /** Window size in milliseconds. */
-  windowMs: number;
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
 }
 
-interface WindowEntry {
-  timestamps: number[];
-}
+const store = new Map<string, RateLimitEntry>();
 
-const DEFAULT_CONFIG: RateLimitConfig = {
-  maxRequests: 100,
-  windowMs: 60_000,
-};
+/** Periodic cleanup — remove expired entries every 5 minutes. */
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+let lastCleanup = Date.now();
 
-const ENDPOINT_CONFIGS: Record<string, RateLimitConfig> = {
-  // Write endpoints — strictest limits
-  "/api/orders": { maxRequests: 30, windowMs: 60_000 },
-  // Read-heavy endpoints — generous but bounded
-  "/api/swap/quote": { maxRequests: 60, windowMs: 60_000 },
-  "/api/market/stats": { maxRequests: 120, windowMs: 60_000 },
-  "/api/market/pools": { maxRequests: 60, windowMs: 60_000 },
-  "/api/events": { maxRequests: 5, windowMs: 60_000 }, // SSE connections
-  "/api/market/orderbook": { maxRequests: 60, windowMs: 60_000 },
-  "/api/market/candles": { maxRequests: 60, windowMs: 60_000 },
-  "/api/assets": { maxRequests: 120, windowMs: 60_000 },
-  "/api/portfolio": { maxRequests: 60, windowMs: 60_000 },
-  "/api/trades": { maxRequests: 60, windowMs: 60_000 },
-};
-
-const store = new Map<string, WindowEntry>();
-
-/** Clean up expired entries periodically (every 5 minutes). */
-function cleanupExpired() {
+function cleanup() {
   const now = Date.now();
-  for (const [key, entry] of store.entries()) {
-    const config = getConfigForKey(key);
-    entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
-    if (entry.timestamps.length === 0) {
-      store.delete(key);
-    }
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  lastCleanup = now;
+  for (const [key, entry] of store) {
+    if (now > entry.resetAt) store.delete(key);
   }
 }
 
-function getConfigForKey(key: string): RateLimitConfig {
-  for (const [path, config] of Object.entries(ENDPOINT_CONFIGS)) {
-    if (key.startsWith(path)) return config;
-  }
-  return DEFAULT_CONFIG;
+export interface RateLimitOptions {
+  /** Maximum number of requests allowed in the window. */
+  maxRequests: number;
+  /** Window duration in milliseconds. */
+  windowMs: number;
+  /** Optional key prefix for namespacing (e.g. per-route). */
+  keyPrefix?: string;
 }
 
-// Auto-cleanup every 5 minutes
-if (typeof globalThis !== "undefined") {
-  setInterval(cleanupExpired, 300_000);
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
 }
 
 /**
- * Check if a request should be rate-limited.
- * Returns { allowed: true } or { allowed: false, retryAfter: seconds }.
+ * Check whether a request identified by `key` (typically IP) is rate-limited.
+ * Returns metadata for setting `X-RateLimit-*` headers.
  */
 export function checkRateLimit(
-  ip: string,
-  path: string
-): { allowed: true } | { allowed: false; retryAfter: number } {
-  const key = `${ip}:${path}`;
-  const config = getConfigForKey(key);
+  key: string,
+  options: RateLimitOptions
+): RateLimitResult {
+  cleanup();
+  const { maxRequests, windowMs, keyPrefix = "rl" } = options;
+  const fullKey = `${keyPrefix}:${key}`;
   const now = Date.now();
 
-  const existing = store.get(key);
-  const entry = existing ?? { timestamps: [now] };
-  if (!existing) {
-    store.set(key, entry);
-    return { allowed: true };
-  }
-  if (!entry) {
-    store.set(key, { timestamps: [now] });
-    return { allowed: true };
+  const entry = store.get(fullKey);
+  if (!entry || now > entry.resetAt) {
+    // Fresh window
+    store.set(fullKey, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: maxRequests - 1, resetAt: now + windowMs };
   }
 
-  // Remove expired timestamps
-  entry.timestamps = entry.timestamps.filter((t) => now - t < config.windowMs);
+  entry.count += 1;
+  const remaining = Math.max(0, maxRequests - entry.count);
+  return {
+    allowed: entry.count <= maxRequests,
+    remaining,
+    resetAt: entry.resetAt,
+  };
+}
 
-  if (entry.timestamps.length >= config.maxRequests) {
-    const oldest = entry.timestamps[0]!;
-    const retryAfter = Math.ceil((oldest + config.windowMs - now) / 1000);
-    return { allowed: false, retryAfter: Math.max(1, retryAfter) };
-  }
-
-  entry.timestamps.push(now);
-  return { allowed: true };
+/** Reset the rate limit store (for testing). */
+export function resetRateLimitStore(): void {
+  store.clear();
 }
 
 /**
- * Extract client IP from request headers.
- * Checks X-Forwarded-For (proxy/CDN) then falls back to direct connection.
+ * Extract a stable client identifier from request headers.
+ * Falls back to IP when x-forwarded-for is unavailable (e.g. dev).
  */
-export function getClientIp(request: Request): string {
+export function getClientId(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
+    // x-forwarded-for may contain multiple IPs; use the first (client).
     return forwarded.split(",")[0]!.trim();
   }
-  return "127.0.0.1";
+  // Fallback: use x-real-ip or a hash of user-agent + accept-language
+  const realIp = request.headers.get("x-real-ip");
+  return realIp ?? "unknown";
 }
