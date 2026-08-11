@@ -327,7 +327,7 @@ describe("event emitter", () => {
     const received: string[] = [];
     appEvents.on("wallet:disconnected", () => received.push("off"));
     appEvents.clear();
-    appEvents.emit("wallet:disconnected");
+    appEvents.emit("wallet:disconnected", undefined);
     expect(received).toHaveLength(0);
   });
 });
@@ -527,12 +527,9 @@ describe("memoize", () => {
   });
 
   it("createMemoized handles maxSize=0 edge case", () => {
-    // maxSize of 0 means the cache is never larger than 0,
-    // so first key lookup on empty map returns undefined
     const m = createMemoized((x: number) => x * 2, 0);
-    let calls = 0;
     m.get(1);
-    m.get(1); // recompute since cache was never populated
+    m.get(1);
     m.clear();
   });
 });
@@ -572,7 +569,8 @@ describe("object utilities", () => {
   });
 
   it("pick ignores missing keys", () => {
-    expect(pick({ a: 1 }, ["a", "x"] as (keyof typeof obj)[])).toEqual({
+    const obj = { a: 1 };
+    expect(pick(obj, ["a", "x"] as Array<keyof typeof obj>)).toEqual({
       a: 1,
     });
   });
@@ -584,8 +582,8 @@ describe("object utilities", () => {
 
   it("deepMerge merges nested objects", () => {
     const result = deepMerge(
-      { a: 1, b: { x: 1, y: 2 } },
-      { b: { y: 99 }, c: 3 }
+      { a: 1, b: { x: 1, y: 2 }, c: 0 },
+      { b: { y: 99 }, c: 3 } as Partial<{ a: number; b: { x: number; y: number }; c: number }>
     );
     expect(result).toEqual({ a: 1, b: { x: 1, y: 99 }, c: 3 });
   });
