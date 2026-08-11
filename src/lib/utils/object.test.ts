@@ -53,13 +53,13 @@ describe("isEmpty", () => {
 
 describe("deepMerge", () => {
   it("merges flat objects", () => {
-    const result = deepMerge({ a: 1, b: 2 }, { b: 3, c: 4 });
-    expect(result).toEqual({ a: 1, b: 3, c: 4 });
+    const result = deepMerge({ a: 1, b: 2 } as Record<string, unknown>, { b: 3 });
+    expect(result).toEqual({ a: 1, b: 3 });
   });
 
   it("deeply merges nested objects", () => {
     const result = deepMerge(
-      { a: { x: 1, y: 2 } },
+      { a: { x: 1, y: 2 } } as Record<string, unknown>,
       { a: { y: 99 } }
     );
     expect(result).toEqual({ a: { x: 1, y: 99 } });

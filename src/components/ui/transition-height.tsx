@@ -32,12 +32,12 @@ export function TransitionHeight({
       setMounted(true);
       // Measure DOM after the mount state update flushes.
       if (ref.current) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setHeight(ref.current.scrollHeight);
       }
       return;
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setHeight(0);
       const timer = setTimeout(() => setMounted(false), duration);
       return () => clearTimeout(timer);

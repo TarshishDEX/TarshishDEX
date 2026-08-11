@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 // We need to test getHorizonUrl and getHorizonServer — re-import after env setup
 const horizonModule = await import("@/lib/stellar/horizon");

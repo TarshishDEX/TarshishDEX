@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { findBestRoute } from "@/lib/stellar/routing";
 import { swapQuoteParamsSchema } from "@/lib/api/schemas";
 import { logger } from "@/lib/server/logger";
-import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse } from "@/lib/server/api-error";
 import type { StellarAsset } from "@/lib/stellar/types";
@@ -14,12 +14,22 @@ export const dynamic = "force-dynamic";
  * Best-route quote with price impact, minimum received, and fee estimate.
  */
 export const GET = apiHandler(async (request) => {
-  const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(ip, "/api/swap/quote");
+  const ip = getClientId(request);
+  const rateLimit = checkRateLimit(ip, {
+    maxRequests: 100,
+    windowMs: 60_000,
+  });
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
-      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfter) } }
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
+          ),
+        },
+      }
     );
   }
 

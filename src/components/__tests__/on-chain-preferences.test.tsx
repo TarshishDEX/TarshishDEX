@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { OnChainPreferences } from "@/components/swap/on-chain-preferences";
 
 // Mock wallet store — disconnected

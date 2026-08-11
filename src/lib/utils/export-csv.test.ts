@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   objectsToCsv,
   exportCsv,
-  downloadFile,
 } from "@/lib/utils/export-csv";
 
 describe("objectsToCsv", () => {

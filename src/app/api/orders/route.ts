@@ -2,18 +2,28 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { parseAddress } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
-import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 
 export const dynamic = "force-dynamic";
 
 function withRateLimit(request: Request): NextResponse | null {
-  const ip = getClientIp(request);
-  const result = checkRateLimit(ip, "/api/orders");
+  const ip = getClientId(request);
+  const result = checkRateLimit(ip, {
+    maxRequests: 100,
+    windowMs: 60_000,
+  });
   if (!result.allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
-      { status: 429, headers: { "Retry-After": String(result.retryAfter) } }
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((result.resetAt - Date.now()) / 1000)
+          ),
+        },
+      }
     );
   }
   return null;

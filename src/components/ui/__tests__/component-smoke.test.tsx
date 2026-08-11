@@ -86,7 +86,7 @@ import { Switch } from "@/components/ui/switch";
 
 describe("Switch", () => {
   it("renders without crashing", () => {
-    const { container } = render(<Switch />);
+    const { container } = render(<Switch checked={false} onChange={() => {}} />);
     expect(container.firstChild).toBeDefined();
   });
 });
@@ -96,7 +96,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 describe("Checkbox", () => {
   it("renders without crashing", () => {
-    const { container } = render(<Checkbox />);
+    const { container } = render(<Checkbox checked={false} onChange={() => {}} />);
     expect(container.firstChild).toBeDefined();
   });
 });

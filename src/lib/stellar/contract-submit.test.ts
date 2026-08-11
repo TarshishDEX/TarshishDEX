@@ -18,7 +18,7 @@ vi.mock("@/lib/stellar/horizon", () => ({
 // Mock TransactionBuilder to avoid XDR parsing of test strings
 vi.mock("@stellar/stellar-sdk", () => ({
   TransactionBuilder: {
-    fromXDR: (xdr: string, _passphrase: string) => ({
+    fromXDR: (xdr: string) => ({
       _xdr: xdr,
       toXDR: () => xdr,
     }),
@@ -85,6 +85,8 @@ describe("signAndSubmitContractTx", () => {
     );
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Transaction failed");
+    if (!result.success) {
+      expect(result.error).toBe("Transaction failed");
+    }
   });
 });

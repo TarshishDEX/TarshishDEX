@@ -940,7 +940,7 @@ mod fuzz {
     /// Invariant: History length never exceeds MAX_HISTORY.
     #[test]
     fn invariant_history_never_exceeds_max() {
-        let (env, _admin, publisher, client) = setup();
+        let (_env, _admin, publisher, client) = setup();
 
         for i in 0..(MAX_HISTORY + 5) {
             client.publish(
@@ -959,7 +959,7 @@ mod fuzz {
     /// Invariant: Publishing overwrites the latest observation.
     #[test]
     fn invariant_publish_overwrites_latest() {
-        let (env, _admin, publisher, client) = setup();
+        let (_env, _admin, publisher, client) = setup();
 
         client.publish(
             &publisher,
@@ -983,7 +983,7 @@ mod fuzz {
     /// Invariant: Unpublished pair returns None.
     #[test]
     fn invariant_unpublished_pair_returns_none() {
-        let (env, _admin, _, client) = setup();
+        let (_env, _admin, _, client) = setup();
 
         for _ in 0..5 {
             let result = client.get_observation(&symbol_short!("BTC"), &symbol_short!("ETH"));
@@ -994,7 +994,7 @@ mod fuzz {
     /// Invariant: Revoked publisher cannot publish.
     #[test]
     fn invariant_revoked_publisher_blocked() {
-        let (env, _admin, publisher, client) = setup();
+        let (_env, _admin, publisher, client) = setup();
 
         client.publish(
             &publisher,
