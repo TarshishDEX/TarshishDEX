@@ -728,3 +728,135 @@ mod gas_benchmarks {
         println!("[bench] get_version: {cost} cpu instructions");
     }
 }
+
+// ── Property-based fuzz tests ──────────────────────────────────────────
+// Run with: cargo test fuzz -- --nocapture
+
+#[cfg(test)]
+mod fuzz {
+    use super::*;
+    use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+
+    fn setup() -> (Env, Address, TradingPreferencesClient<'static>) {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        (env, admin, client)
+    }
+
+    /// Invariant: Preference count always matches PreferencesList length.
+    #[test]
+    fn invariant_preference_count_matches_list() {
+        let (env, _admin, client) = setup();
+
+        for i in 0..5 {
+            let account = Address::generate(&env);
+            let prefs = Preferences {
+                max_slippage_bps: 50 + i * 10,
+                routing_mode: symbol_short!("auto"),
+                allowed_assets: Vec::new(&env),
+            };
+            client.set_preferences(&account, &prefs);
+            assert_eq!(client.get_preference_count(), i + 1);
+        }
+
+        // Paginated results should match count
+        let (page, _) = client.paginated_get_preferences(&50, &0);
+        assert_eq!(page.len(), client.get_preference_count());
+    }
+
+    /// Invariant: Removing all preferences yields count=0.
+    #[test]
+    fn invariant_empty_after_removing_all() {
+        let (env, _admin, client) = setup();
+
+        let mut accounts: Vec<Address> = Vec::new(&env);
+        for _ in 0..5 {
+            let account = Address::generate(&env);
+            client.set_preferences(
+                &account,
+                &Preferences {
+                    max_slippage_bps: 50,
+                    routing_mode: symbol_short!("auto"),
+                    allowed_assets: Vec::new(&env),
+                },
+            );
+            accounts.push_back(account);
+        }
+
+        for account in accounts.iter() {
+            client.remove_preferences(&account);
+        }
+
+        assert_eq!(client.get_preference_count(), 0);
+        let (page, _) = client.paginated_get_preferences(&50, &0);
+        assert_eq!(page.len(), 0);
+    }
+
+    /// Invariant: Default prefs returned for never-set accounts.
+    #[test]
+    fn invariant_unset_returns_defaults() {
+        let (env, _admin, client) = setup();
+
+        for _ in 0..10 {
+            let account = Address::generate(&env);
+            let prefs = client.get_preferences(&account);
+            assert_eq!(prefs.max_slippage_bps, 100); // default
+            assert_eq!(prefs.routing_mode, symbol_short!("auto"));
+            assert_eq!(prefs.allowed_assets.len(), 0);
+        }
+    }
+
+    /// Invariant: Update overwrites, count stays same.
+    #[test]
+    fn invariant_update_does_not_increase_count() {
+        let (env, _admin, client) = setup();
+        let account = Address::generate(&env);
+
+        let prefs1 = Preferences {
+            max_slippage_bps: 50,
+            routing_mode: symbol_short!("auto"),
+            allowed_assets: Vec::new(&env),
+        };
+        client.set_preferences(&account, &prefs1);
+        assert_eq!(client.get_preference_count(), 1);
+
+        let prefs2 = Preferences {
+            max_slippage_bps: 75,
+            routing_mode: symbol_short!("direct"),
+            allowed_assets: Vec::from_array(&env, [symbol_short!("USDC")]),
+        };
+        client.set_preferences(&account, &prefs2);
+        // Count should still be 1 (update, not insert)
+        assert_eq!(client.get_preference_count(), 1);
+        assert_eq!(client.get_preferences(&account), prefs2);
+    }
+
+    /// Invariant: Batch get returns correct length for mixed set/unset.
+    #[test]
+    fn invariant_batch_get_len_matches_input() {
+        let (env, _admin, client) = setup();
+        let account1 = Address::generate(&env);
+        let account2 = Address::generate(&env);
+        let account3 = Address::generate(&env);
+
+        client.set_preferences(
+            &account1,
+            &Preferences {
+                max_slippage_bps: 30,
+                routing_mode: symbol_short!("auto"),
+                allowed_assets: Vec::new(&env),
+            },
+        );
+
+        let accounts = Vec::from_array(
+            &env,
+            [account1.clone(), account2.clone(), account3.clone()],
+        );
+        let batch = client.batch_get_preferences(&accounts);
+        assert_eq!(batch.len(), 3);
+    }
+}

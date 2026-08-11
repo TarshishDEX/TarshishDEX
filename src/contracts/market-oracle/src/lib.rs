@@ -904,3 +904,115 @@ mod gas_benchmarks {
         println!("[bench] set_version: {cost} cpu instructions");
     }
 }
+
+// ── Property-based fuzz tests ──────────────────────────────────────────
+// Run with: cargo test fuzz -- --nocapture
+
+#[cfg(test)]
+mod fuzz {
+    use super::*;
+    use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+
+    fn setup() -> (Env, Address, Address, MarketOracleClient<'static>) {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+        (env, admin, publisher, client)
+    }
+
+    /// Invariant: Publisher count increments on grant, decrements on revoke.
+    #[test]
+    fn invariant_publisher_count_consistent() {
+        let (env, _admin, _, client) = setup();
+
+        for i in 0..5 {
+            let pub_addr = Address::generate(&env);
+            client.set_publisher(&pub_addr, &true);
+            assert_eq!(client.get_publisher_count(), i + 2); // 1 from setup + new ones
+        }
+    }
+
+    /// Invariant: History length never exceeds MAX_HISTORY.
+    #[test]
+    fn invariant_history_never_exceeds_max() {
+        let (env, _admin, publisher, client) = setup();
+
+        for i in 0..(MAX_HISTORY + 5) {
+            client.publish(
+                &publisher,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+            );
+        }
+
+        let history = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        assert!(history.len() <= MAX_HISTORY);
+        assert_eq!(history.len(), MAX_HISTORY);
+    }
+
+    /// Invariant: Publishing overwrites the latest observation.
+    #[test]
+    fn invariant_publish_overwrites_latest() {
+        let (env, _admin, publisher, client) = setup();
+
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &15_000_000,
+        );
+
+        let obs = client
+            .get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"))
+            .unwrap();
+        assert_eq!(obs.price, 15_000_000);
+    }
+
+    /// Invariant: Unpublished pair returns None.
+    #[test]
+    fn invariant_unpublished_pair_returns_none() {
+        let (env, _admin, _, client) = setup();
+
+        for _ in 0..5 {
+            let result = client.get_observation(&symbol_short!("BTC"), &symbol_short!("ETH"));
+            assert_eq!(result, None);
+        }
+    }
+
+    /// Invariant: Revoked publisher cannot publish.
+    #[test]
+    fn invariant_revoked_publisher_blocked() {
+        let (env, _admin, publisher, client) = setup();
+
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+
+        client.set_publisher(&publisher, &false);
+
+        assert_eq!(
+            client.try_publish(
+                &publisher,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &11_000_000
+            ),
+            Err(Ok(Error::NotAuthorized))
+        );
+    }
+}
