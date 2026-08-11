@@ -72,3 +72,26 @@ jobs:
 
       - name: Build wasm
         run: cargo build --workspace --target wasm32v1-none --release
+
+      - name: Check WASM sizes (64 KB Stellar limit)
+        run: |
+          echo "=== WASM binary sizes ==="
+          MAX_SIZE=65536
+          FAILED=0
+          for wasm in target/wasm32v1-none/release/*.wasm; do
+            if [ -f "$wasm" ]; then
+              SIZE=$(stat -c%s "$wasm")
+              NAME=$(basename "$wasm")
+              PCT=$(( SIZE * 100 / MAX_SIZE ))
+              printf "  %-45s %6d bytes  (%d%% of 64KB)\n" "$NAME" "$SIZE" "$PCT"
+              if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+                echo "##[error] $NAME exceeds 64 KB Stellar deploy limit ($SIZE bytes)"
+                FAILED=1
+              fi
+            fi
+          done
+          if [ "$FAILED" -eq 1 ]; then
+            echo "##[error] One or more WASM binaries exceed the 64 KB Stellar limit"
+            exit 1
+          fi
+          echo "✅ All WASM binaries within 64 KB limit"

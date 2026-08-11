@@ -1,0 +1,105 @@
+name: "Contract Fuzz Testing"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+      - ".github/workflows/contract-fuzz.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+  schedule:
+    # Run nightly fuzzing for deeper exploration
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  property-tests:
+    name: Property-based fuzz tests (proptest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: src/contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      # Property-based tests use the `proptest` crate to generate random
+      # inputs and verify invariants hold. These complement unit tests by
+      # exploring edge cases that humans miss.
+      - name: Run property-based fuzz tests
+        run: |
+          cargo test fuzz -- --nocapture 2>&1 | tee fuzz-results.txt
+          echo "=== Fuzz Summary ==="
+          grep -E '(test result|FAILED|panicked)' fuzz-results.txt || echo "All fuzz tests passed"
+
+      - name: Run proptest regression tests
+        # Regression tests replay previously-failed cases from proptest-regressions/
+        run: |
+          if [ -d "proptest-regressions" ]; then
+            echo "Running proptest regression suite..."
+            cargo test proptest_regression -- --nocapture 2>&1 | tee fuzz-regression.txt
+          else
+            echo "No proptest regression directory — skipping."
+          fi
+
+      - name: Upload fuzz results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-test-results
+          path: |
+            src/contracts/fuzz-results.txt
+            src/contracts/fuzz-regression.txt
+          retention-days: 30
+
+  long-fuzz:
+    name: Extended fuzzing (nightly only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    if: github.event_name == 'schedule'
+    defaults:
+      run:
+        working-directory: src/contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      # Extended fuzzing runs more cases overnight. Capped at 100k cases
+      # per test to stay within the 2-hour timeout.
+      - name: Run extended fuzz (100k cases)
+        run: |
+          # Set PROPTEST_CASES for extended exploration
+          export PROPTEST_CASES=100000
+          cargo test fuzz -- --nocapture 2>&1 | tee fuzz-extended.txt
+
+      - name: Upload extended results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-extended-results
+          path: src/contracts/fuzz-extended.txt
+          retention-days: 7

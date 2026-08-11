@@ -1,0 +1,309 @@
+name: "Contract Quality Scorecard"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+      - ".github/workflows/contract-quality.yml"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/contract-audit.yml"
+      - ".github/workflows/scout-audit.yml"
+      - ".github/workflows/gas-regression.yml"
+      - ".github/workflows/contract-fuzz.yml"
+      - ".github/workflows/contract-coverage.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/contracts/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  scorecard:
+    name: Quality Scorecard (target: 20/20)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: src/contracts
+    outputs:
+      total_score: ${{ steps.score.outputs.total }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/contracts
+
+      # ── Check 1: Formatting (2 pts) ───────────────────────────────────
+      - name: 1. Format check (2 pts)
+        id: fmt
+        run: |
+          if cargo fmt --all -- --check 2>&1; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Format: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Format: FAIL"
+          fi
+
+      # ── Check 2: Clippy (2 pts) ───────────────────────────────────────
+      - name: 2. Clippy lints (2 pts)
+        id: clippy
+        run: |
+          if cargo clippy --all-targets -- -D warnings 2>&1; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Clippy: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Clippy: FAIL"
+          fi
+
+      # ── Check 3: Tests pass (2 pts) ───────────────────────────────────
+      - name: 3. Tests pass (2 pts)
+        id: test
+        run: |
+          if cargo test --workspace 2>&1; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Tests: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Tests: FAIL"
+          fi
+
+      # ── Check 4: WASM builds (2 pts) ──────────────────────────────────
+      - name: 4. WASM build (2 pts)
+        id: wasm
+        run: |
+          if cargo build --workspace --target wasm32v1-none --release 2>&1; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ WASM build: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ WASM build: FAIL"
+          fi
+
+      # ── Check 5: WASM size within 64KB limit (2 pts) ─────────────────
+      - name: 5. WASM within 64KB limit (2 pts)
+        id: wasm_size
+        run: |
+          MAX=65536
+          FAILED=0
+          for wasm in target/wasm32v1-none/release/*.wasm; do
+            if [ -f "$wasm" ]; then
+              SIZE=$(stat -c%s "$wasm")
+              if [ "$SIZE" -gt "$MAX" ]; then
+                echo "  $wasm: $SIZE bytes (EXCEEDS 64KB)"
+                FAILED=1
+              else
+                echo "  $(basename "$wasm"): $SIZE bytes (OK)"
+              fi
+            fi
+          done
+          if [ "$FAILED" -eq 0 ]; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ WASM size: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ WASM size: FAIL"
+          fi
+
+      # ── Check 6: Cargo audit (2 pts) ──────────────────────────────────
+      - name: 6. Cargo audit - no known vulns (2 pts)
+        id: audit
+        run: |
+          cargo install cargo-audit --locked --quiet 2>/dev/null || true
+          if cargo audit --deny warnings 2>&1; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Audit: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Audit: FAIL (vulnerabilities found)"
+          fi
+
+      # ── Check 7: Cargo deny (2 pts) ──────────────────────────────────
+      - name: 7. Cargo deny - licenses + bans (2 pts)
+        id: deny
+        run: |
+          cargo install cargo-deny --locked --quiet 2>/dev/null || true
+          DENY_OK=0
+          cargo deny check licenses 2>&1 && DENY_OK=$((DENY_OK+1))
+          cargo deny check bans 2>&1 && DENY_OK=$((DENY_OK+1))
+          cargo deny check advisories 2>&1 && DENY_OK=$((DENY_OK+1))
+          if [ "$DENY_OK" -eq 3 ]; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Deny: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Deny: FAIL ($DENY_OK/3 checks passed)"
+          fi
+
+      # ── Check 8: no_std compliance (2 pts) ────────────────────────────
+      - name: 8. no_std compliance (2 pts)
+        id: nostd
+        run: |
+          echo "Checking #![no_std] in all contract crates..."
+          ALL_OK=1
+          for manifest in */Cargo.toml; do
+            crate=$(dirname "$manifest")
+            if [ "$crate" != "target" ] && [ -f "$crate/src/lib.rs" ]; then
+              if grep -q 'no_std' "$crate/src/lib.rs" 2>/dev/null; then
+                echo "  $crate: no_std ✅"
+              else
+                echo "  $crate: MISSING no_std ❌"
+                ALL_OK=0
+              fi
+            fi
+          done
+          if [ "$ALL_OK" -eq 1 ]; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ no_std: PASS"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ no_std: FAIL"
+          fi
+
+      # ── Check 9: Release profile optimized (2 pts) ────────────────────
+      - name: 9. Release profile optimized (2 pts)
+        id: profile
+        run: |
+          CHECKS=0
+          if grep -q 'opt-level = "z"' Cargo.toml; then CHECKS=$((CHECKS+1)); fi
+          if grep -q 'lto = true' Cargo.toml; then CHECKS=$((CHECKS+1)); fi
+          if grep -q 'codegen-units = 1' Cargo.toml; then CHECKS=$((CHECKS+1)); fi
+          if grep -q 'strip = "symbols"' Cargo.toml; then CHECKS=$((CHECKS+1)); fi
+          if grep -q 'panic = "abort"' Cargo.toml; then CHECKS=$((CHECKS+1)); fi
+          if [ "$CHECKS" -ge 5 ]; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Release profile: PASS ($CHECKS/5 optimizations)"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Release profile: FAIL ($CHECKS/5 optimizations)"
+          fi
+
+      # ── Check 10: Gas benchmarks exist (2 pts) ────────────────────────
+      - name: 10. Gas benchmarks present (2 pts)
+        id: gas
+        run: |
+          TOTAL=0
+          for lib in */src/lib.rs; do
+            if [ -f "$lib" ]; then
+              COUNT=$(grep -c 'fn bench_' "$lib" 2>/dev/null || echo 0)
+              echo "  $(dirname $(dirname "$lib")): $COUNT gas benchmarks"
+              TOTAL=$((TOTAL + COUNT))
+            fi
+          done
+          if [ "$TOTAL" -ge 10 ]; then
+            echo "points=2" >> "$GITHUB_OUTPUT"
+            echo "✅ Gas benchmarks: PASS ($TOTAL total)"
+          else
+            echo "points=0" >> "$GITHUB_OUTPUT"
+            echo "❌ Gas benchmarks: FAIL ($TOTAL total, need ≥10)"
+          fi
+
+      # ── Compute total ─────────────────────────────────────────────────
+      - name: Compute scorecard total
+        id: score
+        run: |
+          FMT=${{ steps.fmt.outputs.points }}
+          CLIPPY=${{ steps.clippy.outputs.points }}
+          TEST=${{ steps.test.outputs.points }}
+          WASM=${{ steps.wasm.outputs.points }}
+          SIZE=${{ steps.wasm_size.outputs.points }}
+          AUDIT=${{ steps.audit.outputs.points }}
+          DENY=${{ steps.deny.outputs.points }}
+          NOSTD=${{ steps.nostd.outputs.points }}
+          PROFILE=${{ steps.profile.outputs.points }}
+          GAS=${{ steps.gas.outputs.points }}
+
+          TOTAL=$((FMT + CLIPPY + TEST + WASM + SIZE + AUDIT + DENY + NOSTD + PROFILE + GAS))
+
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+          cat << 'EOF' | tee scorecard.md
+      # 🏆 Contract Quality Scorecard
+
+      | # | Check | Category | Score |
+      |---|-------|----------|-------|
+      EOF
+          printf "| 1 | cargo fmt | Code Style | %s/2 |\n" "$FMT" >> scorecard.md
+          printf "| 2 | cargo clippy | Static Analysis | %s/2 |\n" "$CLIPPY" >> scorecard.md
+          printf "| 3 | cargo test | Testing | %s/2 |\n" "$TEST" >> scorecard.md
+          printf "| 4 | WASM build | Build | %s/2 |\n" "$WASM" >> scorecard.md
+          printf "| 5 | WASM ≤ 64KB | Size Limit | %s/2 |\n" "$SIZE" >> scorecard.md
+          printf "| 6 | cargo audit | Security | %s/2 |\n" "$AUDIT" >> scorecard.md
+          printf "| 7 | cargo deny | Compliance | %s/2 |\n" "$DENY" >> scorecard.md
+          printf "| 8 | no_std | WASM Compat | %s/2 |\n" "$NOSTD" >> scorecard.md
+          printf "| 9 | Release profile | Optimization | %s/2 |\n" "$PROFILE" >> scorecard.md
+          printf "| 10 | Gas benchmarks | Performance | %s/2 |\n" "$GAS" >> scorecard.md
+          printf "\n| **Total** | | | **%s/20** |\n" "$TOTAL" >> scorecard.md
+
+          if [ "$TOTAL" -eq 20 ]; then
+            printf "\n🎉 **Perfect Score: 20/20!**\n" >> scorecard.md
+          elif [ "$TOTAL" -ge 16 ]; then
+            printf "\n✅ **Good score. Close to 20/20 — see remaining gaps above.**\n" >> scorecard.md
+          else
+            printf "\n⚠️ **Needs improvement. Address the missing checks above.**\n" >> scorecard.md
+          fi
+
+          cat scorecard.md
+
+      - name: Upload scorecard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-quality-scorecard
+          path: src/contracts/scorecard.md
+          retention-days: 90
+
+      - name: PR comment with scorecard
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'src/contracts/scorecard.md';
+            if (!fs.existsSync(path)) {
+              console.log('No scorecard generated');
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('Contract Quality Scorecard'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if below target
+        if: steps.score.outputs.total != '20'
+        run: |
+          echo "##[error] Quality score ${{ steps.score.outputs.total }}/20 — target is 20/20"
+          exit 1

@@ -47,17 +47,39 @@ jobs:
             const output = fs.readFileSync(path, 'utf8');
             const lines = output.split('\n').filter(l => l.startsWith('[bench]'));
             if (lines.length === 0) return;
+
+            // Parse benchmarks with threshold checks
+            const THRESHOLDS = {
+              'initialize': 2_000_000,
+              'place_order': 3_000_000,
+              'cancel_order': 2_000_000,
+              'mark_executed': 2_500_000,
+            };
+
+            const rows = lines.map(l => {
+              const match = l.match(/\[bench\] (.+): (\d+) cpu/);
+              if (!match) return '';
+              const name = match[1];
+              const cost = parseInt(match[2]);
+              let flag = '';
+              for (const [key, threshold] of Object.entries(THRESHOLDS)) {
+                if (name.includes(key) && cost > threshold) {
+                  flag = ` ⚠️ >${threshold.toLocaleString()}`;
+                  break;
+                }
+              }
+              return `| ${name} | ${cost.toLocaleString()}${flag} |`;
+            }).filter(Boolean);
+
             const table = [
               '## ⛽ Gas Benchmark Results',
               '',
               '| Function | CPU Instructions |',
               '|----------|-----------------|',
-              ...lines.map(l => {
-                const [_, name, cost] = l.match(/\[bench\] (.+): (\d+) cpu/) || [];
-                return `| ${name} | ${cost} |`;
-              }),
+              ...rows,
               '',
               '⚠️ Review any significant increases before merging.',
+              'Thresholds: init ≤2M, place_order ≤3M, cancel ≤2M, execute ≤2.5M',
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({

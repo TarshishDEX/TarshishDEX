@@ -31,6 +31,8 @@ pub enum Error {
     NotAuthorized = 6,
     TooManyOrders = 7,
     Expired = 8,
+    SameAssetPair = 9,
+    ArithmeticOverflow = 10,
 }
 
 #[contracttype]
@@ -69,6 +71,10 @@ pub enum DataKey {
     OrderList,
     /// Per-user order ID list for user-scoped queries.
     UserOrders(Address),
+    /// Whether an address is authorized as a relayer (bot/executor).
+    Relayer(Address),
+    /// Count of registered relayers.
+    RelayerCount,
 }
 
 #[contractevent]
@@ -161,6 +167,13 @@ impl LimitOrder {
         if side != symbol_short!("buy") && side != symbol_short!("sell") {
             return Err(Error::InvalidAmount);
         }
+        if base == counter {
+            return Err(Error::SameAssetPair);
+        }
+
+        // Overflow guard: price * amount must fit in i128.
+        // Soroban traps on WASM overflow, but explicit checks are defensive.
+        let _total = price.checked_mul(amount).ok_or(Error::ArithmeticOverflow)?;
 
         // Check per-user order limit
         let user_orders: Vec<u64> = env
@@ -268,23 +281,89 @@ impl LimitOrder {
 
     /// Mark an order as executed (called by frontend after successful swap).
     /// Also cleans the order ID from OrderList and UserOrders indexes.
-    pub fn mark_executed(env: Env, owner: Address, id: u64, tx_hash: Symbol) -> Result<(), Error> {
-        owner.require_auth();
+    ///
+    /// Auth: either the order owner OR a registered relayer may execute.
+    /// This allows bots/relayers to settle orders without owner signatures.
+    pub fn mark_executed(env: Env, caller: Address, id: u64, tx_hash: Symbol) -> Result<(), Error> {
+        caller.require_auth();
         let key = DataKey::Order(id);
         let order: Order = env
             .storage()
             .persistent()
             .get(&key)
             .ok_or(Error::OrderNotFound)?;
-        if order.owner != owner {
+
+        // Allow order owner OR registered relayer.
+        let is_owner = order.owner == caller;
+        let is_relayer: bool = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Relayer(caller.clone()))
+            .unwrap_or(false);
+
+        if !is_owner && !is_relayer {
             return Err(Error::NotAuthorized);
         }
+
+        let owner = order.owner.clone();
         env.storage().persistent().remove(&key);
 
         Self::remove_from_indexes(&env, &owner, id);
 
         OrderExecuted { owner, id, tx_hash }.publish(&env);
         Ok(())
+    }
+
+    /// Admin: grant or revoke relayer access for an address.
+    /// Relayers can execute orders without being the order owner.
+    pub fn set_relayer(env: Env, relayer: Address, allowed: bool) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+
+        let key = DataKey::Relayer(relayer.clone());
+        let was_allowed: bool = env.storage().persistent().get(&key).unwrap_or(false);
+        env.storage().persistent().set(&key, &allowed);
+        env.storage().persistent().extend_ttl(&key, 0, TTL_LEDGERS);
+
+        // Atomic count update.
+        let count: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::RelayerCount)
+            .unwrap_or(0);
+        let new_count = if allowed && !was_allowed {
+            count.saturating_add(1)
+        } else if !allowed && was_allowed && count > 0 {
+            count.saturating_sub(1)
+        } else {
+            count
+        };
+        if new_count != count {
+            env.storage()
+                .instance()
+                .set(&DataKey::RelayerCount, &new_count);
+        }
+        Ok(())
+    }
+
+    /// Check if an address is authorized as a relayer.
+    pub fn is_relayer(env: Env, relayer: Address) -> bool {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Relayer(relayer))
+            .unwrap_or(false)
+    }
+
+    /// Return the count of registered relayers.
+    pub fn get_relayer_count(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&DataKey::RelayerCount)
+            .unwrap_or(0)
     }
 
     /// Internal helper: remove an order ID from OrderList and UserOrders vectors.
@@ -295,7 +374,7 @@ impl LimitOrder {
             .instance()
             .get(&DataKey::OrderList)
             .unwrap_or_else(|| Vec::new(env));
-        if let Some(pos) = list.first_index_of(&id) {
+        if let Some(pos) = list.first_index_of(id) {
             list.remove(pos);
             env.storage().instance().set(&DataKey::OrderList, &list);
         }
@@ -306,7 +385,7 @@ impl LimitOrder {
             .persistent()
             .get(&DataKey::UserOrders(owner.clone()))
             .unwrap_or_else(|| Vec::new(env));
-        if let Some(pos) = user_list.first_index_of(&id) {
+        if let Some(pos) = user_list.first_index_of(id) {
             user_list.remove(pos);
             env.storage()
                 .persistent()
@@ -570,6 +649,152 @@ mod test {
         client.cancel_order(&user, &id2);
         assert_eq!(client.get_user_orders(&user).len(), 0);
     }
+
+    #[test]
+    fn rejects_same_asset_pair() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("XLM"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::SameAssetPair))
+        );
+    }
+
+    #[test]
+    fn relayer_can_execute_order() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let relayer = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        // Stranger cannot execute without relayer access
+        let stranger = Address::generate(&env);
+        assert_eq!(
+            client.try_mark_executed(&stranger, &id, &symbol_short!("tx")),
+            Err(Ok(Error::NotAuthorized))
+        );
+
+        // Grant relayer access
+        client.set_relayer(&relayer, &true);
+        assert!(client.is_relayer(&relayer));
+        assert_eq!(client.get_relayer_count(), 1);
+
+        // Relayer can execute
+        assert!(client
+            .try_mark_executed(&relayer, &id, &symbol_short!("tx_relay"))
+            .is_ok());
+        assert!(client.get_order(&id).is_none());
+
+        // Revoke relayer access
+        client.set_relayer(&relayer, &false);
+        assert!(!client.is_relayer(&relayer));
+        assert_eq!(client.get_relayer_count(), 0);
+    }
+
+    #[test]
+    fn owner_can_still_execute_own_order() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        // Owner can execute their own order (no relayer access needed)
+        assert!(client
+            .try_mark_executed(&user, &id, &symbol_short!("tx_owner"))
+            .is_ok());
+        assert!(client.get_order(&id).is_none());
+    }
+
+    #[test]
+    fn overflow_on_price_times_amount_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        // i128::MAX * 2 overflows
+        let huge = i128::MAX;
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &huge,
+                &2,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::ArithmeticOverflow))
+        );
+    }
+
+    #[test]
+    fn rejects_zero_price() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &0,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::InvalidPrice))
+        );
+    }
 }
 
 // ── Gas benchmarking tests ─────────────────────────────────────────────
@@ -804,5 +1029,163 @@ mod gas_benchmarks {
         let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] limit-order set_version: {cost} cpu instructions");
+    }
+}
+
+// ── Property-based fuzz tests ──────────────────────────────────────────
+// Run with: cargo test fuzz -- --nocapture
+// Extended: PROPTEST_CASES=10000 cargo test fuzz -- --nocapture
+
+#[cfg(test)]
+mod fuzz {
+    use super::*;
+    use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+
+    fn setup() -> (Env, Address, LimitOrderClient<'static>) {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        (env, admin, client)
+    }
+
+    /// Invariant: Order count always equals the length of OrderList.
+    #[test]
+    fn invariant_order_count_matches_list_length() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        for i in 0..10 {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+            assert_eq!(client.get_order_count() as u64, id);
+            let (all, _) = client.paginated_orders(&50, &0);
+            assert_eq!(all.len(), client.get_order_count());
+        }
+
+        for i in 1..=5 {
+            client.cancel_order(&user, &i);
+            let (all, _) = client.paginated_orders(&50, &0);
+            assert_eq!(all.len(), client.get_order_count());
+        }
+    }
+
+    /// Invariant: Removing all orders yields count of 0.
+    #[test]
+    fn invariant_empty_state_after_removing_all() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        let mut ids: Vec<u64> = Vec::new(&env);
+        for i in 0..5 {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+            ids.push_back(id);
+        }
+
+        assert_eq!(client.get_order_count(), 5);
+
+        for id in ids.iter() {
+            client.cancel_order(&user, &id);
+        }
+
+        assert_eq!(client.get_order_count(), 0);
+        assert_eq!(client.get_user_orders(&user).len(), 0);
+        let (all, _) = client.paginated_orders(&50, &0);
+        assert_eq!(all.len(), 0);
+    }
+
+    /// Invariant: After cancel, get_order returns None.
+    #[test]
+    fn invariant_cancelled_order_not_found() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        for _ in 0..20 {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+            client.cancel_order(&user, &id);
+            assert!(client.get_order(&id).is_none());
+        }
+    }
+
+    /// Invariant: Place → Execute → Gone. Both owner and relayer paths.
+    #[test]
+    fn invariant_executed_order_gone() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        let relayer = Address::generate(&env);
+        client.set_relayer(&relayer, &true);
+
+        for i in 0..10 {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+            let executor = if i % 2 == 0 { &user } else { &relayer };
+            client.mark_executed(executor, &id, &symbol_short!("tx"));
+            assert!(client.get_order(&id).is_none());
+        }
+    }
+
+    /// Invariant: UserOrders list length never exceeds MAX_ORDERS_PER_USER.
+    #[test]
+    fn invariant_user_order_limit_respected() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        for i in 0..MAX_ORDERS_PER_USER {
+            client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+        }
+        assert_eq!(client.get_user_orders(&user).len(), MAX_ORDERS_PER_USER);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("BTC"),
+                &symbol_short!("USDC"),
+                &50_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::TooManyOrders))
+        );
     }
 }
