@@ -3,11 +3,13 @@ import { fetchLiquidityPools, buildPoolSummary } from "@/lib/stellar/pool-querie
 import { parseAssetParam } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
 import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
+import { apiHandler } from "@/lib/server/api-handler";
+import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
 export const dynamic = "force-dynamic";
 
 /** GET /api/market/pools?base=XLM&counter=USDC:ISSUER */
-export async function GET(request: Request) {
+export const GET = apiHandler(async (request) => {
   const ip = getClientId(request);
   const rateLimit = checkRateLimit(ip, {
     maxRequests: 100,
@@ -15,15 +17,13 @@ export async function GET(request: Request) {
   });
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: "Too many requests" },
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
       {
         status: 429,
         headers: {
-          "Retry-After": String(
-            Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
-          ),
+          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
         },
-      }
+      },
     );
   }
 
@@ -31,7 +31,10 @@ export async function GET(request: Request) {
   const base = parseAssetParam(url.searchParams.get("base"));
   const counter = parseAssetParam(url.searchParams.get("counter"));
   if (!base || !counter) {
-    return NextResponse.json({ error: "Missing base/counter params" }, { status: 400 });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.BAD_REQUEST, 400, "Missing base/counter params"),
+      { status: 400 },
+    );
   }
   try {
     const pools = await fetchLiquidityPools(base, counter);
@@ -44,8 +47,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ count: summaries.length, pools: summaries });
   } catch (error) {
     logger.error("pools fetch failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to fetch pools" }, { status: 502 });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.POOLS_FETCH_FAILED, 502, "Failed to fetch pools"),
+      { status: 502 },
+    );
   }
-}
+});
 
 export { OPTIONS } from "@/lib/api/cors";

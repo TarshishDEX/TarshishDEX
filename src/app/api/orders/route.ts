@@ -4,6 +4,7 @@ import { parseAddress } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
 import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
+import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +16,13 @@ function withRateLimit(request: Request): NextResponse | null {
   });
   if (!result.allowed) {
     return NextResponse.json(
-      { error: "Too many requests" },
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
       {
         status: 429,
         headers: {
-          "Retry-After": String(
-            Math.ceil((result.resetAt - Date.now()) / 1000)
-          ),
+          "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)),
         },
-      }
+      },
     );
   }
   return null;
@@ -58,8 +57,12 @@ export const GET = apiHandler(async (request) => {
   } catch (error) {
     logger.error("limit orders query failed", { error: String(error) });
     return NextResponse.json(
-      { error: "Failed to query limit orders — contract may not be deployed" },
-      { status: 502 }
+      buildErrorResponse(
+        ErrorCode.CONTRACT_NOT_DEPLOYED,
+        502,
+        "Failed to query limit orders — contract may not be deployed",
+      ),
+      { status: 502 },
     );
   }
 });
@@ -78,8 +81,12 @@ export const POST = apiHandler(async (request) => {
 
     if (!userAddress || !base || !counter || !price || !amount || !side) {
       return NextResponse.json(
-        { error: "Missing required fields: userAddress, base, counter, price, amount, side" },
-        { status: 400 }
+        buildErrorResponse(
+          ErrorCode.VALIDATION_ERROR,
+          400,
+          "Missing required fields: userAddress, base, counter, price, amount, side",
+        ),
+        { status: 400 },
       );
     }
 
@@ -91,13 +98,17 @@ export const POST = apiHandler(async (request) => {
       Number(price),
       Number(amount),
       Number(expiryLedger ?? 0),
-      side
+      side,
     );
 
     if (!xdr) {
       return NextResponse.json(
-        { error: "Failed to build transaction — contract may not be deployed" },
-        { status: 502 }
+        buildErrorResponse(
+          ErrorCode.CONTRACT_NOT_DEPLOYED,
+          502,
+          "Failed to build transaction — contract may not be deployed",
+        ),
+        { status: 502 },
       );
     }
 
@@ -105,7 +116,10 @@ export const POST = apiHandler(async (request) => {
     return NextResponse.json({ xdr, method: "place_order" });
   } catch (error) {
     logger.error("place order build failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to build place order transaction" }, { status: 502 });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.ORDERS_BUILD_FAILED, 502, "Failed to build place order transaction"),
+      { status: 502 },
+    );
   }
 });
 
@@ -124,8 +138,12 @@ export const DELETE = apiHandler(async (request) => {
 
     if (!id || !userAddress) {
       return NextResponse.json(
-        { error: "Missing required fields: id, userAddress" },
-        { status: 400 }
+        buildErrorResponse(
+          ErrorCode.VALIDATION_ERROR,
+          400,
+          "Missing required fields: id, userAddress",
+        ),
+        { status: 400 },
       );
     }
 
@@ -134,8 +152,12 @@ export const DELETE = apiHandler(async (request) => {
 
     if (!xdr) {
       return NextResponse.json(
-        { error: "Failed to build transaction — contract may not be deployed" },
-        { status: 502 }
+        buildErrorResponse(
+          ErrorCode.CONTRACT_NOT_DEPLOYED,
+          502,
+          "Failed to build transaction — contract may not be deployed",
+        ),
+        { status: 502 },
       );
     }
 
@@ -148,8 +170,12 @@ export const DELETE = apiHandler(async (request) => {
   } catch (error) {
     logger.error("cancel/execute build failed", { error: String(error) });
     return NextResponse.json(
-      { error: "Failed to build cancel/execute transaction" },
-      { status: 502 }
+      buildErrorResponse(
+        ErrorCode.ORDERS_BUILD_FAILED,
+        502,
+        "Failed to build cancel/execute transaction",
+      ),
+      { status: 502 },
     );
   }
 });

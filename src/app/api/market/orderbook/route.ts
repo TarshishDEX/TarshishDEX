@@ -3,6 +3,7 @@ import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { parseAssetParam, parseLimit } from "@/lib/api/params";
 import { logger } from "@/lib/server/logger";
 import { apiHandler } from "@/lib/server/api-handler";
+import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,12 @@ export const GET = apiHandler(async (request) => {
 
   if (!selling || !buying) {
     return NextResponse.json(
-      { error: "Missing or invalid 'selling'/'buying' assets (CODE:ISSUER)" },
-      { status: 400 }
+      buildErrorResponse(
+        ErrorCode.BAD_REQUEST,
+        400,
+        "Missing or invalid 'selling'/'buying' assets (CODE:ISSUER)",
+      ),
+      { status: 400 },
     );
   }
 
@@ -32,7 +37,10 @@ export const GET = apiHandler(async (request) => {
     return NextResponse.json(orderbook);
   } catch (error) {
     logger.error("orderbook fetch failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to fetch orderbook" }, { status: 502 });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.ORDERBOOK_FETCH_FAILED, 502, "Failed to fetch orderbook"),
+      { status: 502 },
+    );
   }
 });
 

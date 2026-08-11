@@ -4,7 +4,7 @@ import { swapQuoteParamsSchema } from "@/lib/api/schemas";
 import { logger } from "@/lib/server/logger";
 import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
-import { buildErrorResponse } from "@/lib/server/api-error";
+import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 import type { StellarAsset } from "@/lib/stellar/types";
 
 export const dynamic = "force-dynamic";
@@ -21,15 +21,13 @@ export const GET = apiHandler(async (request) => {
   });
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: "Too many requests" },
+      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
       {
         status: 429,
         headers: {
-          "Retry-After": String(
-            Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
-          ),
+          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
         },
-      }
+      },
     );
   }
 
@@ -48,9 +46,10 @@ export const GET = apiHandler(async (request) => {
       field: issue.path.join("."),
       message: issue.message,
     }));
-    return NextResponse.json(buildErrorResponse(400, "Invalid parameters", details), {
-      status: 400,
-    });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.VALIDATION_ERROR, 400, "Invalid parameters", details),
+      { status: 400 },
+    );
   }
 
   const { input, output, amount, slippage } = parsed.data as {
@@ -63,7 +62,10 @@ export const GET = apiHandler(async (request) => {
   try {
     const route = await findBestRoute(input, output, amount, slippage);
     if (!route) {
-      return NextResponse.json({ error: "No viable route found for this pair" }, { status: 404 });
+      return NextResponse.json(
+        buildErrorResponse(ErrorCode.NO_VIABLE_ROUTE, 404, "No viable route found for this pair"),
+        { status: 404 },
+      );
     }
     logger.info("swap quote served", {
       input: (input as StellarAsset).code,
@@ -73,7 +75,10 @@ export const GET = apiHandler(async (request) => {
     return NextResponse.json(route);
   } catch (error) {
     logger.error("swap quote failed", { error: String(error) });
-    return NextResponse.json({ error: "Failed to compute swap quote" }, { status: 502 });
+    return NextResponse.json(
+      buildErrorResponse(ErrorCode.SWAP_QUOTE_FAILED, 502, "Failed to compute swap quote"),
+      { status: 502 },
+    );
   }
 });
 

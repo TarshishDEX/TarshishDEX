@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildErrorResponse } from "@/lib/server/api-error";
+import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 import { logger } from "@/lib/server/logger";
 
 /**
@@ -7,15 +7,18 @@ import { logger } from "@/lib/server/logger";
  * Catches unhandled exceptions and returns consistent 500 responses
  * with correlation IDs instead of raw Next.js error pages.
  *
- * Usage:
+ * Supports both plain routes and dynamic routes:
+ *   // Plain route
  *   export const GET = apiHandler(async (request) => { ... });
+ *   // Dynamic route with params
+ *   export const GET = apiHandler(async (request, { params }) => { ... });
  */
-export function apiHandler(
-  handler: (request: Request) => Promise<NextResponse>
-): (request: Request) => Promise<NextResponse> {
-  return async (request: Request) => {
+export function apiHandler<T extends unknown[]>(
+  handler: (request: Request, ...rest: T) => Promise<NextResponse>,
+): (request: Request, ...rest: T) => Promise<NextResponse> {
+  return async (request: Request, ...rest: T) => {
     try {
-      return await handler(request);
+      return await handler(request, ...rest);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal server error";
       const requestId =
@@ -29,7 +32,7 @@ export function apiHandler(
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      const body = buildErrorResponse(500, "Internal server error");
+      const body = buildErrorResponse(ErrorCode.INTERNAL_ERROR, 500, "Internal server error");
       return NextResponse.json(body, {
         status: 500,
         headers: { "X-Request-Id": requestId },
