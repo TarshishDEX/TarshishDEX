@@ -760,3 +760,209 @@ describe("seo", () => {
     expect(SITE_CONFIG.description.length).toBeGreaterThan(10);
   });
 });
+
+// ── truncate-hash.ts ────────────────────────────────────────────────────
+import { truncateHash, truncateAccountId, truncateTxHash } from "@/lib/utils/truncate-hash";
+
+describe("truncate-hash", () => {
+  it("truncates long hash", () => {
+    expect(truncateHash("GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")).toBe("GABC…7890");
+  });
+
+  it("returns short hash as-is", () => {
+    expect(truncateHash("abc")).toBe("abc");
+    expect(truncateHash("GABCDEFGHIJ", 4, 4)).toBe("GABCDEFGHIJ");
+  });
+
+  it("truncateAccountId uses 6+6", () => {
+    const result = truncateAccountId("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+    expect(result).toBe("GA5ZSE…K4KZVN");
+  });
+
+  it("truncateTxHash uses 6+4", () => {
+    const result = truncateTxHash("abcdef1234567890abcdef1234567890abcdef12");
+    expect(result).toMatch(/^[a-f0-9]{6}…[a-f0-9]{4}$/);
+  });
+});
+
+// ── try-catch.ts ────────────────────────────────────────────────────────
+import { tryCatch, tryCatchSync } from "@/lib/utils/try-catch";
+
+describe("try-catch", () => {
+  it("tryCatch returns [data, null] on success", async () => {
+    const [data, err] = await tryCatch(async () => 42);
+    expect(data).toBe(42);
+    expect(err).toBeNull();
+  });
+
+  it("tryCatch returns [null, Error] on failure", async () => {
+    const [data, err] = await tryCatch(async () => {
+      throw new Error("oops");
+    });
+    expect(data).toBeNull();
+    expect(err).toBeInstanceOf(Error);
+    expect(err!.message).toBe("oops");
+  });
+
+  it("tryCatch wraps non-Error throws", async () => {
+    const [, err] = await tryCatch(async () => {
+      throw "raw";
+    });
+    expect(err).toBeInstanceOf(Error);
+  });
+
+  it("tryCatchSync returns [data, null] on success", () => {
+    const [data, err] = tryCatchSync(() => 42);
+    expect(data).toBe(42);
+    expect(err).toBeNull();
+  });
+
+  it("tryCatchSync returns [null, Error] on failure", () => {
+    const [data, err] = tryCatchSync(() => {
+      throw new Error("sync fail");
+    });
+    expect(data).toBeNull();
+    expect(err!.message).toBe("sync fail");
+  });
+});
+
+// ── url.ts ──────────────────────────────────────────────────────────────
+import { buildUrl, parseQueryParams, joinPaths, ensureTrailingSlash } from "@/lib/utils/url";
+
+describe("url utilities", () => {
+  it("buildUrl adds query params", () => {
+    const url = buildUrl("https://example.com/api", { a: "1", b: 2 });
+    expect(url).toContain("a=1");
+    expect(url).toContain("b=2");
+  });
+
+  it("buildUrl skips undefined and empty", () => {
+    const url = buildUrl("https://example.com/api", { a: "1", b: undefined, c: "" });
+    expect(url).toContain("a=1");
+    expect(url).not.toContain("b=");
+    expect(url).not.toContain("c=");
+  });
+
+  it("parseQueryParams extracts params", () => {
+    const params = parseQueryParams("https://example.com?foo=bar&baz=42");
+    expect(params).toEqual({ foo: "bar", baz: "42" });
+  });
+
+  it("joinPaths joins segments", () => {
+    expect(joinPaths("/a/", "/b/", "c")).toBe("a/b/c");
+    expect(joinPaths("a", "b")).toBe("a/b");
+    expect(joinPaths("", "b", "")).toBe("b");
+  });
+
+  it("ensureTrailingSlash adds slash if missing", () => {
+    expect(ensureTrailingSlash("https://example.com")).toBe("https://example.com/");
+    expect(ensureTrailingSlash("https://example.com/")).toBe("https://example.com/");
+  });
+});
+
+// ── validators.ts ───────────────────────────────────────────────────────
+import {
+  isValidUrl,
+  isValidEmail,
+  isValidHexColor,
+  isValidDomain,
+  isValidPercentage,
+  isPositiveInteger,
+} from "@/lib/utils/validators";
+
+describe("validators", () => {
+  it("isValidUrl validates URLs", () => {
+    expect(isValidUrl("https://example.com")).toBe(true);
+    expect(isValidUrl("http://example.com")).toBe(true);
+    expect(isValidUrl("ftp://example.com")).toBe(false);
+    expect(isValidUrl("not-a-url")).toBe(false);
+  });
+
+  it("isValidEmail validates emails", () => {
+    expect(isValidEmail("test@example.com")).toBe(true);
+    expect(isValidEmail("  test@example.com  ")).toBe(true);
+    expect(isValidEmail("not-email")).toBe(false);
+    expect(isValidEmail("")).toBe(false);
+  });
+
+  it("isValidHexColor validates colors", () => {
+    expect(isValidHexColor("#fff")).toBe(true);
+    expect(isValidHexColor("#FF0000")).toBe(true);
+    expect(isValidHexColor("#GGG")).toBe(false);
+    expect(isValidHexColor("red")).toBe(false);
+  });
+
+  it("isValidDomain validates domains", () => {
+    expect(isValidDomain("example.com")).toBe(true);
+    expect(isValidDomain("sub.example.com")).toBe(true);
+    expect(isValidDomain("-bad.com")).toBe(false);
+  });
+
+  it("isValidPercentage validates 0-100", () => {
+    expect(isValidPercentage(0)).toBe(true);
+    expect(isValidPercentage(50)).toBe(true);
+    expect(isValidPercentage(100)).toBe(true);
+    expect(isValidPercentage(-1)).toBe(false);
+    expect(isValidPercentage(101)).toBe(false);
+    expect(isValidPercentage(NaN)).toBe(false);
+  });
+
+  it("isPositiveInteger validates positive integers", () => {
+    expect(isPositiveInteger(1)).toBe(true);
+    expect(isPositiveInteger(42)).toBe(true);
+    expect(isPositiveInteger(0)).toBe(false);
+    expect(isPositiveInteger(-1)).toBe(false);
+    expect(isPositiveInteger(3.14)).toBe(false);
+    expect(isPositiveInteger("5")).toBe(false);
+  });
+});
+
+// ── string.ts ───────────────────────────────────────────────────────────
+import { capitalize, camelToTitle, slugify, escapeHtml } from "@/lib/utils/string";
+
+describe("string utilities", () => {
+  it("capitalize capitalizes first letter", () => {
+    expect(capitalize("hello")).toBe("Hello");
+    expect(capitalize("h")).toBe("H");
+    expect(capitalize("")).toBe("");
+  });
+
+  it("camelToTitle converts camelCase", () => {
+    expect(camelToTitle("maxSlippageBps")).toBe("Max Slippage Bps");
+    expect(camelToTitle("hello")).toBe("Hello");
+  });
+
+  it("slugify creates URL slugs", () => {
+    expect(slugify("Hello World")).toBe("hello-world");
+    expect(slugify("  Foo & Bar!!!  ")).toBe("foo-bar");
+  });
+
+  it("escapeHtml escapes HTML entities", () => {
+    expect(escapeHtml("<script>")).toBe("&lt;script&gt;");
+    expect(escapeHtml('a"b&c\'d')).toBe("a&quot;b&amp;c&#039;d");
+    expect(escapeHtml("plain text")).toBe("plain text");
+  });
+});
+
+// ── asset-metadata.ts ───────────────────────────────────────────────────
+import { KNOWN_ASSETS, getAssetDisplayName, getAssetDomain } from "@/lib/utils/asset-metadata";
+
+describe("asset-metadata", () => {
+  it("KNOWN_ASSETS has expected entries", () => {
+    expect(KNOWN_ASSETS["USDC"]!.name).toBe("USD Coin");
+    expect(KNOWN_ASSETS["XRP"]!.name).toContain("XRP");
+  });
+
+  it("getAssetDisplayName returns known name", () => {
+    expect(getAssetDisplayName("USDC")).toBe("USD Coin");
+  });
+
+  it("getAssetDisplayName falls back to code", () => {
+    expect(getAssetDisplayName("UNKNOWN")).toBe("UNKNOWN");
+  });
+
+  it("getAssetDomain returns domain if known", () => {
+    expect(getAssetDomain("USDC")).toBe("circle.com");
+    expect(getAssetDomain("UNKNOWN")).toBeUndefined();
+  });
+});
