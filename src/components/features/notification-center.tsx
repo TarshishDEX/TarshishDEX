@@ -15,9 +15,12 @@ interface Notification {
 /**
  * In-memory notification center. Tracks swap completions, price alert
  * triggers, and system messages. Renders as a bell icon with unread badge.
+ * Accepts optional initial notifications (used by tests); defaults to empty.
  */
-export function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationCenter({
+  initialNotifications = [],
+}: { initialNotifications?: Notification[] } = {}) {
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [open, setOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
