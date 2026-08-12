@@ -5,6 +5,67 @@ All notable changes to TarshishDEX are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-08-12 — Fortress Release
+
+Coverage and testing pushed to fortress levels across every layer:
+**1,504 Vitest tests**, **80.98% TS statement coverage** (hard CI thresholds),
+**95.2% Soroban contract coverage** (90% CI gate), **171 Playwright e2e tests**,
+and a **hard gas-regression gate**.
+
+---
+
+### 🧪 Test Coverage (56% → 81% TS statements)
+
+- **Coverage milestones** — 56.28% → 70% → 75.98% → 80.98% statements across
+eight test batches (1,051 → 1,504 tests). CI thresholds raised to
+**80/72/82/82** (statements/branches/functions/lines).
+- **New test suites** — server lib (cache-headers, cors, cursor-pagination,
+graceful-shutdown, response-headers, content-type, logger), hooks
+(useHover, useMediaQuery, useCopyToClipboard, useIntersectionObserver,
+useIsClient, live-sync), utils (clipboard, throttle, debounce, network,
+string, export-csv, once-promise, swap-validation), stellar lib (queries
+hooks, routing, wallet-kit facade, swap-execution).
+- **Component tests** — 60+ UI primitives (Tooltip, ToastProvider,
+AccessibleIcon, CopyButton, FocusTrap, FileInput, PagePlaceholder,
+WalletStatusBadge, KeyboardShortcutsDialog, CommandPalette, RetryButton,
+SwapExecutionPanel, ShareLink, LastUpdated, ScrollToTop, KeyValuePair) plus
+portfolio widgets (BalanceTable, TradeHistory, PortfolioWidget,
+PriceAlertPanel) and swap internals (SwapWidget, TokenSelector, on-chain
+preferences, VolumeChart with mocked recharts).
+- **0% files eliminated** — every previously-untested module now covered.
+
+### 🧪 E2E Expansion (34 → 171 tests)
+
+- **5 Playwright suites** — swap flow (amounts, slippage, reverse, shortcuts),
+portfolio flow (balances, trade history), limit-order flow (place/cancel
+forms, order tables), navigation UI (header, footer, breadcrumbs, mobile
+menu, theme toggle), analytics (charts, allocation, volume).
+
+### ⛽ Soroban Contract Coverage (93.1% → 95.2%)
+
+- **25 new unit tests** — double-initialize rejection, zero/negative amounts,
+invalid sides, per-user order cap (25), stale observation rejection
+(ledger jump), too-many-pairs cap (100), publisher/relayer count no-ops,
+history ring-buffer wrap (16), empty pagination, batch filtering,
+asset-cap rejection (>50), pagination list hygiene.
+- **6 limit-order fuzz/property tests** — mixed buy/sell sides, price &
+amount boundaries (1 → 9e18), expiry roundtrip (0 → u32::MAX),
+interleaved place/cancel/execute index consistency, pagination totality,
+per-user index isolation.
+- **Total**: 87 → 118 Rust tests. Coverage measured with cargo-tarpaulin;
+CI gate raised 70% → 90% and now measures production source only.
+
+### 🛡️ CI Hardening
+
+- **Gas regression gate** — gas benchmarks now FAIL the build when any of 14
+per-benchmark thresholds is breached (was: informational comment with
+loose 2M-3M limits). Baselines captured from Soroban SDK v27 sandbox.
+- **Contract coverage gate** — raised from 70% to 90%; excludes integration
+test scaffolding so the gate measures production contract source.
+- **5 lint warnings eliminated** — unused variables in e2e and test files.
+All gates: TypeScript 0 errors, ESLint 0 errors/warnings, 1,504 vitest,
+118 cargo, 171 playwright.
+
 ## [0.2.0] — 2026-08-11 — Battle-Hardening Release
 
 This release is the result of an intensive 8-round security, quality, and test-coverage
