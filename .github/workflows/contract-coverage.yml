@@ -59,13 +59,13 @@ jobs:
       - name: Coverage gate
         run: |
           COV="${{ steps.coverage.outputs.coverage_pct }}"
-          # Strip decimal and compare as integer (70% threshold)
+          # Strip decimal and compare as integer (90% threshold)
           COV_INT=$(echo "$COV" | cut -d. -f1)
-          if [ "$COV_INT" -lt 70 ]; then
-            echo "##[error] Contract coverage ${COV}% is below 70% threshold"
+          if [ "$COV_INT" -lt 90 ]; then
+            echo "##[error] Contract coverage ${COV}% is below 90% threshold"
             exit 1
           fi
-          echo "✅ Contract coverage ${COV}% meets 70% threshold"
+          echo "✅ Contract coverage ${COV}% meets 90% threshold"
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'
@@ -73,8 +73,8 @@ jobs:
         with:
           script: |
             const cov = '${{ steps.coverage.outputs.coverage_pct }}';
-            const emoji = parseFloat(cov) >= 80 ? '🟢' : parseFloat(cov) >= 70 ? '🟡' : '🔴';
-            const body = `## ${emoji} Soroban Contract Coverage: **${cov}%**\n\nThreshold: 70% | ${parseFloat(cov) >= 70 ? '✅ Passing' : '❌ Below threshold'}`;
+            const emoji = parseFloat(cov) >= 95 ? '🟢' : parseFloat(cov) >= 90 ? '🟡' : '🔴';
+            const body = `## ${emoji} Soroban Contract Coverage: **${cov}%**\n\nThreshold: 90% | ${parseFloat(cov) >= 90 ? '✅ Passing' : '❌ Below threshold'}`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
