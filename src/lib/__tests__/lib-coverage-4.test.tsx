@@ -96,7 +96,7 @@ describe("registerSW", () => {
       "window",
       Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true }),
     );
-    process.env.NODE_ENV = "test";
+    vi.stubEnv("NODE_ENV", "test");
 
     registerSW();
     expect(register).toHaveBeenCalledWith("/sw.js", { scope: "/" });
@@ -115,7 +115,7 @@ describe("registerSW", () => {
       Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true }),
     );
     const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
 
     registerSW();
     await vi.waitFor(() => expect(debugSpy).toHaveBeenCalled());
