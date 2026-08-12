@@ -42,7 +42,12 @@ jobs:
       - name: Run coverage
         id: coverage
         run: |
-          cargo tarpaulin --workspace --out Html --out Xml --output-dir coverage 2>&1 | tee coverage.log
+          # --exclude-files excludes integration test scaffolding so the gate
+          # measures production contract source only. Coverage measured at
+          # 95.2-95.3% (Aug 2026); remaining lines are rustc/tarpaulin
+          # attribution artifacts on #[contractimpl] macro-expanded chains
+          # plus unreachable defensive fallbacks.
+          cargo tarpaulin --workspace --exclude-files '**/tests/**' --out Html --out Xml --output-dir coverage 2>&1 | tee coverage.log
           # Extract line coverage percentage
           COV=$(grep -oP '\d+\.\d+%' coverage.log | head -1 | tr -d '%' || echo "0")
           echo "coverage_pct=${COV}" >> "$GITHUB_OUTPUT"
