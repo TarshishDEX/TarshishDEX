@@ -52,7 +52,7 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | Tests | **1,504 passing** (545 test files) |
 | Coverage | **80.98% statements** (72.33% branches, 82.53% functions, 82.38% lines) |
 | Rust contracts | **112 tests passing** — fmt ✅, clippy 0 warnings |
-| Contract coverage | **95.33%** (cargo-tarpaulin, 90% CI gate) |
+| Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
 | Contract errors | **153 error codes** across 3 Soroban contracts |
 | E2E (Playwright) | **171 tests** across 5 suites |
 | npm vulns | **0 critical** |
@@ -75,7 +75,7 @@ A comprehensive security and quality audit was conducted across all layers:
 | **Rust fmt** | ✅ All contracts formatted |
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
 | **Rust tests** | ✅ 112 tests, 0 failures |
-| **Contract coverage** | ✅ 95.33% via cargo-tarpaulin (CI gate: 90%) |
+| **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
 | **Contract errors** | ✅ 153 error codes (49+54+50 per contract) |
 | **Gas benchmarks** | ✅ 34 benchmarks, hard regression gate in CI |
 | **Dependencies** | ✅ 0 critical npm vulns |
