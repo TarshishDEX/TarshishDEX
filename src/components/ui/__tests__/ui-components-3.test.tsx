@@ -270,10 +270,14 @@ describe("LastUpdated", () => {
 describe("ConfirmDialog", () => {
   it("renders without crashing", () => {
     const { container } = render(
-      <ConfirmDialog open={true} title="Confirm" onConfirm={vi.fn()} onCancel={vi.fn()}>
-        Are you sure?
-      </ConfirmDialog>
+      <ConfirmDialog
+        title="Confirm"
+        message="Are you sure?"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />
     );
     expect(container.textContent).toContain("Confirm");
+    expect(container.textContent).toContain("Are you sure?");
   });
 });

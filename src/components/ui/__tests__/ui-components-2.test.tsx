@@ -7,8 +7,6 @@ import { Panel } from "@/components/ui/panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { Divider } from "@/components/ui/divider";
-import { Separator } from "@/components/ui/separator";
 
 // ── Select ─────────────────────────────────────────────────────────────
 

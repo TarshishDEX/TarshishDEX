@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { AddressDisplay } from "@/components/ui/address-display";
-import { ToastProvider } from "@/components/ui/toast-provider";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({

@@ -196,7 +196,6 @@ describe("useIsFirstRender", () => {
 
   it("is stable after re-renders", () => {
     const { result, rerender } = renderHook(() => useIsFirstRender());
-    const first = result.current;
     rerender();
     // After first render with layout effect, it should be false
     expect(result.current).toBe(false);
