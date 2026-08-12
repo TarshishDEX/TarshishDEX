@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "src/contracts/**"
+      - ".github/workflows/gas-regression.yml"
 
 permissions:
   contents: read
@@ -32,55 +33,104 @@ jobs:
           workspaces: src/contracts
 
       - name: Run gas benchmarks
-        run: cargo test gas_benchmarks -- --nocapture 2>&1 | tee gas-bench.txt
+        id: bench
+        run: cargo test --workspace gas_benchmarks -- --nocapture 2>&1 | tee gas-bench.txt
 
-      - name: Post benchmark results
+      - name: Check thresholds and fail on regression
+        id: gate
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const path = 'src/contracts/gas-bench.txt';
-            if (!fs.existsSync(path)) {
-              console.log('No benchmark output');
-              return;
-            }
             const output = fs.readFileSync(path, 'utf8');
             const lines = output.split('\n').filter(l => l.startsWith('[bench]'));
-            if (lines.length === 0) return;
 
-            // Parse benchmarks with threshold checks
+            // CPU-instruction thresholds. Baselines measured on Soroban SDK
+            // v27 test sandbox (Aug 2026). Read-only ops show ~0 in sandbox
+            // and are exempt from the gate.
             const THRESHOLDS = {
-              'initialize': 2_000_000,
-              'place_order': 3_000_000,
-              'cancel_order': 2_000_000,
-              'mark_executed': 2_500_000,
+              'initialize': 100_000,                    // 25,465 baseline (~4x headroom)
+              'limit-order place_order (first)': 450_000,       // 114,591 baseline
+              'limit-order place_order (subsequent)': 150_000,  // 38,108 baseline
+              'limit-order cancel_order': 50_000,               // ~0 sandbox, real path cheap
+              'limit-order mark_executed': 35_000,              // 8,420 baseline
+              'limit-order set_version': 30_000,                // 6,482 baseline
+              'set_preferences (new)': 300_000,                 // 78,252 baseline
+              'set_preferences (update)': 50_000,
+              'batch_get_preferences (10 accts)': 650_000,      // 166,442 baseline
+              'publish (first)': 500_000,                       // 132,585 baseline
+              'publish (subsequent)': 100_000,                  // 22,898 baseline
+              'set_publisher (grant)': 60_000,                  // 14,286 baseline
+              'set_publisher (revoke)': 20_000,                 // 3,423 baseline
+              'remove_preferences': 50_000,
+              'set_version': 30_000,                            // 6,482 baseline
             };
 
-            const rows = lines.map(l => {
-              const match = l.match(/\[bench\] (.+): (\d+) cpu/);
-              if (!match) return '';
+            const results = [];
+            for (const line of lines) {
+              const match = line.match(/\[bench\] (.+): (\d+) cpu/);
+              if (!match) continue;
               const name = match[1];
               const cost = parseInt(match[2]);
+              let status = '✅';
               let flag = '';
-              for (const [key, threshold] of Object.entries(THRESHOLDS)) {
-                if (name.includes(key) && cost > threshold) {
-                  flag = ` ⚠️ >${threshold.toLocaleString()}`;
-                  break;
+              // Exact-name match wins; fall back to contains for namespaced benches.
+              const key = THRESHOLDS[name] !== undefined ? name
+                : Object.keys(THRESHOLDS).find(k => name.includes(k));
+              if (key && THRESHOLDS[key] !== undefined) {
+                if (cost > THRESHOLDS[key]) {
+                  status = '❌';
+                  flag = ` (limit ${THRESHOLDS[key].toLocaleString()})`;
                 }
               }
-              return `| ${name} | ${cost.toLocaleString()}${flag} |`;
-            }).filter(Boolean);
+              results.push({ name, cost, status, flag, threshold: key ? THRESHOLDS[key] : null });
+            }
 
+            const failed = results.filter(r => r.status === '❌');
             const table = [
               '## ⛽ Gas Benchmark Results',
               '',
-              '| Function | CPU Instructions |',
-              '|----------|-----------------|',
-              ...rows,
+              '| Status | Function | CPU Instructions | Limit |',
+              '|--------|----------|------------------|-------|',
+              ...results.map(r =>
+                `| ${r.status} | ${r.name} | ${r.cost.toLocaleString()} | ${r.threshold ? r.threshold.toLocaleString() : '—'} |`
+              ),
               '',
-              '⚠️ Review any significant increases before merging.',
-              'Thresholds: init ≤2M, place_order ≤3M, cancel ≤2M, execute ≤2.5M',
-            ].join('\n');
+            ];
+
+            if (failed.length > 0) {
+              table.push(`## 🔴 ${failed.length} benchmark(s) exceeded their gas limit`);
+              for (const f of failed) {
+                table.push(`- **${f.name}**: ${f.cost.toLocaleString()} CPU > limit ${f.threshold.toLocaleString()}`);
+              }
+              table.push('', 'This is a **required check** — optimize the regression or raise the limit deliberately in this workflow.');
+              core.setOutput('passed', 'false');
+            } else {
+              table.push(`## 🟢 All ${results.length} benchmarks within limits`);
+              core.setOutput('passed', 'true');
+            }
+
+            require('fs').writeFileSync('src/contracts/gas-table.md', table.join('\n'));
+
+      - name: Fail build if benchmarks regressed
+        if: steps.gate.outputs.passed == 'false'
+        run: |
+          echo "##[error] Gas regression detected — one or more benchmarks exceeded their threshold"
+          exit 1
+
+      - name: Post benchmark results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'src/contracts/gas-table.md';
+            if (!fs.existsSync(path)) {
+              console.log('No benchmark table generated');
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -93,13 +143,13 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: prev.id,
-                body: table,
+                body,
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: table,
+                body,
               });
             }
