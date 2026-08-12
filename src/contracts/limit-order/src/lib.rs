@@ -1476,4 +1476,209 @@ mod fuzz {
             Err(Ok(Error::TooManyOrders))
         );
     }
+
+    /// Property: Mixed buy/sell sides round-trip exactly through get_order.
+    #[test]
+    fn prop_mixed_sides_roundtrip() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        for i in 0..10u32 {
+            let side = if i % 2 == 0 {
+                symbol_short!("buy")
+            } else {
+                symbol_short!("sell")
+            };
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &(1_000_000 + i as i128 * 7),
+                &0,
+                &side,
+            );
+            let order = client.get_order(&id).unwrap();
+            assert_eq!(order.side, side);
+            assert_eq!(order.price, 10_000_000 + i as i128);
+            assert_eq!(order.amount, 1_000_000 + i as i128 * 7);
+        }
+    }
+
+    /// Property: Price and amount boundaries — tiny and huge values both store fine.
+    #[test]
+    fn prop_price_and_amount_boundaries() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        // Smallest valid values
+        let id1 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &1,
+            &1,
+            &0,
+            &symbol_short!("buy"),
+        );
+        assert_eq!(client.get_order(&id1).unwrap().price, 1);
+        assert_eq!(client.get_order(&id1).unwrap().amount, 1);
+
+        // Large but non-overflowing values (i128)
+        let id2 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &9_000_000_000_000_000_000,
+            &9_000_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        let o2 = client.get_order(&id2).unwrap();
+        assert_eq!(o2.price, 9_000_000_000_000_000_000);
+        assert_eq!(o2.amount, 9_000_000_000);
+    }
+
+    /// Property: Expiry ledger values round-trip — 0 (none) and concrete ledgers.
+    #[test]
+    fn prop_expiry_ledger_roundtrip() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        for (i, expiry) in [0u32, 100, 1_000_000, 4_294_967_295].into_iter().enumerate() {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &expiry,
+                &symbol_short!("buy"),
+            );
+            assert_eq!(client.get_order(&id).unwrap().expiry_ledger, expiry);
+        }
+    }
+
+    /// Invariant: Random interleaving of place/cancel/execute keeps indexes consistent.
+    #[test]
+    fn invariant_interleaved_operations_keep_indexes_consistent() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+        let relayer = Address::generate(&env);
+        client.set_relayer(&relayer, &true);
+
+        let mut live_ids: Vec<u64> = Vec::new(&env);
+
+        for (i, next_expected) in (0..30u32).zip(1_u64..) {
+            // Place every iteration
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &(i * 3), // varied expiry
+                &symbol_short!("sell"),
+            );
+            assert_eq!(id, next_expected);
+            live_ids.push_back(id);
+
+            // Remove roughly 1 in 3 by cancel or execute, alternating
+            if i % 3 == 0 && live_ids.len() > 1 {
+                let victim = live_ids.get(0).unwrap();
+                if i % 6 == 0 {
+                    client.cancel_order(&user, &victim);
+                } else {
+                    client.mark_executed(&relayer, &victim, &symbol_short!("tx"));
+                }
+                live_ids.remove(0);
+            }
+
+            // Every step: global count == live count, list matches
+            assert_eq!(client.get_order_count(), live_ids.len());
+            let (all, _) = client.paginated_orders(&50, &0);
+            assert_eq!(all.len(), live_ids.len());
+            assert_eq!(client.get_user_orders(&user).len(), live_ids.len());
+        }
+    }
+
+    /// Invariant: Pagination is total — walking pages yields every live order exactly once.
+    #[test]
+    fn invariant_pagination_visits_every_order_exactly_once() {
+        let (env, _admin, client) = setup();
+        let user = Address::generate(&env);
+
+        let mut placed: Vec<u64> = Vec::new(&env);
+        for i in 0..7u32 {
+            let id = client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+            placed.push_back(id);
+        }
+
+        // Walk pages of size 3 — must see exactly 7 unique IDs.
+        let mut seen: Vec<u64> = Vec::new(&env);
+        let mut cursor: u32 = 0;
+        loop {
+            let (page, next) = client.paginated_orders(&3, &cursor);
+            for id in page.iter() {
+                assert!(!seen.contains(id));
+                seen.push_back(id);
+            }
+            match next {
+                Some(c) => cursor = c,
+                None => break,
+            }
+        }
+
+        assert_eq!(seen.len(), 7);
+        assert_eq!(seen, placed);
+    }
+
+    /// Invariant: Place order on one user doesn't leak into another user's index.
+    #[test]
+    fn invariant_user_index_isolation() {
+        let (env, _admin, client) = setup();
+        let user_a = Address::generate(&env);
+        let user_b = Address::generate(&env);
+
+        for i in 0..4u32 {
+            client.place_order(
+                &user_a,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("buy"),
+            );
+        }
+        for i in 0..2u32 {
+            client.place_order(
+                &user_b,
+                &symbol_short!("BTC"),
+                &symbol_short!("USDC"),
+                &(50_000_000 + i as i128),
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+        }
+
+        assert_eq!(client.get_user_orders(&user_a).len(), 4);
+        assert_eq!(client.get_user_orders(&user_b).len(), 2);
+        assert_eq!(client.get_order_count(), 6);
+
+        // Cancelling user B's order must not affect user A's list.
+        let b_id = client.get_user_orders(&user_b).get(0).unwrap();
+        client.cancel_order(&user_b, &b_id);
+        assert_eq!(client.get_user_orders(&user_a).len(), 4);
+        assert_eq!(client.get_user_orders(&user_b).len(), 1);
+    }
 }
