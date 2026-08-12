@@ -894,10 +894,8 @@ mod fuzz {
             },
         );
 
-        let accounts = Vec::from_array(
-            &env,
-            [account1.clone(), account2.clone(), account3.clone()],
-        );
+        let accounts =
+            Vec::from_array(&env, [account1.clone(), account2.clone(), account3.clone()]);
         let batch = client.batch_get_preferences(&accounts);
         assert_eq!(batch.len(), 3);
     }
