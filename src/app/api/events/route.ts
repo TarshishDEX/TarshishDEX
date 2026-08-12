@@ -7,6 +7,8 @@ import { NextResponse } from "next/server";
  */
 export async function GET() {
   const encoder = new TextEncoder();
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  let closed = false;
 
   const stream = new ReadableStream({
     start(controller) {
@@ -14,18 +16,19 @@ export async function GET() {
       controller.enqueue(encoder.encode("event: connected\ndata: {}\n\n"));
 
       // Keep connection alive with heartbeat every 30s
-      const heartbeat = setInterval(() => {
-        controller.enqueue(encoder.encode(": heartbeat\n\n"));
+      heartbeat = setInterval(() => {
+        if (!closed) {
+          controller.enqueue(encoder.encode(": heartbeat\n\n"));
+        }
       }, 30_000);
-
-      // Clean up on close
-      const cleanup = () => {
+    },
+    // Handle client disconnect — the runtime invokes this on reader.cancel().
+    cancel() {
+      closed = true;
+      if (heartbeat) {
         clearInterval(heartbeat);
-        controller.close();
-      };
-
-      // Handle client disconnect
-      return cleanup;
+        heartbeat = null;
+      }
     },
   });
 

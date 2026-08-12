@@ -31,10 +31,9 @@ const { connectMock, disconnectMock, setConnectedMock, setDisconnectedMock, getH
     getHorizonServerMock: vi.fn(),
   }));
 
-// Recharts mock that captures formatter functions so their branches get covered.
+// Recharts mock that invokes formatter functions so their branches get covered.
 vi.mock("recharts", () => {
   const React = require("react");
-  const captured: Record<string, unknown> = {};
   return {
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="container">{children}</div>
@@ -45,13 +44,20 @@ vi.mock("recharts", () => {
     Bar: () => <div data-testid="bar" />,
     CartesianGrid: () => <div />,
     XAxis: () => <div />,
-    YAxis: ({ tickFormatter }: { tickFormatter: (v: number) => string }) => {
-      captured.tick = tickFormatter;
-      return <div data-testid="yaxis" />;
-    },
+    YAxis: ({ tickFormatter }: { tickFormatter: (v: number) => string }) => (
+      <>
+        <div data-testid="yaxis-small">{tickFormatter(500)}</div>
+        <div data-testid="yaxis-large">{tickFormatter(2500)}</div>
+        <div data-testid="yaxis">axis</div>
+      </>
+    ),
     Tooltip: ({ formatter }: { formatter: (v: unknown) => unknown }) => {
-      captured.format = formatter;
-      return <div data-testid="tooltip" />;
+      const formatted = formatter(1500) as [string, string];
+      return (
+        <div data-testid="tooltip">
+          <span data-testid="tooltip-value">{formatted[0]}</span>
+        </div>
+      );
     },
   };
 });
@@ -133,8 +139,9 @@ describe("VolumeChart", () => {
       />
     );
     expect(screen.getByTestId("bar-chart")).toBeTruthy();
-    expect(screen.getByTestId("yaxis")).toBeTruthy();
-    expect(screen.getByTestId("tooltip")).toBeTruthy();
+    expect(screen.getByTestId("yaxis-small").textContent).toBe("500");
+    expect(screen.getByTestId("yaxis-large").textContent).toBe("2.5K");
+    expect(screen.getByTestId("tooltip-value").textContent).toBe("1500.00 XLM");
   });
 
   it("handles empty candle arrays", () => {

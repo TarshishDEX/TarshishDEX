@@ -78,13 +78,16 @@ describe("rate-limit module", () => {
   });
 
   it("runs periodic cleanup of expired entries after 5 minutes", () => {
-    vi.setSystemTime(1_000_000);
-    // Prime the first entry, then let the clock pass beyond the cleanup interval
+    // lastCleanup is captured at module import with the real clock, so set the
+    // fake clock relative to the real now to push past the 5-minute interval.
+    const now = Date.now();
+    vi.setSystemTime(now);
     checkRateLimit("old-key", { maxRequests: 5, windowMs: 1_000 });
-    vi.setSystemTime(1_000_000 + 10 * 60_000);
+    vi.setSystemTime(now + 10 * 60_000);
+    // This call triggers cleanup: old-key expired, fresh-key still live
     checkRateLimit("fresh-key", { maxRequests: 5, windowMs: 60_000 });
-    // Force a second cleanup pass to attempt deletion of the expired entry
-    vi.setSystemTime(1_000_000 + 20 * 60_000);
+    // Second cleanup pass after another 10 minutes
+    vi.setSystemTime(now + 20 * 60_000);
     checkRateLimit("fresh-key", { maxRequests: 5, windowMs: 60_000 });
     expect(true).toBe(true);
   });
