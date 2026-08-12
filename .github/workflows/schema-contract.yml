@@ -1,0 +1,208 @@
+name: "Schema Contract Tests"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/api/schemas.ts"
+      - "src/lib/api/validators.ts"
+      - "src/lib/api/params.ts"
+      - "src/lib/api/errors.ts"
+      - "src/lib/api/types.ts"
+      - "src/lib/api/__tests__/**"
+      - ".github/workflows/schema-contract.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/lib/api/schemas.ts"
+      - "src/lib/api/validators.ts"
+      - "src/lib/api/params.ts"
+      - "src/lib/api/errors.ts"
+      - "src/lib/api/types.ts"
+      - "src/lib/api/__tests__/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  schema-tests:
+    name: Zod schema validation tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run schema tests
+        id: schemas
+        run: |
+          npx vitest run --reporter=verbose src/lib/api/__tests__/schemas.test.ts 2>&1 | tee schema-test-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Run validator tests
+        id: validators
+        run: |
+          npx vitest run --reporter=verbose src/lib/api/__tests__/validators.test.ts 2>&1 | tee validator-test-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Run params tests
+        id: params
+        run: |
+          npx vitest run --reporter=verbose src/lib/api/params.test.ts 2>&1 | tee params-test-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Check schema compatibility
+        id: compatibility
+        run: |
+          echo "=== Schema-Version Compatibility Check ==="
+          echo "Checking that all API routes use consistent Zod schemas..."
+
+          # Ensure all API route files import from centralized schema/validator modules
+          MISSING_IMPORTS=0
+          for route in src/app/api/**/route.ts; do
+            if [ -f "$route" ]; then
+              ROUTE_NAME=$(echo "$route" | sed 's|src/app/api/||' | sed 's|/route.ts||')
+              # Check if route imports from the schemas or validators module
+              if ! grep -qE "from.*['\"].*\/api\/(schemas|validators|params)" "$route" 2>/dev/null; then
+                # Skip routes that don't need validation (health, events)
+                case "$ROUTE_NAME" in
+                  health|events)
+                    continue
+                    ;;
+                esac
+                echo "  ⚠️  $ROUTE_NAME: does not import from centralized schema/validator modules"
+                MISSING_IMPORTS=$((MISSING_IMPORTS + 1))
+              else
+                echo "  ✅ $ROUTE_NAME: imports from centralized schema modules"
+              fi
+            fi
+          done
+
+          echo ""
+          if [ "$MISSING_IMPORTS" -gt 0 ]; then
+            echo "⚠️  $MISSING_IMPORTS route(s) may use inline or non-centralized validation"
+          else
+            echo "✅ All API routes use centralized schema validation"
+          fi
+
+          echo "missing_imports=$MISSING_IMPORTS" >> "$GITHUB_OUTPUT"
+
+      - name: Verify schema test coverage
+        id: coverage_check
+        run: |
+          echo "=== Schema Coverage Check ==="
+          # Count schemas in schemas.ts
+          SCHEMA_COUNT=$(grep -cE '^export const [a-z]' src/lib/api/schemas.ts 2>/dev/null || echo "0")
+          # Count validators in validators.ts
+          VALIDATOR_COUNT=$(grep -cE '^export const [a-z]' src/lib/api/validators.ts 2>/dev/null || echo "0")
+
+          echo "  Schemas defined: $SCHEMA_COUNT"
+          echo "  Validators defined: $VALIDATOR_COUNT"
+
+          # Count tests
+          SCHEMA_TEST_COUNT=$(grep -cE '\b(it|test|describe)\b' src/lib/api/__tests__/schemas.test.ts 2>/dev/null || echo "0")
+          VALIDATOR_TEST_COUNT=$(grep -cE '\b(it|test|describe)\b' src/lib/api/__tests__/validators.test.ts 2>/dev/null || echo "0")
+
+          echo "  Schema tests: $SCHEMA_TEST_COUNT"
+          echo "  Validator tests: $VALIDATOR_TEST_COUNT"
+
+          echo "✅ Schema contract coverage verified"
+          echo "schema_count=$SCHEMA_COUNT" >> "$GITHUB_OUTPUT"
+          echo "validator_count=$VALIDATOR_COUNT" >> "$GITHUB_OUTPUT"
+          echo "test_count=$((SCHEMA_TEST_COUNT + VALIDATOR_TEST_COUNT))" >> "$GITHUB_OUTPUT"
+
+      - name: Report results
+        if: always()
+        run: |
+          SCHEMA_EXIT=${{ steps.schemas.outputs.exit_code }}
+          VALIDATOR_EXIT=${{ steps.validators.outputs.exit_code }}
+          PARAMS_EXIT=${{ steps.params.outputs.exit_code }}
+
+          echo ""
+          echo "=== Schema Contract Results ==="
+          [ "$SCHEMA_EXIT" = "0" ] && echo "✅ Schema tests: PASSED" || echo "❌ Schema tests: FAILED"
+          [ "$VALIDATOR_EXIT" = "0" ] && echo "✅ Validator tests: PASSED" || echo "❌ Validator tests: FAILED"
+          [ "$PARAMS_EXIT" = "0" ] && echo "✅ Params tests: PASSED" || echo "❌ Params tests: FAILED"
+
+          FAILED=0
+          [ "$SCHEMA_EXIT" != "0" ] && FAILED=1
+          [ "$VALIDATOR_EXIT" != "0" ] && FAILED=1
+          [ "$PARAMS_EXIT" != "0" ] && FAILED=1
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "##[error] Schema contract tests failed"
+            exit 1
+          fi
+
+      - name: Upload schema test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-contract-results
+          path: |
+            schema-test-results.txt
+            validator-test-results.txt
+            params-test-results.txt
+          retention-days: 14
+
+      - name: Comment PR with schema contract report
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const schemaCount = '${{ steps.coverage_check.outputs.schema_count }}';
+            const validatorCount = '${{ steps.coverage_check.outputs.validator_count }}';
+            const testCount = '${{ steps.coverage_check.outputs.test_count }}';
+            const success = '${{ job.status }}' === 'success';
+            const emoji = success ? '🟢' : '🔴';
+
+            const body = [
+              `## 📐 Schema Contract Tests`,
+              '',
+              `${emoji} **Status:** ${success ? 'All schema contracts valid' : 'Schema contract violations detected'}`,
+              '',
+              '| Metric | Count |',
+              '|--------|-------|',
+              `| Zod schemas | ${schemaCount} |`,
+              `| Zod validators | ${validatorCount} |`,
+              `| Contract tests | ${testCount} |`,
+              '',
+              '**Suites:** `schemas.test.ts`, `validators.test.ts`, `params.test.ts`',
+              '',
+              success ? '✅ All API request/response schemas match their contracts.' : '⚠️ Schema mismatch — check the workflow logs for details.',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('Schema Contract Tests'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

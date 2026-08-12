@@ -1,0 +1,173 @@
+name: "Component Tests"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/components/**"
+      - "src/lib/hooks/**"
+      - "vitest.config.ts"
+      - "vitest.setup.tsx"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/component-test.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/**"
+      - "src/lib/hooks/**"
+      - "vitest.config.ts"
+      - "vitest.setup.tsx"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  component-tests:
+    name: Vitest component tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run component tests
+        id: test
+        run: |
+          # Run only component tests (files in __tests__ directories under components/)
+          npx vitest run --reporter=verbose src/components/__tests__/ 2>&1 | tee component-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Run hook tests
+        id: hooks
+        run: |
+          # Run hook tests separately
+          npx vitest run --reporter=verbose src/lib/hooks/ 2>&1 | tee hook-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Run UI component tests
+        id: ui_tests
+        run: |
+          # Run UI component tests
+          npx vitest run --reporter=verbose src/components/ui/__tests__/ 2>&1 | tee ui-component-results.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-results
+          path: |
+            component-results.txt
+            hook-results.txt
+            ui-component-results.txt
+          retention-days: 14
+
+      - name: Check for failures
+        if: always()
+        run: |
+          COMP_EXIT=${{ steps.test.outputs.exit_code }}
+          HOOK_EXIT=${{ steps.hooks.outputs.exit_code }}
+          UI_EXIT=${{ steps.ui_tests.outputs.exit_code }}
+
+          FAILED=0
+          [ "$COMP_EXIT" != "0" ] && { echo "❌ Component tests failed"; FAILED=1; }
+          [ "$HOOK_EXIT" != "0" ] && { echo "❌ Hook tests failed"; FAILED=1; }
+          [ "$UI_EXIT" != "0" ] && { echo "❌ UI component tests failed"; FAILED=1; }
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "##[error] One or more component test suites failed"
+            exit 1
+          fi
+
+          echo "✅ All component test suites passed"
+
+      - name: Generate component test summary
+        if: always()
+        run: |
+          echo "# Component Test Results" > component-summary.md
+          echo "" >> component-summary.md
+
+          echo "## Component Tests" >> component-summary.md
+          echo '```' >> component-summary.md
+          if [ -f component-results.txt ]; then
+            grep -E '(PASS|FAIL|Tests|test)' component-results.txt | tail -20 >> component-summary.md
+          else
+            echo "No results" >> component-summary.md
+          fi
+          echo '```' >> component-summary.md
+
+          echo "" >> component-summary.md
+          echo "## Hook Tests" >> component-summary.md
+          echo '```' >> component-summary.md
+          if [ -f hook-results.txt ]; then
+            grep -E '(PASS|FAIL|Tests|test)' hook-results.txt | tail -20 >> component-summary.md
+          else
+            echo "No results" >> component-summary.md
+          fi
+          echo '```' >> component-summary.md
+
+          echo "" >> component-summary.md
+          echo "## UI Component Tests" >> component-summary.md
+          echo '```' >> component-summary.md
+          if [ -f ui-component-results.txt ]; then
+            grep -E '(PASS|FAIL|Tests|test)' ui-component-results.txt | tail -20 >> component-summary.md
+          else
+            echo "No results" >> component-summary.md
+          fi
+          echo '```' >> component-summary.md
+
+      - name: Comment PR with component test summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summaryPath = 'component-summary.md';
+            if (!fs.existsSync(summaryPath)) {
+              console.log('No component test summary generated');
+              return;
+            }
+            const summary = fs.readFileSync(summaryPath, 'utf8');
+            const failed = '${{ job.status }}' !== 'success';
+            const emoji = failed ? '🔴' : '🟢';
+            const header = `## 🧩 ${emoji} Component Tests: ${failed ? 'FAILED' : 'PASSED'}\n\n`;
+
+            const body = header + summary;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('Component Tests'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

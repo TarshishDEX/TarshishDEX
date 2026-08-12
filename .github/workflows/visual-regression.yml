@@ -1,0 +1,113 @@
+name: "Visual Regression"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  visual-diff:
+    name: Playwright screenshot diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Start server
+        run: |
+          npm start &
+          sleep 5
+          curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/api/health
+
+      - name: Take baseline screenshots (main only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          VISUAL_BASELINE=true npx playwright test --project=chromium --grep "visual" 2>&1 || true
+        env:
+          E2E_BASE_URL: http://localhost:3000
+
+      - name: Run visual regression tests
+        if: github.event_name == 'pull_request'
+        run: |
+          # Fetch baseline screenshots from main branch
+          git fetch origin main:main 2>/dev/null || true
+          # Run visual comparison tests
+          npx playwright test --project=chromium --grep "visual" 2>&1 | tee visual-results.txt
+        env:
+          E2E_BASE_URL: http://localhost:3000
+
+      - name: Upload diff artifacts (on failure)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: |
+            test-results/
+            visual-results.txt
+          retention-days: 14
+
+      - name: Comment PR with visual diff summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resultsPath = 'visual-results.txt';
+            let body;
+
+            if (!fs.existsSync(resultsPath)) {
+              body = '## 👁️ Visual Regression\n\n✅ No visual diff output (tests may have been skipped or all passed).';
+            } else {
+              const output = fs.readFileSync(resultsPath, 'utf8');
+              const failed = (output.match(/failed/gi) || []).length;
+              const passed = (output.match(/passed/gi) || []).length;
+
+              if (failed > 0) {
+                body = `## 👁️ Visual Regression\n\n⚠️ **${failed} visual test(s) failed** — check the uploaded artifacts for screenshot diffs.\n\n<details><summary>Raw output</summary>\n\n\`\`\`\n${output.slice(0, 3000)}\n\`\`\`\n</details>`;
+              } else {
+                body = '## 👁️ Visual Regression\n\n✅ All visual snapshot tests passed — no unintended UI changes detected.';
+              }
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('Visual Regression'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

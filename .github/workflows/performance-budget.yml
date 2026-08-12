@@ -1,0 +1,227 @@
+name: "Performance Budget"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  budget:
+    name: Bundle size & perf budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Check JS bundle sizes
+        id: js_bundle
+        run: |
+          echo "=== Next.js JS Bundle Budget ==="
+          # Budget thresholds
+          MAX_FIRST_LOAD_JS=300   # KB
+          MAX_CHUNK_SIZE=150      # KB (individual chunk)
+
+          FAILED=0
+          TOTAL_JS_SIZE=0
+
+          # Measure total first-load JS
+          if [ -d ".next/static/chunks" ]; then
+            for chunk in .next/static/chunks/*.js; do
+              if [ -f "$chunk" ]; then
+                SIZE=$(stat -c%s "$chunk")
+                SIZE_KB=$((SIZE / 1024))
+                NAME=$(basename "$chunk" | cut -c1-60)
+                TOTAL_JS_SIZE=$((TOTAL_JS_SIZE + SIZE_KB))
+
+                if [ "$SIZE_KB" -gt "$MAX_CHUNK_SIZE" ]; then
+                  printf "  ❌ %s: %d KB (exceeds %d KB chunk limit)\n" "$NAME" "$SIZE_KB" "$MAX_CHUNK_SIZE"
+                  FAILED=1
+                elif [ "$SIZE_KB" -gt 50 ]; then
+                  printf "  ⚠️  %s: %d KB\n" "$NAME" "$SIZE_KB"
+                fi
+              fi
+            done
+          fi
+
+          echo ""
+          echo "Total first-load JS: ${TOTAL_JS_SIZE} KB (budget: ${MAX_FIRST_LOAD_JS} KB)"
+
+          if [ "$TOTAL_JS_SIZE" -gt "$MAX_FIRST_LOAD_JS" ]; then
+            echo "❌ Total JS exceeds ${MAX_FIRST_LOAD_JS} KB budget!"
+            FAILED=1
+          else
+            echo "✅ Total JS within budget"
+          fi
+
+          echo "total_js_kb=$TOTAL_JS_SIZE" >> "$GITHUB_OUTPUT"
+          echo "js_failed=$FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Check CSS bundle size
+        id: css_bundle
+        run: |
+          echo "=== CSS Bundle Budget ==="
+          MAX_CSS_SIZE=100  # KB
+
+          TOTAL_CSS=0
+          if [ -d ".next/static/css" ]; then
+            for css in .next/static/css/*.css; do
+              if [ -f "$css" ]; then
+                SIZE_KB=$(($(stat -c%s "$css") / 1024))
+                NAME=$(basename "$css" | cut -c1-60)
+                TOTAL_CSS=$((TOTAL_CSS + SIZE_KB))
+                printf "  %s: %d KB\n" "$NAME" "$SIZE_KB"
+              fi
+            done
+          fi
+
+          echo ""
+          echo "Total CSS: ${TOTAL_CSS} KB (budget: ${MAX_CSS_SIZE} KB)"
+
+          CSS_FAILED=0
+          if [ "$TOTAL_CSS" -gt "$MAX_CSS_SIZE" ]; then
+            echo "❌ Total CSS exceeds ${MAX_CSS_SIZE} KB budget!"
+            CSS_FAILED=1
+          else
+            echo "✅ Total CSS within budget"
+          fi
+
+          echo "total_css_kb=$TOTAL_CSS" >> "$GITHUB_OUTPUT"
+          echo "css_failed=$CSS_FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Check total page size
+        id: total_size
+        run: |
+          echo "=== Total Static Build Size ==="
+
+          STATIC_SIZE_KB=0
+          if [ -d ".next/static" ]; then
+            STATIC_SIZE_BYTES=$(du -sb .next/static 2>/dev/null | cut -f1)
+            STATIC_SIZE_KB=$((STATIC_SIZE_BYTES / 1024))
+          fi
+
+          MAX_STATIC=1024  # 1 MB
+          echo "Total .next/static: ${STATIC_SIZE_KB} KB (budget: ${MAX_STATIC} KB)"
+
+          STATIC_FAILED=0
+          if [ "$STATIC_SIZE_KB" -gt "$MAX_STATIC" ]; then
+            echo "❌ Static assets exceed 1 MB budget!"
+            STATIC_FAILED=1
+          else
+            echo "✅ Static assets within budget"
+          fi
+
+          echo "static_size_kb=$STATIC_SIZE_KB" >> "$GITHUB_OUTPUT"
+          echo "static_failed=$STATIC_FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Check WASM sizes
+        id: wasm_size
+        run: |
+          echo "=== WASM Size Budget ==="
+          MAX_WASM=64  # KB per file (Stellar limit)
+
+          WASM_FAILED=0
+          if [ -d "src/contracts/target/wasm32v1-none/release" ]; then
+            for wasm in src/contracts/target/wasm32v1-none/release/*.wasm; do
+              if [ -f "$wasm" ]; then
+                SIZE_KB=$(($(stat -c%s "$wasm") / 1024))
+                NAME=$(basename "$wasm")
+                if [ "$SIZE_KB" -gt "$MAX_WASM" ]; then
+                  echo "  ❌ $NAME: ${SIZE_KB} KB (exceeds 64 KB Stellar limit)"
+                  WASM_FAILED=1
+                else
+                  echo "  ✅ $NAME: ${SIZE_KB} KB"
+                fi
+              fi
+            done
+          else
+            echo "  No WASM artifacts found"
+            echo "wasm_failed=0" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "wasm_failed=$WASM_FAILED" >> "$GITHUB_OUTPUT"
+
+      - name: Determine overall budget status
+        id: overall
+        if: always()
+        run: |
+          JS_FAILED=${{ steps.js_bundle.outputs.js_failed || '0' }}
+          CSS_FAILED=${{ steps.css_bundle.outputs.css_failed || '0' }}
+          STATIC_FAILED=${{ steps.total_size.outputs.static_failed || '0' }}
+          WASM_FAILED=${{ steps.wasm_size.outputs.wasm_failed || '0' }}
+
+          FAILURES=$((JS_FAILED + CSS_FAILED + STATIC_FAILED + WASM_FAILED))
+
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "##[error] $FAILURES performance budget(s) exceeded!"
+            echo "overall_failed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          else
+            echo "✅ All performance budgets met"
+            echo "overall_failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment PR with budget report
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const js = '${{ steps.js_bundle.outputs.total_js_kb || 'N/A' }}';
+            const css = '${{ steps.css_bundle.outputs.total_css_kb || 'N/A' }}';
+            const static = '${{ steps.total_size.outputs.static_size_kb || 'N/A' }}';
+            const failed = '${{ steps.overall.outputs.overall_failed }}' === 'true';
+            const emoji = failed ? '🔴' : '🟢';
+
+            const body = [
+              `## 📊 Performance Budget Report`,
+              '',
+              `${emoji} **Status:** ${failed ? 'Budget(s) exceeded' : 'All within budget'}`,
+              '',
+              '| Metric | Current | Budget |',
+              '|--------|---------|--------|',
+              `| Total JS (first load) | ${js} KB | 300 KB |`,
+              `| Total CSS | ${css} KB | 100 KB |`,
+              `| Total static assets | ${static} KB | 1024 KB |`,
+              `| WASM per contract | see log | 64 KB (Stellar limit) |`,
+              '',
+              failed ? '⚠️ **Action required:** Optimize bundles before merging.' : '✅ No performance regressions detected.',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('Performance Budget Report'));
+            if (prev) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
