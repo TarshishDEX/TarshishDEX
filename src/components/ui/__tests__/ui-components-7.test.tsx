@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { PercentButtons } from "@/components/swap/percent-buttons";
 import { AnimatedNumber } from "@/components/ui/animated-number";
