@@ -362,7 +362,6 @@ describe("useMediaQuery subscription", () => {
   it("subscribes and re-renders on change events", () => {
     let changeHandler: (() => void) | null = null;
     let matches = false;
-    // @ts-expect-error testing override
     window.matchMedia = vi.fn().mockImplementation(() => ({
       matches,
       media: "",
