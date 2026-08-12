@@ -59,7 +59,7 @@ describe("RootLayout", () => {
 
   it("exports metadata and viewport", async () => {
     const layout = await import("@/app/layout");
-    expect(layout.metadata.description).toContain("TarshishDEX");
+    expect(layout.metadata.description).toContain("Stellar");
     expect(layout.viewport.themeColor).toBe("#06090f");
   });
 });
