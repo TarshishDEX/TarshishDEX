@@ -601,6 +601,126 @@ mod test {
             Err(Ok(Error::InvalidRoutingMode))
         );
     }
+
+    #[test]
+    fn rejects_too_many_assets() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let mut assets = Vec::new(&env);
+        for i in 0..51 {
+            assets.push_back(Symbol::new(&env, &format!("ASSET{i}")));
+        }
+        let prefs = Preferences {
+            max_slippage_bps: 100,
+            routing_mode: symbol_short!("auto"),
+            allowed_assets: assets,
+        };
+        assert_eq!(
+            client.try_set_preferences(&account, &prefs),
+            Err(Ok(Error::TooManyAssets))
+        );
+    }
+
+    #[test]
+    fn paginated_empty_without_preferences() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let (page, cursor) = client.paginated_get_preferences(&10, &0);
+        assert_eq!(page.len(), 0);
+        assert!(cursor.is_none());
+    }
+
+    #[test]
+    fn paginated_with_missing_preference_uses_defaults() {
+        // An account in the list whose preference entry was deleted should
+        // still appear in paginated results with default values.
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account1 = Address::generate(&env);
+        let account2 = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_preferences(&account1, &default_prefs(&env));
+        client.set_preferences(&account2, &default_prefs(&env));
+
+        // Remove account1's prefs directly — it stays in the list but the
+        // entry is gone. Pagination must fall back to defaults.
+        client.remove_preferences(&account1);
+
+        let (page, cursor) = client.paginated_get_preferences(&50, &0);
+        assert_eq!(page.len(), 1);
+        assert!(cursor.is_none());
+        // The remaining entry (account2) has its stored prefs
+        assert_eq!(page.get(0).unwrap().0, account2);
+    }
+
+    #[test]
+    fn batch_get_all_unset_returns_defaults() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let a1 = Address::generate(&env);
+        let a2 = Address::generate(&env);
+        let accounts = Vec::from_array(&env, [a1.clone(), a2.clone()]);
+        let batch = client.batch_get_preferences(&accounts);
+        assert_eq!(batch.len(), 2);
+        assert_eq!(batch.get(0).unwrap().1, Preferences::defaults(&env));
+        assert_eq!(batch.get(1).unwrap().1, Preferences::defaults(&env));
+    }
+
+    #[test]
+    fn set_preferences_extends_count_only_once() {
+        // Updating existing preferences must not increment the count twice.
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_preferences(&account, &default_prefs(&env));
+        client.set_preferences(&account, &default_prefs(&env));
+        assert_eq!(client.get_preference_count(), 1);
+    }
+
+    #[test]
+    fn remove_preferences_updates_pagination_list() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account1 = Address::generate(&env);
+        let account2 = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_preferences(&account1, &default_prefs(&env));
+        client.set_preferences(&account2, &default_prefs(&env));
+        client.remove_preferences(&account1);
+
+        let (page, _) = client.paginated_get_preferences(&50, &0);
+        assert_eq!(page.len(), 1);
+        assert_eq!(page.get(0).unwrap().0, account2);
+    }
 }
 
 // ── Gas benchmarking tests ─────────────────────────────────────────────

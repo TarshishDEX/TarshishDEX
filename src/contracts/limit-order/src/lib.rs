@@ -839,6 +839,250 @@ mod test {
             Err(Ok(Error::InvalidPrice))
         );
     }
+
+    #[test]
+    fn rejects_double_initialize() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(
+            client.try_initialize(&admin),
+            Err(Ok(Error::AlreadyInitialized))
+        );
+    }
+
+    #[test]
+    fn rejects_zero_amount() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &0,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::InvalidAmount))
+        );
+    }
+
+    #[test]
+    fn rejects_negative_amount() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &-5,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::InvalidAmount))
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_side() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("bid"),
+            ),
+            Err(Ok(Error::InvalidAmount))
+        );
+    }
+
+    #[test]
+    fn rejects_too_many_orders_per_user() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        // Fill to the cap (MAX_ORDERS_PER_USER = 25)
+        for _ in 0..25 {
+            client.place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            );
+        }
+
+        // 26th order must be rejected
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::TooManyOrders))
+        );
+        assert_eq!(client.get_order_count(), 25);
+    }
+
+    #[test]
+    fn cancel_missing_order_returns_not_found() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_cancel_order(&user, &999),
+            Err(Ok(Error::OrderNotFound))
+        );
+    }
+
+    #[test]
+    fn mark_executed_missing_order_returns_not_found() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(
+            client.try_mark_executed(&user, &999, &symbol_short!("tx")),
+            Err(Ok(Error::OrderNotFound))
+        );
+    }
+
+    #[test]
+    fn get_user_orders_empty_for_fresh_user() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        assert_eq!(client.get_user_orders(&user).len(), 0);
+    }
+
+    #[test]
+    fn paginated_orders_empty_on_fresh_contract() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let (page, cursor) = client.paginated_orders(&10, &0);
+        assert_eq!(page.len(), 0);
+        assert!(cursor.is_none());
+    }
+
+    #[test]
+    fn relayer_count_unchanged_on_noop_state() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let relayer = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        // Grant then re-grant — count must stay 1
+        client.set_relayer(&relayer, &true);
+        client.set_relayer(&relayer, &true);
+        assert_eq!(client.get_relayer_count(), 1);
+        assert!(client.is_relayer(&relayer));
+
+        // Revoke then re-revoke a non-relayer — count must stay 0
+        let other = Address::generate(&env);
+        client.set_relayer(&other, &false);
+        client.set_relayer(&other, &false);
+        assert_eq!(client.get_relayer_count(), 1);
+        assert!(!client.is_relayer(&other));
+    }
+
+    #[test]
+    fn set_version_without_initialize_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+
+        assert_eq!(client.try_set_version(&1), Err(Ok(Error::NotInitialized)));
+    }
+
+    #[test]
+    fn place_order_uses_timestamp_from_ledger() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        let order = client.get_order(&id).unwrap();
+        assert_eq!(order.placed_at, env.ledger().timestamp());
+        assert_eq!(order.side, symbol_short!("sell"));
+        assert_eq!(order.expiry_ledger, 0);
+    }
 }
 
 // ── Gas benchmarking tests ─────────────────────────────────────────────

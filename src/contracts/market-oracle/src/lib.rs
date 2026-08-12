@@ -478,6 +478,7 @@ impl MarketOracle {
 #[cfg(test)]
 mod test {
     use super::*;
+    use soroban_sdk::testutils::Ledger as _;
     use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
 
     #[test]
@@ -713,6 +714,196 @@ mod test {
         let (page2, cursor2) = client.paginated_observations(&10, &cursor1.unwrap());
         assert!(!page2.is_empty());
         assert!(cursor2.is_none());
+    }
+
+    #[test]
+    fn stale_observation_rejected_after_ledger_jump() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+
+        // Jump far beyond STALE_THRESHOLD (720 ledgers)
+        let current = env.ledger().sequence();
+        env.ledger().set_sequence_number(current + 1000);
+
+        assert_eq!(
+            client.try_get_observation(&symbol_short!("XLM"), &symbol_short!("USDC")),
+            Err(Ok(Error::StaleObservation))
+        );
+
+        // batch and all_observations must also filter it out
+        let pairs = Vec::from_array(&env, [(symbol_short!("XLM"), symbol_short!("USDC"))]);
+        let batch = client.batch_get_observations(&pairs);
+        assert!(batch.get(0).unwrap().2.is_none());
+
+        assert_eq!(client.all_observations().len(), 0);
+        let (page, cursor) = client.paginated_observations(&10, &0);
+        assert_eq!(page.len(), 0);
+        assert!(cursor.is_none());
+    }
+
+    #[test]
+    fn get_observation_unpublished_returns_none() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        assert_eq!(
+            client.try_get_observation(&symbol_short!("XLM"), &symbol_short!("USDC")),
+            Ok(Ok(None))
+        );
+        assert_eq!(
+            client
+                .get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"))
+                .len(),
+            0
+        );
+    }
+
+    #[test]
+    fn paginated_observations_empty_on_fresh_contract() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        let (page, cursor) = client.paginated_observations(&10, &0);
+        assert_eq!(page.len(), 0);
+        assert!(cursor.is_none());
+        assert_eq!(client.all_observations().len(), 0);
+    }
+
+    #[test]
+    fn publisher_count_unchanged_on_noop_state() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+
+        // Grant then re-grant — count must stay 1
+        client.set_publisher(&publisher, &true);
+        client.set_publisher(&publisher, &true);
+        assert_eq!(client.get_publisher_count(), 1);
+
+        // Revoke then re-revoke a non-publisher — count must stay 1
+        let other = Address::generate(&env);
+        client.set_publisher(&other, &false);
+        client.set_publisher(&other, &false);
+        assert_eq!(client.get_publisher_count(), 1);
+        // Revoking the real publisher returns count to 0
+        client.set_publisher(&publisher, &false);
+        assert_eq!(client.get_publisher_count(), 0);
+    }
+
+    #[test]
+    fn history_ring_buffer_wraps_within_cap() {
+        // Publish more than MAX_HISTORY (16) times; history must stay capped.
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+        for i in 0..20u64 {
+            client.publish(
+                &publisher,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &(10_000_000 + i as i128),
+            );
+        }
+        let history = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        assert_eq!(history.len(), 16); // MAX_HISTORY
+    }
+
+    #[test]
+    fn rejects_too_many_tracked_pairs() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        // Fill up to MAX_TRACKED_PAIRS (100) unique pairs
+        for i in 0..100u32 {
+            client.publish(
+                &publisher,
+                &Symbol::new(&env, &format!("A{i:03}")),
+                &symbol_short!("USDC"),
+                &10_000_000,
+            );
+        }
+        assert_eq!(client.all_observations().len(), 100);
+
+        // 101st unique pair must be rejected
+        assert_eq!(
+            client.try_publish(
+                &publisher,
+                &Symbol::new(&env, "OVERFLOW"),
+                &symbol_short!("USDC"),
+                &10_000_000
+            ),
+            Err(Ok(Error::TooManyPairs))
+        );
+    }
+
+    #[test]
+    fn batch_get_observations_filters_unpublished() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+        client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+
+        let pairs = Vec::from_array(
+            &env,
+            [
+                (symbol_short!("XLM"), symbol_short!("USDC")),
+                (symbol_short!("BTC"), symbol_short!("USDC")),
+            ],
+        );
+        let batch = client.batch_get_observations(&pairs);
+        assert_eq!(batch.len(), 2);
+        assert!(batch.get(0).unwrap().2.is_some());
+        assert!(batch.get(1).unwrap().2.is_none());
     }
 }
 
