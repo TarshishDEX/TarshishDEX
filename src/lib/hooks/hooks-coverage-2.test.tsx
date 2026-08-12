@@ -189,7 +189,7 @@ describe("useWatchlist", () => {
     };
     act(() => result.current.add(token));
     expect(result.current.tokens).toHaveLength(1);
-    expect(result.current.tokens[0].code).toBe("USDC");
+    expect(result.current.tokens[0]?.code).toBe("USDC");
   });
 
   it("removes a token", () => {
@@ -254,7 +254,7 @@ describe("useSwapHistory", () => {
       })
     );
     expect(result.current.entries).toHaveLength(1);
-    expect(result.current.entries[0].inputAsset).toBe("XLM");
+    expect(result.current.entries[0]?.inputAsset).toBe("XLM");
   });
 
   it("clears history", () => {
