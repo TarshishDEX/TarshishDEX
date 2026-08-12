@@ -486,6 +486,32 @@ describe("DELETE /api/orders", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("returns 502 when the contract is not deployed", async () => {
+    buildCancelOrExecuteTxMock.mockResolvedValue(null);
+    const res = await deleteOrders(
+      makeRequest("http://localhost/api/orders", {
+        method: "DELETE",
+        body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS }),
+      }),
+    );
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.code).toBe("CONTRACT_NOT_DEPLOYED");
+  });
+
+  it("returns 502 when building the transaction fails", async () => {
+    buildCancelOrExecuteTxMock.mockRejectedValue(new Error("boom"));
+    const res = await deleteOrders(
+      makeRequest("http://localhost/api/orders", {
+        method: "DELETE",
+        body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS }),
+      }),
+    );
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.code).toBe("ORDERS_BUILD_FAILED");
+  });
 });
 
 // =========================================================================
