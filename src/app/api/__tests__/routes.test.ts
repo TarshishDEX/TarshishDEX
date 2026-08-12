@@ -617,6 +617,79 @@ describe("OPTIONS (CORS)", () => {
 });
 
 // =========================================================================
+// rate-limit 429 branches across all routes
+// =========================================================================
+describe("rate limiting", () => {
+  beforeEach(() => {
+    checkRateLimitMock.mockReturnValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60_000 });
+  });
+
+  it("rejects candles with 429", async () => {
+    const res = await getCandles(makeRequest("http://localhost/api/market/candles?base=XLM&counter=USDC:" + USDC_ISSUER));
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects orderbook with 429", async () => {
+    const res = await getOrderbook(makeRequest("http://localhost/api/market/orderbook?base=XLM&counter=USDC:" + USDC_ISSUER));
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects pools with 429", async () => {
+    const res = await getPools(makeRequest("http://localhost/api/market/pools?base=XLM&counter=USDC:" + USDC_ISSUER));
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects stats with 429", async () => {
+    const res = await getStats(makeRequest("http://localhost/api/market/stats"));
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects portfolio with 429", async () => {
+    const res = await getPortfolio(makeRequest(`http://localhost/api/portfolio/${VALID_ADDRESS}`), {
+      params: Promise.resolve({ address: VALID_ADDRESS }),
+    });
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects quote with 429", async () => {
+    const res = await getQuote(makeRequest("http://localhost/api/swap/quote?input=XLM&output=USDC:" + USDC_ISSUER + "&amount=10"));
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects trades with 429", async () => {
+    const res = await getTrades(makeRequest(`http://localhost/api/trades/${VALID_ADDRESS}`), {
+      params: Promise.resolve({ address: VALID_ADDRESS }),
+    });
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects order POST with 429", async () => {
+    const res = await postOrders(
+      makeRequest("http://localhost/api/orders", {
+        method: "POST",
+        body: JSON.stringify({ userAddress: VALID_ADDRESS, base: "XLM", counter: "USDC", price: 1, amount: 1, expiryLedger: 0, side: "buy" }),
+      })
+    );
+    expect(res.status).toBe(429);
+  });
+
+  it("rejects order DELETE with 429", async () => {
+    const res = await deleteOrders(
+      makeRequest("http://localhost/api/orders", {
+        method: "DELETE",
+        body: JSON.stringify({ id: 1, userAddress: VALID_ADDRESS }),
+      })
+    );
+    expect(res.status).toBe(429);
+  });
+
+  it("sets Retry-After header on the 429 response", async () => {
+    const res = await getStats(makeRequest("http://localhost/api/market/stats"));
+    expect(res.headers.get("Retry-After")).not.toBeNull();
+  });
+});
+
+// =========================================================================
 // apiHandler error envelope
 // =========================================================================
 describe("apiHandler unhandled errors", () => {
