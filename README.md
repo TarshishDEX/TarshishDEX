@@ -5,6 +5,7 @@
 **A decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.**
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
+[![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
 ![Tests](https://img.shields.io/badge/tests-1504%20passing-2ea44f)
 ![Coverage](https://img.shields.io/badge/coverage-81%25%20statements-2ea44f)
