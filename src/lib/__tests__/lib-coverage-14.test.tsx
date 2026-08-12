@@ -278,13 +278,13 @@ describe("useWatchlist", () => {
         <button data-testid="wl-add2" onClick={() => add({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}>
           add2
         </button>
-        <button data-testid="wl-remove" onClick={() => remove({ code: "XLM", isNative: true })}>
+        <button data-testid="wl-remove" onClick={() => remove({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}>
           remove
         </button>
         <button data-testid="wl-toggle" onClick={() => toggle({ code: "USDC", issuer: "G", name: "USDC", decimals: 7 })}>
           toggle
         </button>
-        <span data-testid="wl-watched">{String(isWatched({ code: "XLM", isNative: true }))}</span>
+        <span data-testid="wl-watched">{String(isWatched({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 }))}</span>
       </div>
     );
   }
