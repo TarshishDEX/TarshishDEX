@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { PagePlaceholder } from "@/components/ui/page-placeholder";
 import { WalletStatusBadge } from "@/components/wallet/wallet-status-badge";

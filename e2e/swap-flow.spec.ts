@@ -38,8 +38,6 @@ test.describe("Swap flow", () => {
   });
 
   test("reverses swap direction via arrow button", async ({ page }) => {
-    // Capture the token selector values before reversing
-    const paySelector = page.getByLabelText("Amount to pay").locator("..");
     await page.getByRole("button", { name: "Reverse swap direction" }).click();
     // The reverse button still exists after swap
     await expect(

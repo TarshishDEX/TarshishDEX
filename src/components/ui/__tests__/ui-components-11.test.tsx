@@ -213,7 +213,7 @@ describe("VolumeChart", () => {
   ];
 
   it("renders chart components for candles", () => {
-    const { container } = render(<VolumeChart candles={mockCandles} />);
+    render(<VolumeChart candles={mockCandles} />);
     expect(screen.getByTestId("recharts-container")).toBeInTheDocument();
     expect(screen.getByTestId("recharts-chart")).toBeInTheDocument();
     expect(screen.getByTestId("recharts-bar")).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe("VolumeChart", () => {
   });
 
   it("handles empty candles array", () => {
-    const { container } = render(<VolumeChart candles={[]} />);
+    render(<VolumeChart candles={[]} />);
     expect(screen.getByTestId("recharts-chart")).toBeInTheDocument();
   });
 
