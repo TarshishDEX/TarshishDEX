@@ -1545,7 +1545,10 @@ mod fuzz {
         let (env, _admin, client) = setup();
         let user = Address::generate(&env);
 
-        for (i, expiry) in [0u32, 100, 1_000_000, 4_294_967_295].into_iter().enumerate() {
+        for (i, expiry) in [0u32, 100, 1_000_000, 4_294_967_295]
+            .into_iter()
+            .enumerate()
+        {
             let id = client.place_order(
                 &user,
                 &symbol_short!("XLM"),
