@@ -39,6 +39,10 @@ pub enum Error {
     InvalidPrice = 4,
     StaleObservation = 5,
     TooManyPairs = 6,
+    ObservationNotFound = 7,
+    InvalidPair = 8,
+    MaxHistoryReached = 9,
+    PublisherAlreadySet = 10,
 }
 
 #[contracttype]

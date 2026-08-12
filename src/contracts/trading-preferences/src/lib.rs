@@ -32,6 +32,9 @@ pub enum Error {
     PreferenceNotFound = 5,
     InvalidRoutingMode = 6,
     TooManyAssets = 7,
+    InvalidAssetCode = 8,
+    BatchTooLarge = 9,
+    AccountNotFound = 10,
 }
 
 #[contracttype]

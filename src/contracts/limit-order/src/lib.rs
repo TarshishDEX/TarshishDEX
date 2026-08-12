@@ -33,6 +33,10 @@ pub enum Error {
     Expired = 8,
     SameAssetPair = 9,
     ArithmeticOverflow = 10,
+    InvalidOrderSide = 11,
+    InsufficientBalance = 12,
+    OrderAlreadyFilled = 13,
+    InvalidTimestamp = 14,
 }
 
 #[contracttype]
