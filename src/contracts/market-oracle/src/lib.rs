@@ -12,8 +12,8 @@
 //! - Cached admin address locally to avoid double instance reads
 //! - Eliminated redundant Symbol clones in publish() validation
 //! - Combined publisher count read+write into single atomic update
-//! - Pairs tracking uses Vec push_back without contains check (rely on
-//!   idempotent storage — duplicate entries harmlessly overwritten)
+//! - Pairs tracking lives in persistent storage (keeps the instance entry
+//!   bounded) and deduplicates before push_back to prevent unbounded growth
 //! - Observation history now uses a fixed-size buffer for predictable gas
 //! - Publisher auth reads cached in local variable before storage writes
 
@@ -295,8 +295,8 @@ impl MarketOracle {
     ///
     /// # Gas notes
     /// Ring buffer uses index-based wrapping (O(1) write) instead of
-    /// Vec::remove(0) (O(n) shift). Pair tracking avoids the O(n) contains
-    /// check — duplicates are harmless.
+    /// Vec::remove(0) (O(n) shift). Pair tracking is a bounded, deduplicated
+    /// Vec kept in persistent storage so the instance entry stays small.
     pub fn publish(
         env: Env,
         publisher: Address,
@@ -365,7 +365,7 @@ impl MarketOracle {
         // For small pair counts (<100), linear scan is cheaper than a map lookup.
         let mut pairs: Vec<(Symbol, Symbol)> = env
             .storage()
-            .instance()
+            .persistent()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
         if pairs.len() >= MAX_TRACKED_PAIRS {
@@ -373,7 +373,10 @@ impl MarketOracle {
         }
         if !pairs.contains(&(base.clone(), counter.clone())) {
             pairs.push_back((base.clone(), counter.clone()));
-            env.storage().instance().set(&DataKey::Pairs, &pairs);
+            env.storage().persistent().set(&DataKey::Pairs, &pairs);
+            env.storage()
+                .persistent()
+                .extend_ttl(&DataKey::Pairs, 0, TTL_LEDGERS);
         }
 
         PricePublished {
@@ -443,7 +446,7 @@ impl MarketOracle {
         let current_ledger = env.ledger().sequence();
         let pairs: Vec<(Symbol, Symbol)> = env
             .storage()
-            .instance()
+            .persistent()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
         let mut out = Vec::new(&env);
@@ -473,7 +476,7 @@ impl MarketOracle {
         let current_ledger = env.ledger().sequence();
         let pairs: Vec<(Symbol, Symbol)> = env
             .storage()
-            .instance()
+            .persistent()
             .get(&DataKey::Pairs)
             .unwrap_or_else(|| Vec::new(&env));
 
@@ -1187,6 +1190,89 @@ mod gas_benchmarks {
         let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] set_version: {cost} cpu instructions");
+    }
+
+    /// Print the full metered resource breakdown + fee for the last invocation.
+    fn report(env: &Env, label: &str) {
+        let r = env.cost_estimate().resources();
+        let f = env.cost_estimate().fee();
+        println!(
+            "[gas] {label} | cpu={} mem={} rd_entries={} wr_entries={} rd_bytes={} wr_bytes={} events={} fee_stroops={}",
+            r.instructions,
+            r.mem_bytes,
+            r.disk_read_entries,
+            r.write_entries,
+            r.disk_read_bytes,
+            r.write_bytes,
+            r.contract_events_size_bytes,
+            f.total,
+        );
+    }
+
+    /// Full per-transaction resource table (CPU, memory, ledger IO, fee).
+    #[test]
+    fn bench_resource_table() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        report(&env, "initialize");
+
+        client.set_publisher(&publisher, &true);
+        report(&env, "set_publisher (grant)");
+
+        let _ = client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+        );
+        report(&env, "publish (first)");
+
+        let _ = client.publish(
+            &publisher,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &11_000_000,
+        );
+        report(&env, "publish (subsequent)");
+
+        let _ = client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        report(&env, "get_observation");
+
+        let _ = client.get_observation_history(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        report(&env, "get_observation_history");
+
+        let pairs = Vec::from_array(
+            &env,
+            [
+                (symbol_short!("XLM"), symbol_short!("USDC")),
+                (symbol_short!("BTC"), symbol_short!("USDC")),
+            ],
+        );
+        let _ = client.batch_get_observations(&pairs);
+        report(&env, "batch_get_observations (2)");
+
+        let _ = client.all_observations();
+        report(&env, "all_observations");
+
+        let _ = client.paginated_observations(&10, &0);
+        report(&env, "paginated_observations (limit=10)");
+
+        let _ = client.get_publisher_count();
+        report(&env, "get_publisher_count");
+
+        client.set_publisher(&publisher, &false);
+        report(&env, "set_publisher (revoke)");
+
+        let _ = client.get_version();
+        report(&env, "get_version");
+
+        assert!(client.try_set_version(&5).is_ok());
+        report(&env, "set_version");
     }
 }
 

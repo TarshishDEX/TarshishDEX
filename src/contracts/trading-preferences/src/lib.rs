@@ -13,6 +13,8 @@
 //! - Used `saturating_add` / `saturating_sub` to avoid overflow checks
 //! - Cached admin address locally to avoid double instance storage reads
 //! - TTL extension now targets correct storage domain (instance for admin)
+//! - Pagination list (`PreferencesList`) lives in persistent storage so the
+//!   contract instance entry stays bounded regardless of user count
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, symbol_short, Address, Env,
@@ -264,14 +266,17 @@ impl TradingPreferences {
             // Track account for pagination — skip duplicates.
             let mut list: Vec<Address> = env
                 .storage()
-                .instance()
+                .persistent()
                 .get(&DataKey::PreferencesList)
                 .unwrap_or_else(|| Vec::new(&env));
             if !list.contains(&account) {
                 list.push_back(account.clone());
                 env.storage()
-                    .instance()
+                    .persistent()
                     .set(&DataKey::PreferencesList, &list);
+                env.storage()
+                    .persistent()
+                    .extend_ttl(&DataKey::PreferencesList, 0, TTL_LEDGERS);
             }
         }
 
@@ -315,14 +320,17 @@ impl TradingPreferences {
             // Remove from pagination list.
             let mut list: Vec<Address> = env
                 .storage()
-                .instance()
+                .persistent()
                 .get(&DataKey::PreferencesList)
                 .unwrap_or_else(|| Vec::new(&env));
             if let Some(pos) = list.first_index_of(&account) {
                 list.remove(pos);
                 env.storage()
-                    .instance()
+                    .persistent()
                     .set(&DataKey::PreferencesList, &list);
+                env.storage()
+                    .persistent()
+                    .extend_ttl(&DataKey::PreferencesList, 0, TTL_LEDGERS);
             }
         }
 
@@ -383,7 +391,7 @@ impl TradingPreferences {
         let max_limit = limit.min(50);
         let list: Vec<Address> = env
             .storage()
-            .instance()
+            .persistent()
             .get(&DataKey::PreferencesList)
             .unwrap_or_else(|| Vec::new(&env));
 
@@ -939,6 +947,70 @@ mod gas_benchmarks {
         let after = env.cost_estimate().budget().cpu_instruction_cost();
         let cost = after.saturating_sub(before);
         println!("[bench] get_version: {cost} cpu instructions");
+    }
+
+    /// Print the full metered resource breakdown + fee for the last invocation.
+    fn report(env: &Env, label: &str) {
+        let r = env.cost_estimate().resources();
+        let f = env.cost_estimate().fee();
+        println!(
+            "[gas] {label} | cpu={} mem={} rd_entries={} wr_entries={} rd_bytes={} wr_bytes={} events={} fee_stroops={}",
+            r.instructions,
+            r.mem_bytes,
+            r.disk_read_entries,
+            r.write_entries,
+            r.disk_read_bytes,
+            r.write_bytes,
+            r.contract_events_size_bytes,
+            f.total,
+        );
+    }
+
+    /// Full per-transaction resource table (CPU, memory, ledger IO, fee).
+    #[test]
+    fn bench_resource_table() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let account = Address::generate(&env);
+        let contract_id = env.register(TradingPreferences, ());
+        let client = TradingPreferencesClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        report(&env, "initialize");
+
+        let p = prefs(&env);
+        client.set_preferences(&account, &p);
+        report(&env, "set_preferences (new)");
+
+        let mut updated = prefs(&env);
+        updated.max_slippage_bps = 75;
+        client.set_preferences(&account, &updated);
+        report(&env, "set_preferences (update)");
+
+        let _ = client.get_preferences(&account);
+        report(&env, "get_preferences");
+
+        let mut accounts = Vec::new(&env);
+        for _ in 0..10 {
+            accounts.push_back(Address::generate(&env));
+        }
+        let _ = client.batch_get_preferences(&accounts);
+        report(&env, "batch_get_preferences (10)");
+
+        let _ = client.get_preference_count();
+        report(&env, "get_preference_count");
+
+        let _ = client.paginated_get_preferences(&10, &0);
+        report(&env, "paginated_get_preferences (limit=10)");
+
+        client.remove_preferences(&account);
+        report(&env, "remove_preferences");
+
+        let _ = client.get_version();
+        report(&env, "get_version");
+
+        assert!(client.try_set_version(&5).is_ok());
+        report(&env, "set_version");
     }
 }
 

@@ -494,6 +494,51 @@
               "key": {
                 "vec": [
                   {
+                    "symbol": "Pairs"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "vec": [
+                  {
+                    "vec": [
+                      {
+                        "symbol": "XLM"
+                      },
+                      {
+                        "symbol": "USDC"
+                      }
+                    ]
+                  },
+                  {
+                    "vec": [
+                      {
+                        "symbol": "BTC"
+                      },
+                      {
+                        "symbol": "USDC"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "key": {
+                "vec": [
+                  {
                     "symbol": "Publisher"
                   },
                   {
@@ -548,39 +593,6 @@
                       },
                       "val": {
                         "bool": true
-                      }
-                    },
-                    {
-                      "key": {
-                        "vec": [
-                          {
-                            "symbol": "Pairs"
-                          }
-                        ]
-                      },
-                      "val": {
-                        "vec": [
-                          {
-                            "vec": [
-                              {
-                                "symbol": "XLM"
-                              },
-                              {
-                                "symbol": "USDC"
-                              }
-                            ]
-                          },
-                          {
-                            "vec": [
-                              {
-                                "symbol": "BTC"
-                              },
-                              {
-                                "symbol": "USDC"
-                              }
-                            ]
-                          }
-                        ]
                       }
                     },
                     {

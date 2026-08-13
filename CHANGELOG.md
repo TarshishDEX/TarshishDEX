@@ -5,6 +5,31 @@ All notable changes to TarshishDEX are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### ⛽ Soroban Gas & Storage Optimization
+
+- **Verified ultra-low gas** — benchmarked every contract function against a
+  local protocol-27 network (`stellar-cli 27.1.0`). Reads cost only the
+  100-stroop inclusion fee (~0.00001 XLM); writes cost 0.003–0.019 XLM,
+  dominated by refundable state rent, not CPU/I/O.
+- **Removed the unbounded `OrderList`** from limit-order instance storage.
+  `paginated_orders` now scans `Order(id)` by ID range (bounded scans), so
+  `place_order`/`cancel_order`/`mark_executed` no longer read-and-rewrite a
+  global list. `place_order` (first) dropped 114,591 → 102,203 CPU
+  instructions; subsequent dropped 38,108 → 27,566.
+- **Moved `PreferencesList` (trading-preferences) and `Pairs`
+  (market-oracle) out of instance storage into persistent storage**, keeping
+  the contract instance entry bounded regardless of account/pair count.
+- **New `bench_resource_table` tests** report full per-transaction resource
+  usage (`env.cost_estimate().resources()` + `.fee()`) — CPU, memory, ledger
+  reads/writes/bytes, events, and fee — closing the gap where read-only ops
+  showed "0" in the CPU-only sandbox metric.
+- **Refreshed `docs/GAS_BENCHMARKS.md`** with the protocol-27 fee schedule,
+  per-transaction resource/fee tables, and corrected WASM sizes
+  (21.1 KB / 29.4 KB / 30.4 KB).
+
+
 ## [0.3.0] — 2026-08-12 — Fortress Release
 
 Coverage and testing pushed to fortress levels across every layer:

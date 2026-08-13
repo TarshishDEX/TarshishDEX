@@ -10,6 +10,7 @@
 //! - Fully on-chain order persistence (survives page reloads/sessions)
 //! - Price-conditioned execution with expiry
 //! - Gas-optimized: single read per query, O(1) order cancellation
+//! - ID-range pagination (no unbounded global order list in instance storage)
 //! - No matching engine on-chain (frontend-driven execution for low fees)
 
 use soroban_sdk::{
@@ -19,6 +20,9 @@ use soroban_sdk::{
 
 const TTL_LEDGERS: u32 = 518_400;
 const MAX_ORDERS_PER_USER: u32 = 25;
+/// Upper bound on gap-scans per pagination page (multiple of `limit`). Keeps
+/// `paginated_orders` gas predictable even when many orders were removed.
+const MAX_GAP_SCAN_FACTOR: u32 = 4;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -157,8 +161,6 @@ pub enum DataKey {
     NextOrderId,
     OrderCount,
     Order(u64),
-    /// Ordered list of order IDs for pagination.
-    OrderList,
     /// Per-user order ID list for user-scoped queries.
     UserOrders(Address),
     /// Whether an address is authorized as a relayer (bot/executor).
@@ -305,15 +307,6 @@ impl LimitOrder {
             .instance()
             .set(&DataKey::NextOrderId, &next_id.saturating_add(1));
 
-        // Track in global order list
-        let mut list: Vec<u64> = env
-            .storage()
-            .instance()
-            .get(&DataKey::OrderList)
-            .unwrap_or_else(|| Vec::new(&env));
-        list.push_back(id);
-        env.storage().instance().set(&DataKey::OrderList, &list);
-
         // Track in per-user list
         let mut user_list = user_orders;
         user_list.push_back(id);
@@ -458,17 +451,6 @@ impl LimitOrder {
 
     /// Internal helper: remove an order ID from OrderList and UserOrders vectors.
     fn remove_from_indexes(env: &Env, owner: &Address, id: u64) {
-        // Remove from global OrderList
-        let mut list: Vec<u64> = env
-            .storage()
-            .instance()
-            .get(&DataKey::OrderList)
-            .unwrap_or_else(|| Vec::new(env));
-        if let Some(pos) = list.first_index_of(id) {
-            list.remove(pos);
-            env.storage().instance().set(&DataKey::OrderList, &list);
-        }
-
         // Remove from per-user UserOrders
         let mut user_list: Vec<u64> = env
             .storage()
@@ -509,29 +491,41 @@ impl LimitOrder {
     }
 
     /// Paginated list of all active order IDs.
-    pub fn paginated_orders(env: Env, limit: u32, cursor: u32) -> (Vec<u64>, Option<u32>) {
+    ///
+    /// Orders are keyed by their auto-incrementing ID, so pages are produced
+    /// by scanning IDs from `cursor` (inclusive) upward and skipping the gaps
+    /// left by cancelled/executed orders. This avoids storing an unbounded
+    /// global order list in instance storage and keeps per-call gas bounded.
+    pub fn paginated_orders(env: Env, limit: u32, cursor: u64) -> (Vec<u64>, Option<u64>) {
         let max_limit = limit.min(50);
-        let list: Vec<u64> = env
+        // Upper bound (exclusive) is the next ID that would be allocated.
+        let max_id: u64 = env
             .storage()
             .instance()
-            .get(&DataKey::OrderList)
-            .unwrap_or_else(|| Vec::new(&env));
-
-        let total = list.len();
-        let mut idx = cursor;
-        if idx >= total {
-            return (Vec::new(&env), None);
-        }
+            .get(&DataKey::NextOrderId)
+            .unwrap_or(1);
 
         let mut out = Vec::new(&env);
         let mut collected: u32 = 0;
-        while collected < max_limit && idx < total {
-            out.push_back(list.get(idx).unwrap());
-            collected = collected.saturating_add(1);
-            idx = idx.saturating_add(1);
+        let mut id = cursor;
+        // Bound the gap scans so gas stays predictable even when many orders
+        // have been cancelled/executed between the live ones.
+        let max_scans = max_limit.saturating_mul(MAX_GAP_SCAN_FACTOR) as u64;
+
+        while collected < max_limit && id < max_id && id.saturating_sub(cursor) < max_scans {
+            if env
+                .storage()
+                .persistent()
+                .get::<_, Order>(&DataKey::Order(id))
+                .is_some()
+            {
+                out.push_back(id);
+                collected = collected.saturating_add(1);
+            }
+            id = id.saturating_add(1);
         }
 
-        let next = if idx < total { Some(idx) } else { None };
+        let next = if id < max_id { Some(id) } else { None };
         (out, next)
     }
 
@@ -1364,6 +1358,86 @@ mod gas_benchmarks {
         let cost = after.saturating_sub(before);
         println!("[bench] limit-order set_version: {cost} cpu instructions");
     }
+
+    /// Print the full metered resource breakdown + fee for the last invocation.
+    fn report(env: &Env, label: &str) {
+        let r = env.cost_estimate().resources();
+        let f = env.cost_estimate().fee();
+        println!(
+            "[gas] {label} | cpu={} mem={} rd_entries={} wr_entries={} rd_bytes={} wr_bytes={} events={} fee_stroops={}",
+            r.instructions,
+            r.mem_bytes,
+            r.disk_read_entries,
+            r.write_entries,
+            r.disk_read_bytes,
+            r.write_bytes,
+            r.contract_events_size_bytes,
+            f.total,
+        );
+    }
+
+    /// Full per-transaction resource table (CPU, memory, ledger IO, fee).
+    #[test]
+    fn bench_resource_table() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        report(&env, "initialize");
+
+        let id1 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        report(&env, "place_order (first)");
+
+        let id2 = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &11_000_000,
+            &500_000,
+            &0,
+            &symbol_short!("buy"),
+        );
+        report(&env, "place_order (subsequent)");
+
+        let _ = client.get_order(&id1);
+        report(&env, "get_order");
+
+        let _ = client.get_user_orders(&user);
+        report(&env, "get_user_orders (2)");
+
+        let _ = client.paginated_orders(&10, &0);
+        report(&env, "paginated_orders (limit=10)");
+
+        let _ = client.get_order_count();
+        report(&env, "get_order_count");
+
+        let relayer = Address::generate(&env);
+        client.set_relayer(&relayer, &true);
+        report(&env, "set_relayer (grant)");
+
+        client.cancel_order(&user, &id1);
+        report(&env, "cancel_order");
+
+        client.mark_executed(&user, &id2, &symbol_short!("tx"));
+        report(&env, "mark_executed");
+
+        let _ = client.get_version();
+        report(&env, "get_version");
+
+        assert!(client.try_set_version(&5).is_ok());
+        report(&env, "set_version");
+    }
 }
 
 // ── Property-based fuzz tests ──────────────────────────────────────────
@@ -1673,7 +1747,7 @@ mod fuzz {
 
         // Walk pages of size 3 — must see exactly 7 unique IDs.
         let mut seen: Vec<u64> = Vec::new(&env);
-        let mut cursor: u32 = 0;
+        let mut cursor: u64 = 0;
         loop {
             let (page, next) = client.paginated_orders(&3, &cursor);
             for id in page.iter() {
