@@ -1,3 +1,5 @@
+import packageJson from "../../../package.json";
+
 /**
  * Runtime environment detection utilities.
  */
@@ -21,4 +23,4 @@ export const isTest = process.env.NODE_ENV === "test";
 export const isVercel = Boolean(process.env.VERCEL);
 
 /** The application version from package.json (set at build time). */
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0";
+export const APP_VERSION = packageJson.version;

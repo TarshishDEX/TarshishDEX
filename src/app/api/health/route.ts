@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import packageJson from "../../../../package.json";
 
 /**
  * Health check endpoint for load balancers and monitoring.
@@ -12,7 +13,7 @@ export async function GET() {
       timestamp: Date.now(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV,
-      version: process.env.npm_package_version ?? "0.1.0",
+      version: packageJson.version,
     },
     {
       status: 200,
