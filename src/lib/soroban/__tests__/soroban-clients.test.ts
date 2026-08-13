@@ -583,3 +583,44 @@ describe("market-oracle client", () => {
     expect(await readPriceObservation("XLM", "USDC")).toBeNull();
   });
 });
+
+// =========================================================================
+// parseResultXdr arrow bodies (statement coverage)
+// =========================================================================
+
+describe("parseResultXdr arrow bodies", () => {
+  beforeEach(() => {
+    mockLimitContractId.mockReturnValue("CABC");
+    mockContractId.mockReturnValue("CABC");
+    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+      capturedParse = parseResultXdr;
+      return makeTx();
+    });
+  });
+
+  it("runs the place_order parser", async () => {
+    await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1, 1, 0, "buy");
+    expect(capturedParse).toBeDefined();
+    expect(capturedParse!(xdr.ScVal.scvSymbol("hello"))).toBe("hello");
+  });
+
+  it("runs the cancel/execute parser", async () => {
+    await buildCancelOrExecuteTx(VALID_ADDRESS, 3);
+    expect(capturedParse).toBeDefined();
+    expect(capturedParse!(xdr.ScVal.scvVoid())).toBeUndefined();
+  });
+
+  it("runs the set_preferences parser", async () => {
+    signAndSendMock.mockResolvedValue({
+      getTransactionResponse: { status: "SUCCESS", txHash: "h" },
+      sendTransactionResponse: { hash: "h" },
+    });
+    await writeTradingPreferences(VALID_ADDRESS, {
+      max_slippage_bps: 100,
+      routing_mode: "auto",
+      allowed_assets: [],
+    });
+    expect(capturedParse).toBeDefined();
+    expect(capturedParse!(xdr.ScVal.scvVoid())).toBeNull();
+  });
+});
