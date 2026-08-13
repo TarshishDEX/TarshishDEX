@@ -2,10 +2,11 @@
 # https://embarkstudios.github.io/cargo-deny/
 
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
+# Note: cargo-deny >= 0.15 removed the `vulnerability`/`notice`/`severity-threshold`
+# fields and changed `unmaintained`/`unsound` to one of all|workspace|transitive|none.
 yanked = "deny"
-notice = "warn"
+unmaintained = "workspace"
+unsound = "workspace"
 ignore = []
 
 [licenses]

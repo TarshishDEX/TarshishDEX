@@ -124,7 +124,9 @@ jobs:
         id: audit
         run: |
           cargo install cargo-audit --locked --quiet 2>/dev/null || true
-          if cargo audit --deny warnings 2>&1; then
+          # `cargo audit` fails on vulnerabilities (error severity) but only
+          # warns on unmaintained/notice advisories, so no `--deny warnings`.
+          if cargo audit 2>&1; then
             echo "points=2" >> "$GITHUB_OUTPUT"
             echo "✅ Audit: PASS"
           else

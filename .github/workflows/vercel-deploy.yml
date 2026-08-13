@@ -35,6 +35,10 @@ env:
 jobs:
   deploy:
     name: Deploy frontend to Vercel (production)
+    # Vercel's native Git integration already deploys production on every
+    # push; this job is a fallback that only runs when a VERCEL_TOKEN secret
+    # is configured (otherwise `vercel pull` fails on a missing --token).
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
