@@ -7,12 +7,16 @@ Status snapshot as of **2026-08-13** (post batch-16).
 | Metric | Coverage | Target |
 |---|---|---|
 | Statements | **99.77%** (3461/3469) | 99.5% |
-| Branches | **92.51%** (2150/2324) | 99.5% |
+| Branches | **95.09%** (2210/2324) | 99.5% |
 | Functions | **99.72%** (1073/1076) | 99.5% |
 | Lines | **99.97%** (3114/3115) | 99.5% |
 
 - **Statements target met** — 99.5% achieved at 99.77%.
 - Only **8 statements** remain uncovered, all defensively-unreachable guards (see below).
+- **Branches** are the remaining gap: 95.09%. ~30 of the 114 uncovered branch edges are
+  defensive/SSR-only (e.g. `?? default` after a null guard, `sorted[0] ?? null` after a length
+  check, `typeof navigator === "undefined"`). The rest are UI render branches in swap-widget,
+  limit-order-form, swap-execution-panel, etc.
 - Thresholds in `vitest.config.ts` (`coverage.thresholds`) are far below actuals and are all green.
 
 ## The 8 remaining uncovered statements (all defensively unreachable)
@@ -33,6 +37,14 @@ Line numbers are 1-based from the JSON coverage (`coverage/coverage-final.json` 
 These cannot be exercised through public API/UI without contrived internals or SSR-only
 harnesses. Reaching them would require test-only code changes to production source, so they
 are intentionally left uncovered.
+
+## Branch coverage batches (completed after batch-16)
+
+- `6246cc0` — meter colors, format-currency locale fallbacks, pool-queries mapping,
+  swap-execution fee/trustline/non-Error, order/prefs defaults, routing bridge/horizon,
+  logger levels (branches 92.51% → 94.28%).
+- `d27f3d1` — SSR hook snapshots, hook guards, try-catch non-Error, keyboard modifiers,
+  oracle observation defaults, market-table null cells (branches → 95.09%).
 
 ## Batch-16 summary (completed)
 
@@ -72,6 +84,9 @@ Technique notes worth reusing in future batches:
 ## Commit history for this effort (most recent first)
 
 ```
+d27f3d1 test: branch coverage — SSR hook snapshots, hook guards, try-catch non-Error, keyboard modifiers, oracle observation defaults, market-table null cells — 17 tests
+6246cc0 test: branch coverage batch — meter colors, format-currency locale fallbacks, pool-queries mapping, swap-execution fee/trustline/non-Error, order/prefs defaults, routing bridge/horizon, logger levels — 24 tests
+bbd69c3 test: batch-16 coverage — SSR theme/wallet-kit branches, shutdown timeout, routing bridge fill, soroban parser arrows, price-impact/swap impact levels, timer resets, disconnect cancel, 6 hooks — 33 tests
 docs: store coverage progress — 98.76% statements, full 43-statement gap map, batch-16 resume plan
 d792693 test: final coverage batch — bridge routing failures, limit-order catches, wallet-kit events, sw-register, trading-preferences failure paths, 3 hooks, swap-widget flows, oracle/cancel branches, panel marking — 31 tests
 92a2946 fix: correct Token shapes in watchlist tests + valid AQUA issuer for routing
