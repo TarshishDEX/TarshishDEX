@@ -20,6 +20,9 @@
   --color-primary: #3e8dfd;
   --color-primary-hover: #5ba0fd;
   --color-primary-soft: rgba(62, 141, 253, 0.12);
+  /* Solid fills need a darker blue so white text clears WCAG AA (4.5:1). */
+  --color-primary-solid: #2563eb;
+  --color-primary-solid-hover: #1d4ed8;
   --color-accent: #22d3ee;
   --color-accent-soft: rgba(34, 211, 238, 0.12);
 

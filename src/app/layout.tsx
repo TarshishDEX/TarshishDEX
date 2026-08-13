@@ -7,7 +7,6 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { WalletProvider } from "@/components/providers/wallet-provider";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import { SkipLink } from "@/components/ui/skip-link";
 import { ToastViewport } from "@/components/ui/toast";
 import { ThemeProvider } from "@/lib/theme";
 import { Analytics } from "@/lib/analytics";
@@ -94,9 +93,8 @@ export default function RootLayout({
           <QueryProvider>
             <WalletProvider>
               <ErrorBoundary>
-                <SkipLink />
                 <Header />
-                <main className="flex-1">
+                <main id="main-content" tabIndex={-1} className="flex-1">
                   <Suspense fallback={null}>{children}</Suspense>
                 </main>
                 <Footer />

@@ -68,7 +68,7 @@ export function ConnectWalletButton() {
           type="button"
           onClick={handleConnect}
           disabled={status === "connecting"}
-          className="bg-primary shadow-primary/25 hover:bg-primary-hover hover:shadow-primary/40 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
+          className="bg-primary-solid shadow-primary/25 hover:bg-primary-solid-hover hover:shadow-primary/40 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
         >
           {status === "connecting" ? "Connecting…" : "Connect Wallet"}
         </button>

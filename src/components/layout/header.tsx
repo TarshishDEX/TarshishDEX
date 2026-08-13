@@ -6,6 +6,7 @@ import { Logo } from "@/components/brand/logo";
 import { ConnectWalletButton } from "@/components/wallet/connect-wallet-button";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NetworkIndicator } from "@/components/ui/network-indicator";
+import { SkipLink } from "@/components/ui/skip-link";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -21,6 +22,7 @@ export function Header() {
 
   return (
     <header className="border-border bg-background/80 sticky top-0 z-50 border-b backdrop-blur-xl">
+      <SkipLink />
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Logo />

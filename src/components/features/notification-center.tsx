@@ -56,7 +56,7 @@ export function NotificationCenter({
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="bg-primary absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
+          <span className="bg-primary-solid absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
             {unreadCount}
           </span>
         )}

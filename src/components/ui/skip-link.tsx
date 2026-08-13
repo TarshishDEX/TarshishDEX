@@ -20,7 +20,7 @@ export function SkipLink({
       href={href}
       className={cn(
         "sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300]",
-        "focus:bg-primary focus:rounded-xl focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg",
+        "focus:bg-primary-solid focus:rounded-xl focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg",
         className
       )}
     >

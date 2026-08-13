@@ -22,7 +22,7 @@ export default function OrdersError({ error, reset }: ErrorPageProps) {
       <div className="flex gap-3">
         <button
           onClick={reset}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
+          className="bg-primary-solid text-white hover:bg-primary-solid-hover rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
         >
           Try again
         </button>

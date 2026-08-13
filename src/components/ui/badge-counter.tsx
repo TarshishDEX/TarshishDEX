@@ -10,7 +10,7 @@ interface BadgeCounterProps {
 }
 
 const variantMap = {
-  primary: "bg-primary text-white",
+  primary: "bg-primary-solid text-white",
   success: "bg-success text-background",
   warning: "bg-warning text-background",
   danger: "bg-danger text-white",

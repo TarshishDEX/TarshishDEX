@@ -56,7 +56,13 @@ async function connectViaPicker(page, url = BASE_URL) {
       .getByRole("button", { name: /freighter/i })
       .first()
       .click({ timeout: 10_000 })
-      .catch(() => page.locator("text=/Freighter/i").first().click().catch(() => {}));
+      .catch(() =>
+        page
+          .locator("text=/Freighter/i")
+          .first()
+          .click()
+          .catch(() => {})
+      );
   }
   await page
     .locator("header button", { hasText: /G[A-Z0-9]/ })

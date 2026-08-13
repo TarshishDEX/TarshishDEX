@@ -19,7 +19,7 @@ export default function NotFound() {
       </div>
       <Link
         href="/"
-        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
+        className="bg-primary-solid text-white hover:bg-primary-solid-hover rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors"
       >
         Back to TarshishDEX
       </Link>

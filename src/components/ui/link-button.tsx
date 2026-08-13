@@ -26,7 +26,7 @@ export function LinkButton({
         "focus-visible:ring-primary/60 focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
         "active:scale-[0.98]",
         variant === "primary" &&
-          "bg-primary shadow-primary/25 hover:bg-primary-hover text-white shadow-lg",
+          "bg-primary-solid shadow-primary/25 hover:bg-primary-solid-hover text-white shadow-lg",
         variant === "secondary" &&
           "border-border bg-surface text-foreground hover:border-border-strong hover:bg-surface-elevated border",
         size === "sm" && "h-8 rounded-lg px-3 text-xs",

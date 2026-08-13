@@ -62,7 +62,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/swap"
-                className="bg-primary shadow-primary/25 hover:bg-primary-hover hover:shadow-primary/40 w-full rounded-xl px-8 py-3.5 text-center text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] sm:w-auto"
+                className="bg-primary-solid shadow-primary/25 hover:bg-primary-solid-hover hover:shadow-primary/40 w-full rounded-xl px-8 py-3.5 text-center text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98] sm:w-auto"
               >
                 Launch Swap
               </Link>
@@ -85,10 +85,10 @@ export default function Home() {
               key={feature.title}
               className="glass-card group hover:border-border-strong rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="bg-primary-soft font-display text-primary group-hover:bg-primary flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-colors duration-300 group-hover:text-white">
+              <div className="bg-primary-soft font-display text-primary group-hover:bg-primary-solid flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-colors duration-300 group-hover:text-white">
                 {feature.icon}
               </div>
-              <h3 className="font-display mt-4 text-lg font-semibold">{feature.title}</h3>
+              <h2 className="font-display mt-4 text-lg font-semibold">{feature.title}</h2>
               <p className="text-foreground-muted mt-2 text-sm leading-relaxed">
                 {feature.description}
               </p>
@@ -112,7 +112,7 @@ export default function Home() {
           <div className="mt-8">
             <Link
               href="/swap"
-              className="bg-primary shadow-primary/25 hover:bg-primary-hover inline-block rounded-xl px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98]"
+              className="bg-primary-solid shadow-primary/25 hover:bg-primary-solid-hover inline-block rounded-xl px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 active:scale-[0.98]"
             >
               Start Trading
             </Link>

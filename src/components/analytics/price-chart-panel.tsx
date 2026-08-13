@@ -72,7 +72,7 @@ export function PriceChartPanel() {
               className={cn(
                 "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
                 timeframe.label === tf.label
-                  ? "bg-primary text-white"
+                  ? "bg-primary-solid text-white"
                   : "text-foreground-muted hover:text-foreground"
               )}
             >

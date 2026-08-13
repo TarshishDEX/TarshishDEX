@@ -56,7 +56,7 @@ export function Pagination({ page, totalPages, onPageChange, className }: Pagina
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium transition-colors",
               Number(p) === page
-                ? "bg-primary text-white"
+                ? "bg-primary-solid text-white"
                 : "text-foreground-muted hover:bg-surface-elevated hover:text-foreground"
             )}
             aria-label={`Page ${p}`}
