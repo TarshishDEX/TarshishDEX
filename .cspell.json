@@ -193,7 +193,8 @@
     "VQKQH",
     "xaxis",
     "yaxis",
-    "ZMFSHONUCEOASW"
+    "ZMFSHONUCEOASW",
+    "GXYZ"
   ],
   "ignorePaths": ["node_modules", ".next", "package-lock.json", "src/contracts/target", "coverage"]
 }

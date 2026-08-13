@@ -116,7 +116,11 @@ describe("fetchAssetCatalog", () => {
 
   it("normalizes the issuer filter to uppercase for case-insensitive search", async () => {
     mockAssetsCall.mockResolvedValue({ records: [] });
-    await fetchAssetCatalog(10, undefined, "ga5zsejyb37jrc5avcia5mop4rhtm335x2kgx3ihojapp5re34k4kzvn");
+    await fetchAssetCatalog(
+      10,
+      undefined,
+      "ga5zsejyb37jrc5avcia5mop4rhtm335x2kgx3ihojapp5re34k4kzvn"
+    );
     expect(mockForIssuer).toHaveBeenCalledWith(
       "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
     );
