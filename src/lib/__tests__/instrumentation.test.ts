@@ -53,9 +53,7 @@ describe("instrumentation (register)", () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining("NEXT_PUBLIC_STELLAR_NETWORK")
     );
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("STELLAR_SOURCE_ACCOUNT")
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("STELLAR_SOURCE_ACCOUNT"));
   });
 
   it("handles single missing env var", async () => {
@@ -71,8 +69,6 @@ describe("instrumentation (register)", () => {
     const mod = await import("@/instrumentation");
     await mod.register();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("STELLAR_SOURCE_ACCOUNT")
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("STELLAR_SOURCE_ACCOUNT"));
   });
 });

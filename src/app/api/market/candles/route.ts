@@ -20,10 +20,10 @@ export const GET = apiHandler(async (request) => {
   const ip = getClientId(request);
   const rateLimit = checkRateLimit(ip, { maxRequests: 100, windowMs: 60_000 });
   if (!rateLimit.allowed) {
-    return NextResponse.json(
-      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
-      { status: 429, headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) } },
-    );
+    return NextResponse.json(buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"), {
+      status: 429,
+      headers: { "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)) },
+    });
   }
 
   const url = new URL(request.url);
@@ -37,9 +37,9 @@ export const GET = apiHandler(async (request) => {
       buildErrorResponse(
         ErrorCode.BAD_REQUEST,
         400,
-        "Missing or invalid 'base'/'counter' assets (CODE:ISSUER)",
+        "Missing or invalid 'base'/'counter' assets (CODE:ISSUER)"
       ),
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -51,7 +51,7 @@ export const GET = apiHandler(async (request) => {
       counter,
       Date.now() - rangeMs,
       Date.now(),
-      resolutionMs,
+      resolutionMs
     );
     logger.info("candles served", {
       base: base.code,
@@ -63,7 +63,7 @@ export const GET = apiHandler(async (request) => {
     logger.error("candles fetch failed", { error: String(error) });
     return NextResponse.json(
       buildErrorResponse(ErrorCode.CANDLES_FETCH_FAILED, 502, "Failed to fetch candles"),
-      { status: 502 },
+      { status: 502 }
     );
   }
 });

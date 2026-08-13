@@ -15,10 +15,7 @@ import {
   buildPlaceOrderTx,
   buildCancelOrExecuteTx,
 } from "@/lib/soroban/limit-order";
-import {
-  observationFromScVal,
-  readPriceObservation,
-} from "@/lib/soroban/market-oracle";
+import { observationFromScVal, readPriceObservation } from "@/lib/soroban/market-oracle";
 import { xdr, scValToNative, Address, nativeToScVal } from "@stellar/stellar-sdk";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
@@ -81,11 +78,15 @@ vi.mock("@/lib/stellar/wallet-kit", () => ({
 }));
 
 vi.mock("@/lib/utils/retry", () => ({
-  withRetry: <T,>(fn: () => Promise<T>) => fn(),
+  withRetry: <T>(fn: () => Promise<T>) => fn(),
 }));
 
 // Grab the mocked getters
-import { getTradingPreferencesContractId, getMarketOracleContractId, getLimitOrderContractId } from "@/lib/soroban/config";
+import {
+  getTradingPreferencesContractId,
+  getMarketOracleContractId,
+  getLimitOrderContractId,
+} from "@/lib/soroban/config";
 import { getActiveNetwork } from "@/lib/stellar/config";
 import { signTransactionXdr } from "@/lib/stellar/wallet-kit";
 
@@ -108,10 +109,12 @@ function makeTx(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   capturedParse = undefined;
-  buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
-    capturedParse = parseResultXdr;
-    return makeTx();
-  });
+  buildMock.mockImplementation(
+    async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+      capturedParse = parseResultXdr;
+      return makeTx();
+    }
+  );
   mockActiveNetwork.mockReturnValue({
     name: "testnet",
     label: "Testnet",
@@ -176,7 +179,11 @@ describe("readTradingPreferences", () => {
 
   it("returns decoded preferences on success", async () => {
     mockContractId.mockReturnValue("CABC");
-    const resultScv = preferencesToScVal({ max_slippage_bps: 100, routing_mode: "auto", allowed_assets: [] });
+    const resultScv = preferencesToScVal({
+      max_slippage_bps: 100,
+      routing_mode: "auto",
+      allowed_assets: [],
+    });
     stubRawResult(resultScv);
 
     const prefs = await readTradingPreferences(VALID_ADDRESS);
@@ -501,7 +508,9 @@ describe("limit-order client", () => {
   it("buildPlaceOrderTx returns XDR", async () => {
     mockLimitContractId.mockReturnValue("CABC");
     buildMock.mockResolvedValue(makeTx());
-    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1.5, 2.5, 0, "buy")).toBe("tx-xdr");
+    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1.5, 2.5, 0, "buy")).toBe(
+      "tx-xdr"
+    );
   });
 
   it("buildPlaceOrderTx returns null on error", async () => {
@@ -600,10 +609,12 @@ describe("parseResultXdr arrow bodies", () => {
   beforeEach(() => {
     mockLimitContractId.mockReturnValue("CABC");
     mockContractId.mockReturnValue("CABC");
-    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
-      capturedParse = parseResultXdr;
-      return makeTx();
-    });
+    buildMock.mockImplementation(
+      async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+        capturedParse = parseResultXdr;
+        return makeTx();
+      }
+    );
   });
 
   it("runs the place_order parser", async () => {
@@ -640,10 +651,12 @@ describe("parseResultXdr arrow bodies", () => {
 describe("limit-order order defaults", () => {
   beforeEach(() => {
     mockLimitContractId.mockReturnValue("CABC");
-    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
-      capturedParse = parseResultXdr;
-      return makeTx();
-    });
+    buildMock.mockImplementation(
+      async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+        capturedParse = parseResultXdr;
+        return makeTx();
+      }
+    );
   });
 
   it("applies defaults for an order missing every field", async () => {
@@ -670,10 +683,12 @@ describe("trading-preferences branch coverage", () => {
 
   beforeEach(() => {
     mockContractId.mockReturnValue("CABC");
-    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
-      capturedParse = parseResultXdr;
-      return makeTx();
-    });
+    buildMock.mockImplementation(
+      async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+        capturedParse = parseResultXdr;
+        return makeTx();
+      }
+    );
   });
 
   it("applies defaults for missing batch preference fields", async () => {

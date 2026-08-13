@@ -212,7 +212,12 @@ describe("AccessibleIcon non-element child", () => {
   it("returns a non-element child as-is", () => {
     render(
       <AccessibleIcon label="icon">
-        {"plain-text-child" as unknown as ReactElement<{ className?: string; "aria-hidden"?: boolean }>}
+        {
+          "plain-text-child" as unknown as ReactElement<{
+            className?: string;
+            "aria-hidden"?: boolean;
+          }>
+        }
       </AccessibleIcon>
     );
     expect(screen.getByText("plain-text-child")).toBeTruthy();

@@ -6,7 +6,9 @@ describe("sleep", () => {
     vi.useFakeTimers();
     const promise = sleep(1000);
     let resolved = false;
-    promise.then(() => { resolved = true; });
+    promise.then(() => {
+      resolved = true;
+    });
 
     expect(resolved).toBe(false);
     vi.advanceTimersByTime(999);
@@ -23,9 +25,18 @@ describe("sequential", () => {
   it("executes functions in order", async () => {
     const order: number[] = [];
     const fns = [
-      async () => { order.push(1); return "a"; },
-      async () => { order.push(2); return "b"; },
-      async () => { order.push(3); return "c"; },
+      async () => {
+        order.push(1);
+        return "a";
+      },
+      async () => {
+        order.push(2);
+        return "b";
+      },
+      async () => {
+        order.push(3);
+        return "c";
+      },
     ];
 
     const results = await sequential(fns);
@@ -41,7 +52,9 @@ describe("sequential", () => {
   it("propagates errors from a failing function", async () => {
     const fns = [
       async () => "ok",
-      async () => { throw new Error("fail"); },
+      async () => {
+        throw new Error("fail");
+      },
     ];
     await expect(sequential(fns)).rejects.toThrow("fail");
   });
@@ -73,18 +86,14 @@ describe("tryAsync", () => {
   });
 
   it("returns [null, error] on failure", async () => {
-    const [result, error] = await tryAsync(() =>
-      Promise.reject(new Error("boom"))
-    );
+    const [result, error] = await tryAsync(() => Promise.reject(new Error("boom")));
     expect(result).toBeNull();
     expect(error).toBeInstanceOf(Error);
     expect(error!.message).toBe("boom");
   });
 
   it("wraps non-Error throwables", async () => {
-    const [result, error] = await tryAsync(() =>
-      Promise.reject("string error")
-    );
+    const [result, error] = await tryAsync(() => Promise.reject("string error"));
     expect(result).toBeNull();
     expect(error).toBeInstanceOf(Error);
     expect(error!.message).toBe("string error");

@@ -8,16 +8,23 @@ const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
 // =========================================================================
 // Shared mocks
 // =========================================================================
-const { useWalletMock, useQueryMock, usePortfolioSummaryMock, useTradeHistoryMock, executeSwapMock, signSubmitMock, toastMock } =
-  vi.hoisted(() => ({
-    useWalletMock: vi.fn(),
-    useQueryMock: vi.fn(),
-    usePortfolioSummaryMock: vi.fn(),
-    useTradeHistoryMock: vi.fn(),
-    executeSwapMock: vi.fn(),
-    signSubmitMock: vi.fn(),
-    toastMock: { info: vi.fn(), error: vi.fn(), success: vi.fn() },
-  }));
+const {
+  useWalletMock,
+  useQueryMock,
+  usePortfolioSummaryMock,
+  useTradeHistoryMock,
+  executeSwapMock,
+  signSubmitMock,
+  toastMock,
+} = vi.hoisted(() => ({
+  useWalletMock: vi.fn(),
+  useQueryMock: vi.fn(),
+  usePortfolioSummaryMock: vi.fn(),
+  useTradeHistoryMock: vi.fn(),
+  executeSwapMock: vi.fn(),
+  signSubmitMock: vi.fn(),
+  toastMock: { info: vi.fn(), error: vi.fn(), success: vi.fn() },
+}));
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
@@ -126,7 +133,7 @@ describe("SwapExecutionPanel", () => {
         amountIn="100"
         quote={QUOTE}
         onReset={() => {}}
-      />,
+      />
     );
     expect(screen.getByText("You pay")).toBeTruthy();
     expect(screen.getByText("You receive")).toBeTruthy();
@@ -134,13 +141,17 @@ describe("SwapExecutionPanel", () => {
     expect(screen.getByRole("button", { name: "Confirm & Swap" })).toBeTruthy();
   });
 
-  function mockSwap(result: { phase: string; hash?: string; explorerUrl?: string; error?: string; errorKind?: string }) {
-    executeSwapMock.mockImplementation(
-      async (_params: unknown, onPhase?: (p: string) => void) => {
-        onPhase?.(result.phase);
-        return result;
-      },
-    );
+  function mockSwap(result: {
+    phase: string;
+    hash?: string;
+    explorerUrl?: string;
+    error?: string;
+    errorKind?: string;
+  }) {
+    executeSwapMock.mockImplementation(async (_params: unknown, onPhase?: (p: string) => void) => {
+      onPhase?.(result.phase);
+      return result;
+    });
   }
 
   it("executes the swap and shows success with explorer link", async () => {
@@ -153,13 +164,13 @@ describe("SwapExecutionPanel", () => {
         amountIn="100"
         quote={QUOTE}
         onReset={() => {}}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole("button", { name: "Confirm & Swap" }));
     await screen.findByText("Swap completed on-chain");
     expect(screen.getByRole("link", { name: /View transaction/ })).toHaveAttribute(
       "href",
-      "https://explorer/txhash123",
+      "https://explorer/txhash123"
     );
   });
 
@@ -173,7 +184,7 @@ describe("SwapExecutionPanel", () => {
         amountIn="100"
         quote={QUOTE}
         onReset={() => {}}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole("button", { name: "Confirm & Swap" }));
     await screen.findByText(/Insufficient balance for this swap/);
@@ -184,17 +195,17 @@ describe("SwapExecutionPanel", () => {
       async (
         _params: unknown,
         onPhase?: (p: string) => void,
-        onSuccess?: (h: string) => Promise<void>,
+        onSuccess?: (h: string) => Promise<void>
       ) => {
         await onSuccess?.("txh");
         onPhase?.("success");
         return { phase: "success", hash: "txh", explorerUrl: "https://e/txh" };
-      },
+      }
     );
     signSubmitMock.mockResolvedValue({ success: true });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr" }) }),
+      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr" }) })
     );
     render(
       <SwapExecutionPanel
@@ -205,7 +216,7 @@ describe("SwapExecutionPanel", () => {
         quote={QUOTE}
         orderId={7}
         onReset={() => {}}
-      />,
+      />
     );
     fireEvent.click(screen.getByRole("button", { name: "Confirm & Swap" }));
     await screen.findByText(/marked as executed/);
@@ -227,7 +238,7 @@ describe("SwapExecutionPanel", () => {
         amountIn="100"
         quote={multiQuote}
         onReset={() => {}}
-      />,
+      />
     );
     expect(screen.getByText("AQUA")).toBeTruthy();
     expect(screen.getByText("Route")).toBeTruthy();
@@ -428,7 +439,15 @@ vi.mock("@/lib/stellar/wallet-kit", () => ({
 }));
 
 vi.mock("@/components/wallet/disconnect-dialog", () => ({
-  DisconnectDialog: ({ address, onConfirm, onCancel }: { address: string; onConfirm: () => void; onCancel: () => void }) => (
+  DisconnectDialog: ({
+    address,
+    onConfirm,
+    onCancel,
+  }: {
+    address: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }) => (
     <div data-testid="disconnect-dialog">
       <span>{address}</span>
       <button onClick={onConfirm}>Confirm</button>
@@ -458,7 +477,7 @@ describe("ConnectWalletButton (connected)", () => {
     expect(screen.getByText("123.5 XLM")).toBeTruthy();
     expect(screen.getByRole("link", { name: /View on explorer/ })).toHaveAttribute(
       "href",
-      `https://explorer/account/${VALID_ADDRESS}`,
+      `https://explorer/account/${VALID_ADDRESS}`
     );
   });
 

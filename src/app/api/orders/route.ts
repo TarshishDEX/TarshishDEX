@@ -15,15 +15,12 @@ function withRateLimit(request: Request): NextResponse | null {
     windowMs: 60_000,
   });
   if (!result.allowed) {
-    return NextResponse.json(
-      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)),
-        },
+    return NextResponse.json(buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"), {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)),
       },
-    );
+    });
   }
   return null;
 }
@@ -60,9 +57,9 @@ export const GET = apiHandler(async (request) => {
       buildErrorResponse(
         ErrorCode.ORDERS_QUERY_FAILED,
         502,
-        "Failed to query limit orders — contract may not be deployed",
+        "Failed to query limit orders — contract may not be deployed"
       ),
-      { status: 502 },
+      { status: 502 }
     );
   }
 });
@@ -84,9 +81,9 @@ export const POST = apiHandler(async (request) => {
         buildErrorResponse(
           ErrorCode.VALIDATION_ERROR,
           400,
-          "Missing required fields: userAddress, base, counter, price, amount, side",
+          "Missing required fields: userAddress, base, counter, price, amount, side"
         ),
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -98,7 +95,7 @@ export const POST = apiHandler(async (request) => {
       Number(price),
       Number(amount),
       Number(expiryLedger ?? 0),
-      side,
+      side
     );
 
     if (!xdr) {
@@ -106,9 +103,9 @@ export const POST = apiHandler(async (request) => {
         buildErrorResponse(
           ErrorCode.CONTRACT_NOT_DEPLOYED,
           502,
-          "Failed to build transaction — contract may not be deployed",
+          "Failed to build transaction — contract may not be deployed"
         ),
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -117,8 +114,12 @@ export const POST = apiHandler(async (request) => {
   } catch (error) {
     logger.error("place order build failed", { error: String(error) });
     return NextResponse.json(
-      buildErrorResponse(ErrorCode.ORDERS_BUILD_FAILED, 502, "Failed to build place order transaction"),
-      { status: 502 },
+      buildErrorResponse(
+        ErrorCode.ORDERS_BUILD_FAILED,
+        502,
+        "Failed to build place order transaction"
+      ),
+      { status: 502 }
     );
   }
 });
@@ -141,9 +142,9 @@ export const DELETE = apiHandler(async (request) => {
         buildErrorResponse(
           ErrorCode.VALIDATION_ERROR,
           400,
-          "Missing required fields: id, userAddress",
+          "Missing required fields: id, userAddress"
         ),
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -155,9 +156,9 @@ export const DELETE = apiHandler(async (request) => {
         buildErrorResponse(
           ErrorCode.CONTRACT_NOT_DEPLOYED,
           502,
-          "Failed to build transaction — contract may not be deployed",
+          "Failed to build transaction — contract may not be deployed"
         ),
-        { status: 502 },
+        { status: 502 }
       );
     }
 
@@ -173,9 +174,9 @@ export const DELETE = apiHandler(async (request) => {
       buildErrorResponse(
         ErrorCode.ORDERS_BUILD_FAILED,
         502,
-        "Failed to build cancel/execute transaction",
+        "Failed to build cancel/execute transaction"
       ),
-      { status: 502 },
+      { status: 502 }
     );
   }
 });

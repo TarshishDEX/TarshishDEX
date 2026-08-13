@@ -58,18 +58,12 @@ describe("deepMerge", () => {
   });
 
   it("deeply merges nested objects", () => {
-    const result = deepMerge(
-      { a: { x: 1, y: 2 } } as Record<string, unknown>,
-      { a: { y: 99 } }
-    );
+    const result = deepMerge({ a: { x: 1, y: 2 } } as Record<string, unknown>, { a: { y: 99 } });
     expect(result).toEqual({ a: { x: 1, y: 99 } });
   });
 
   it("replaces arrays (does not merge)", () => {
-    const result = deepMerge(
-      { arr: [1, 2, 3] },
-      { arr: [4, 5] }
-    );
+    const result = deepMerge({ arr: [1, 2, 3] }, { arr: [4, 5] });
     expect(result).toEqual({ arr: [4, 5] });
   });
 

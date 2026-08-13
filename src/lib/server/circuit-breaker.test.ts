@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import {
-  withCircuitBreaker,
-  resetCircuitBreaker,
-} from "@/lib/server/circuit-breaker";
+import { withCircuitBreaker, resetCircuitBreaker } from "@/lib/server/circuit-breaker";
 
 beforeEach(() => {
   resetCircuitBreaker("test-cb");
@@ -19,9 +16,7 @@ describe("withCircuitBreaker", () => {
     const fail = () => Promise.reject(new Error("boom"));
 
     for (let i = 0; i < 5; i++) {
-      await expect(
-        withCircuitBreaker("test-cb", fail, { threshold: 5 })
-      ).rejects.toThrow("boom");
+      await expect(withCircuitBreaker("test-cb", fail, { threshold: 5 })).rejects.toThrow("boom");
     }
 
     // Circuit should now be open
@@ -35,21 +30,15 @@ describe("withCircuitBreaker", () => {
 
     // 4 failures — circuit stays closed
     for (let i = 0; i < 4; i++) {
-      await expect(
-        withCircuitBreaker("test-cb", fail, { threshold: 5 })
-      ).rejects.toThrow("boom");
+      await expect(withCircuitBreaker("test-cb", fail, { threshold: 5 })).rejects.toThrow("boom");
     }
 
     // Success resets failure count
-    const result = await withCircuitBreaker("test-cb", () =>
-      Promise.resolve(99)
-    );
+    const result = await withCircuitBreaker("test-cb", () => Promise.resolve(99));
     expect(result).toBe(99);
 
     // Should still be closed — can execute again
-    const result2 = await withCircuitBreaker("test-cb", () =>
-      Promise.resolve(100)
-    );
+    const result2 = await withCircuitBreaker("test-cb", () => Promise.resolve(100));
     expect(result2).toBe(100);
   });
 
@@ -70,10 +59,9 @@ describe("withCircuitBreaker", () => {
     await new Promise((r) => setTimeout(r, 10));
 
     // Should now be half-open and allow one attempt
-    const result = await withCircuitBreaker("test-fast", () =>
-      Promise.resolve(42),
-      { timeoutMs: 1 }
-    );
+    const result = await withCircuitBreaker("test-fast", () => Promise.resolve(42), {
+      timeoutMs: 1,
+    });
     expect(result).toBe(42);
   });
 
@@ -82,9 +70,7 @@ describe("withCircuitBreaker", () => {
 
     // Trip circuit A
     for (let i = 0; i < 5; i++) {
-      await expect(
-        withCircuitBreaker("cb-a", fail, { threshold: 5 })
-      ).rejects.toThrow("boom");
+      await expect(withCircuitBreaker("cb-a", fail, { threshold: 5 })).rejects.toThrow("boom");
     }
 
     // Circuit B should still work

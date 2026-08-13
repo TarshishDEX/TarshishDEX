@@ -105,13 +105,7 @@ describe("SwapExecutionPanel — idle state", () => {
 
   it("calls onReset when cancel clicked", () => {
     const onReset = vi.fn();
-    render(
-      <SwapExecutionPanel
-        {...defaultProps}
-        quote={makeQuote()}
-        onReset={onReset}
-      />
-    );
+    render(<SwapExecutionPanel {...defaultProps} quote={makeQuote()} onReset={onReset} />);
     screen.getByText("Cancel").click();
     expect(onReset).toHaveBeenCalled();
   });

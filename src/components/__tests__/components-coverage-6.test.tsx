@@ -272,8 +272,7 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("@/lib/stellar/queries", () => ({
-  useTokenBalance: (address: string, code: string) =>
-    useQueryMock(address, code),
+  useTokenBalance: (address: string, code: string) => useQueryMock(address, code),
 }));
 
 import { useTokenBalance } from "@/lib/hooks/use-token-balance";
@@ -282,7 +281,7 @@ describe("useTokenBalance", () => {
   it("returns balance from the query", () => {
     useQueryMock.mockReturnValue({ data: "123", isLoading: false });
     const { result } = renderHook(() =>
-      useTokenBalance(VALID_ADDRESS, { code: "USDC", issuer: "GISSUER" }),
+      useTokenBalance(VALID_ADDRESS, { code: "USDC", issuer: "GISSUER" })
     );
     expect(result.current).toEqual({ data: "123", isLoading: false });
   });
@@ -337,7 +336,7 @@ describe("usePortfolioPnL", () => {
           balance: "10",
           valueInXlm: 100,
         },
-      ] as never),
+      ] as never)
     );
     expect(result.current.totalPnl).toBe(0);
     expect(result.current.pnlByAsset[0]?.pnl).toBeNull();
@@ -346,7 +345,7 @@ describe("usePortfolioPnL", () => {
   it("computes PnL with stored cost basis", () => {
     localStorage.setItem(
       "tarshishdex-cost-basis",
-      JSON.stringify({ XLM: { totalCostXlm: 50, totalAmount: 10 } }),
+      JSON.stringify({ XLM: { totalCostXlm: 50, totalAmount: 10 } })
     );
     const { result } = renderHook(() =>
       usePortfolioPnL([
@@ -355,7 +354,7 @@ describe("usePortfolioPnL", () => {
           balance: "10",
           valueInXlm: 100,
         },
-      ] as never),
+      ] as never)
     );
     expect(result.current.pnlByAsset[0]?.pnl).toBe(50);
   });

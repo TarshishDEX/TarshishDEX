@@ -61,7 +61,9 @@ describe("createMemoized", () => {
     const fn = vi.fn((x: number) => x);
     const cached = createMemoized(fn, 3);
 
-    cached.get(1); cached.get(2); cached.get(3);
+    cached.get(1);
+    cached.get(2);
+    cached.get(3);
     expect(fn).toHaveBeenCalledTimes(3);
 
     // This should evict key=1

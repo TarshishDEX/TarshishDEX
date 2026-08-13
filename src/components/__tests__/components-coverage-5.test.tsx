@@ -70,8 +70,8 @@ describe("needsTrustline", () => {
     expect(
       needsTrustline(
         [{ asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: USDC.issuer }],
-        USDC,
-      ),
+        USDC
+      )
     ).toBe(false);
   });
 });
@@ -177,7 +177,7 @@ describe("executeSwap", () => {
         path: [XLM, USDC],
         method: "direct",
       },
-      (p) => phases.push(p),
+      (p) => phases.push(p)
     );
     expect(result.phase).toBe("success");
     expect(result.hash).toBe("tx-hash-1");
@@ -195,7 +195,8 @@ describe("executeSwap", () => {
       path: [XLM, USDC],
       method: "direct",
     });
-    console.log("ERRMSG:", result.error); expect(result.phase).toBe("success");
+    console.log("ERRMSG:", result.error);
+    expect(result.phase).toBe("success");
     expect(loadAccountMock).toHaveBeenCalledWith(VALID_ADDRESS);
   });
 
@@ -227,9 +228,10 @@ describe("executeSwap", () => {
         method: "direct",
       },
       undefined,
-      onSuccess,
+      onSuccess
     );
-    console.log("ERRMSG:", result.error); expect(result.phase).toBe("success");
+    console.log("ERRMSG:", result.error);
+    expect(result.phase).toBe("success");
     expect(onSuccess).toHaveBeenCalledWith("tx-hash-1");
   });
 
@@ -269,13 +271,7 @@ import { DisconnectDialog } from "@/components/wallet/disconnect-dialog";
 
 describe("DisconnectDialog", () => {
   it("renders the truncated address", () => {
-    render(
-      <DisconnectDialog
-        address={VALID_ADDRESS}
-        onConfirm={() => {}}
-        onCancel={() => {}}
-      />,
-    );
+    render(<DisconnectDialog address={VALID_ADDRESS} onConfirm={() => {}} onCancel={() => {}} />);
     expect(screen.getByText(/GAAAAA/)).toBeTruthy();
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
@@ -365,8 +361,28 @@ vi.mock("@/lib/utils", () => ({
 import { LimitOrderTable } from "@/components/orders/limit-order-table";
 
 const ORDERS = [
-  { id: 1, owner: VALID_ADDRESS, base: "XLM", counter: "USDC", price: 2, amount: 100, expiryLedger: 0, side: "buy", placedAt: 1700000000 },
-  { id: 2, owner: VALID_ADDRESS, base: "USDC", counter: "XLM", price: 0.5, amount: 50, expiryLedger: 0, side: "sell", placedAt: 1700000001 },
+  {
+    id: 1,
+    owner: VALID_ADDRESS,
+    base: "XLM",
+    counter: "USDC",
+    price: 2,
+    amount: 100,
+    expiryLedger: 0,
+    side: "buy",
+    placedAt: 1700000000,
+  },
+  {
+    id: 2,
+    owner: VALID_ADDRESS,
+    base: "USDC",
+    counter: "XLM",
+    price: 0.5,
+    amount: 50,
+    expiryLedger: 0,
+    side: "sell",
+    placedAt: 1700000001,
+  },
 ];
 
 function wrapper(ui: ReactNode) {
@@ -378,7 +394,12 @@ describe("LimitOrderTable", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useWalletMock.mockReturnValue({ address: null, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: [], isLoading: false, isError: false, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     useOraclePriceMock.mockReturnValue({ data: null, isLoading: false });
     signAndSubmitMock.mockResolvedValue({ success: true });
   });
@@ -390,14 +411,24 @@ describe("LimitOrderTable", () => {
 
   it("shows skeletons while loading", () => {
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
     wrapper(<LimitOrderTable />);
     expect(screen.getByText("Limit Orders")).toBeTruthy();
   });
 
   it("shows an error message on query failure", () => {
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
     wrapper(<LimitOrderTable />);
     expect(screen.getByText(/Could not load limit orders/)).toBeTruthy();
   });
@@ -410,7 +441,12 @@ describe("LimitOrderTable", () => {
 
   it("renders orders with oracle distance", () => {
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: ORDERS, isLoading: false, isError: false, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: ORDERS,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     useOraclePriceMock.mockReturnValue({ data: { price: 20_000_000 }, isLoading: false });
     wrapper(<LimitOrderTable />);
     expect(screen.getByText("2 open orders")).toBeTruthy();
@@ -422,11 +458,18 @@ describe("LimitOrderTable", () => {
   it("cancels an order via DELETE + sign + refetch", async () => {
     const refetch = vi.fn();
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: ORDERS, isLoading: false, isError: false, refetch });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: ORDERS,
+      isLoading: false,
+      isError: false,
+      refetch,
+    });
     useOraclePriceMock.mockReturnValue({ data: { price: 20_000_000 }, isLoading: false });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "cancel-xdr" }) }),
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "cancel-xdr" }) })
     );
 
     wrapper(<LimitOrderTable />);
@@ -436,7 +479,7 @@ describe("LimitOrderTable", () => {
     await waitFor(() => expect(signAndSubmitMock).toHaveBeenCalled());
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "/api/orders",
-      expect.objectContaining({ method: "DELETE" }),
+      expect.objectContaining({ method: "DELETE" })
     );
     expect(refetch).toHaveBeenCalled();
     vi.unstubAllGlobals();
@@ -444,12 +487,19 @@ describe("LimitOrderTable", () => {
 
   it("shows toast error when cancel submission fails", async () => {
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: ORDERS, isLoading: false, isError: false, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: ORDERS,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     useOraclePriceMock.mockReturnValue({ data: { price: 20_000_000 }, isLoading: false });
     signAndSubmitMock.mockResolvedValue({ success: false, error: "rejected" });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "cancel-xdr" }) }),
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "cancel-xdr" }) })
     );
 
     wrapper(<LimitOrderTable />);
@@ -460,7 +510,12 @@ describe("LimitOrderTable", () => {
 
   it("shows oracle unavailability dash", () => {
     useWalletMock.mockReturnValue({ address: VALID_ADDRESS, networkPassphrase: "test" });
-    useUserLimitOrdersMock.mockReturnValue({ data: ORDERS, isLoading: false, isError: false, refetch: vi.fn() });
+    useUserLimitOrdersMock.mockReturnValue({
+      data: ORDERS,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     useOraclePriceMock.mockReturnValue({ data: null, isLoading: false });
     wrapper(<LimitOrderTable />);
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
@@ -483,7 +538,11 @@ import { LimitOrderForm } from "@/components/orders/limit-order-form";
 describe("LimitOrderForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useWalletMock.mockReturnValue({ address: VALID_ADDRESS, connect: vi.fn(), networkPassphrase: "test" });
+    useWalletMock.mockReturnValue({
+      address: VALID_ADDRESS,
+      connect: vi.fn(),
+      networkPassphrase: "test",
+    });
   });
 
   it("disables submit until price and amount are entered", () => {
@@ -502,7 +561,7 @@ describe("LimitOrderForm", () => {
     signAndSubmitMock.mockResolvedValue({ success: true });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr-1" }) }),
+      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr-1" }) })
     );
 
     wrapper(<LimitOrderForm />);
@@ -525,7 +584,7 @@ describe("LimitOrderForm", () => {
     signAndSubmitMock.mockResolvedValue({ success: true });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr-1" }) }),
+      vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ xdr: "xdr-1" }) })
     );
 
     wrapper(<LimitOrderForm />);
@@ -547,14 +606,18 @@ describe("LimitOrderForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /Place Buy Order/ }));
 
     await waitFor(() =>
-      expect(toastMock.error).toHaveBeenCalledWith("Please connect your wallet to place limit orders."),
+      expect(toastMock.error).toHaveBeenCalledWith(
+        "Please connect your wallet to place limit orders."
+      )
     );
   });
 
   it("shows toast error when API fails", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, json: vi.fn().mockResolvedValue({ error: "bad fields" }) }),
+      vi
+        .fn()
+        .mockResolvedValue({ ok: false, json: vi.fn().mockResolvedValue({ error: "bad fields" }) })
     );
 
     wrapper(<LimitOrderForm />);

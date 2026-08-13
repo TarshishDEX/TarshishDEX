@@ -85,9 +85,7 @@ describe("LimitOrderForm", () => {
   it("renders heading and description", () => {
     render(<LimitOrderForm />, { wrapper });
     expect(screen.getByText("Place Limit Order")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Set a target price/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Set a target price/)).toBeInTheDocument();
   });
 
   it("renders Buy/Sell toggle with Buy active by default", () => {
@@ -175,9 +173,7 @@ describe("PriceChartPanel", () => {
 
   it("shows empty state when no candles", () => {
     render(<PriceChartPanel />, { wrapper });
-    expect(
-      screen.getByText(/No price history available/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No price history available/)).toBeInTheDocument();
   });
 });
 
@@ -193,8 +189,6 @@ describe("OrderbookDepth", () => {
 
   it("shows empty message when no orderbook data", () => {
     render(<OrderbookDepth base={mockBase} counter={mockCounter} />, { wrapper });
-    expect(
-      screen.getByText(/No active orderbook for this pair/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No active orderbook for this pair/)).toBeInTheDocument();
   });
 });

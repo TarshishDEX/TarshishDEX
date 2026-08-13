@@ -75,7 +75,7 @@ export function buildErrorResponse(
   code: string,
   status: number,
   message: string,
-  details?: ApiErrorResponse["details"],
+  details?: ApiErrorResponse["details"]
 ): ApiErrorResponse {
   const errorId = crypto.randomUUID();
   return {

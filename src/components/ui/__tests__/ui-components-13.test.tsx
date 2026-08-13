@@ -315,9 +315,7 @@ describe("SwapExecutionPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Swap failed")).toBeInTheDocument();
     });
-    expect(
-      screen.getByText(/Insufficient balance for this swap/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Insufficient balance for this swap/)).toBeInTheDocument();
   });
 
   it("calls onReset for cancel", () => {
@@ -386,17 +384,15 @@ describe("SwapExecutionPanel", () => {
 describe("swap-execution lib", () => {
   describe("needsTrustline", () => {
     it("returns false for native output", () => {
-      expect(
-        needsTrustline([], { code: "XLM", isNative: true })
-      ).toBe(false);
+      expect(needsTrustline([], { code: "XLM", isNative: true })).toBe(false);
     });
 
     it("returns true when balance missing", () => {
       expect(
-        needsTrustline(
-          [{ asset_type: "native", asset_code: "XLM", asset_issuer: "" }],
-          { code: "USDC", issuer: ISSUER }
-        )
+        needsTrustline([{ asset_type: "native", asset_code: "XLM", asset_issuer: "" }], {
+          code: "USDC",
+          issuer: ISSUER,
+        })
       ).toBe(true);
     });
 
@@ -416,11 +412,7 @@ describe("swap-execution lib", () => {
     });
 
     it("returns middle hops for multi-path", () => {
-      const path = [
-        { code: "XLM" },
-        { code: "BTC" },
-        { code: "USDC" },
-      ];
+      const path = [{ code: "XLM" }, { code: "BTC" }, { code: "USDC" }];
       expect(intermediatePath(path).map((a) => a.code)).toEqual(["BTC"]);
     });
   });

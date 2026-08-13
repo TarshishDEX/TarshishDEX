@@ -37,9 +37,7 @@ describe("TypedEventEmitter", () => {
   });
 
   it("no-ops when emitting to event with no listeners", () => {
-    expect(() =>
-      appEvents.emit("wallet:disconnected", undefined as void)
-    ).not.toThrow();
+    expect(() => appEvents.emit("wallet:disconnected", undefined as void)).not.toThrow();
   });
 
   it("clear removes all listeners", () => {

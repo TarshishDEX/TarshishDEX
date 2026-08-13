@@ -105,9 +105,7 @@ describe("WalletStatusBadge", () => {
   });
 
   it("applies custom className", () => {
-    const { container } = render(
-      <WalletStatusBadge status="connected" className="wallet-badge" />
-    );
+    const { container } = render(<WalletStatusBadge status="connected" className="wallet-badge" />);
     expect(container.firstChild).toHaveClass("wallet-badge");
   });
 });

@@ -106,9 +106,7 @@ describe("TransactionStatusIcon", () => {
   });
 
   it("applies custom className", () => {
-    const { container } = render(
-      <TransactionStatusIcon status="success" className="my-icon" />
-    );
+    const { container } = render(<TransactionStatusIcon status="success" className="my-icon" />);
     expect(container.firstChild).toHaveClass("my-icon");
   });
 });
@@ -122,34 +120,26 @@ describe("QuoteRefreshIndicator", () => {
   });
 
   it("renders refresh button", () => {
-    render(
-      <QuoteRefreshIndicator staleTimeMs={30000} onRefresh={vi.fn()} />
-    );
+    render(<QuoteRefreshIndicator staleTimeMs={30000} onRefresh={vi.fn()} />);
     expect(screen.getByLabelText("Refresh quote")).toBeInTheDocument();
   });
 
   it("calls onRefresh on click", () => {
     const onRefresh = vi.fn();
-    render(
-      <QuoteRefreshIndicator staleTimeMs={30000} onRefresh={onRefresh} />
-    );
+    render(<QuoteRefreshIndicator staleTimeMs={30000} onRefresh={onRefresh} />);
     fireEvent.click(screen.getByLabelText("Refresh quote"));
     expect(onRefresh).toHaveBeenCalledTimes(1);
   });
 
   it("renders progress bar", () => {
-    const { container } = render(
-      <QuoteRefreshIndicator staleTimeMs={30000} onRefresh={vi.fn()} />
-    );
+    const { container } = render(<QuoteRefreshIndicator staleTimeMs={30000} onRefresh={vi.fn()} />);
     const bar = container.querySelector(".h-1");
     expect(bar).toBeInTheDocument();
   });
 
   it("calls onRefresh when timer expires", () => {
     const onRefresh = vi.fn();
-    render(
-      <QuoteRefreshIndicator staleTimeMs={30000} onRefresh={onRefresh} />
-    );
+    render(<QuoteRefreshIndicator staleTimeMs={30000} onRefresh={onRefresh} />);
     act(() => {
       vi.advanceTimersByTime(35000);
     });

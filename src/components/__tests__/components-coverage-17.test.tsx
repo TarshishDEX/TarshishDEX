@@ -238,9 +238,7 @@ describe("QuoteRefreshIndicator colors", () => {
   it("transitions from success to warning to danger", () => {
     vi.useFakeTimers();
     const onRefresh = vi.fn();
-    const { container } = render(
-      <QuoteRefreshIndicator staleTimeMs={100} onRefresh={onRefresh} />
-    );
+    const { container } = render(<QuoteRefreshIndicator staleTimeMs={100} onRefresh={onRefresh} />);
     expect(container.querySelector(".bg-success")).toBeTruthy();
     act(() => {
       vi.advanceTimersByTime(50);
@@ -338,12 +336,10 @@ describe("SwapExecutionPanel fallbacks", () => {
   });
 
   it("marks earlier steps as done while a later phase is active", () => {
-    executeSwapMock.mockImplementation(
-      (_args: unknown, report: (p: string) => void) => {
-        report("submitting");
-        return new Promise(() => {});
-      }
-    );
+    executeSwapMock.mockImplementation((_args: unknown, report: (p: string) => void) => {
+      report("submitting");
+      return new Promise(() => {});
+    });
     render(
       <SwapExecutionPanel
         address={VALID_ADDRESS}
@@ -450,15 +446,11 @@ describe("LimitOrderForm branches", () => {
     fireEvent.change(screen.getByLabelText("Limit price"), { target: { value: "1" } });
     fireEvent.change(screen.getByLabelText("Order amount"), { target: { value: "1" } });
     fireEvent.click(screen.getByText(/Place Buy Order/));
-    await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith("Failed to build transaction")
-    );
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to build transaction"));
   });
 
   it("toasts a generic message for a non-Error failure", async () => {
-    global.fetch = vi
-      .fn()
-      .mockRejectedValue("plain string failure") as unknown as typeof fetch;
+    global.fetch = vi.fn().mockRejectedValue("plain string failure") as unknown as typeof fetch;
     render(<LimitOrderForm />);
     fireEvent.change(screen.getByLabelText("Limit price"), { target: { value: "1" } });
     fireEvent.change(screen.getByLabelText("Order amount"), { target: { value: "1" } });

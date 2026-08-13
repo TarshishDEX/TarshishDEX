@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { isBodyWithinLimit, MAX_JSON_BODY_SIZE, MAX_URLENCODED_BODY_SIZE } from "../body-limit";
-import { sanitizeString, isValidStellarIdentifier, parseNumericParam, truncateString } from "../sanitize";
+import {
+  sanitizeString,
+  isValidStellarIdentifier,
+  parseNumericParam,
+  truncateString,
+} from "../sanitize";
 import { deduplicate, clearDedupCache } from "../dedup-requests";
 import { buildErrorResponse, ErrorCode } from "../api-error";
 import { NextResponse } from "next/server";
@@ -78,14 +83,17 @@ describe("sanitizeString", () => {
   });
 
   it("preserves safe text", () => {
-    expect(sanitizeString("XLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"))
-      .toBe("XLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+    expect(sanitizeString("XLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")).toBe(
+      "XLM:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    );
   });
 });
 
 describe("isValidStellarIdentifier", () => {
   it("accepts a valid Stellar public key", () => {
-    expect(isValidStellarIdentifier("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")).toBe(true);
+    expect(
+      isValidStellarIdentifier("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
+    ).toBe(true);
   });
 
   it("accepts alphanumeric asset codes", () => {
@@ -203,10 +211,7 @@ describe("deduplicate", () => {
       return callCount;
     };
 
-    const results = await Promise.all([
-      deduplicate("key-a", fn),
-      deduplicate("key-b", fn),
-    ]);
+    const results = await Promise.all([deduplicate("key-a", fn), deduplicate("key-b", fn)]);
     expect(results).toHaveLength(2);
     expect(callCount).toBe(2);
   });
@@ -347,10 +352,12 @@ describe("apiHandler", () => {
   });
 
   it("supports dynamic routes with params", async () => {
-    const handler = apiHandler(async (_: Request, ctx: { params: Promise<{ address: string }> }) => {
-      const { address } = await ctx.params;
-      return NextResponse.json({ address }, { status: 200 });
-    });
+    const handler = apiHandler(
+      async (_: Request, ctx: { params: Promise<{ address: string }> }) => {
+        const { address } = await ctx.params;
+        return NextResponse.json({ address }, { status: 200 });
+      }
+    );
 
     const req = new Request("https://example.com/api/test");
     const res = await handler(req, { params: Promise.resolve({ address: "GABC123" }) });

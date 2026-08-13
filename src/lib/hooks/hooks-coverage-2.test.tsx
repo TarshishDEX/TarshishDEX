@@ -103,18 +103,14 @@ describe("useEffectOnce", () => {
 describe("useKeyboardShortcuts", () => {
   it("fires handler on matching key", () => {
     const handler = vi.fn();
-    renderHook(() =>
-      useKeyboardShortcuts([{ key: "a", handler, description: "Test" }])
-    );
+    renderHook(() => useKeyboardShortcuts([{ key: "a", handler, description: "Test" }]));
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "a" }));
     expect(handler).toHaveBeenCalled();
   });
 
   it("does not fire on non-matching key", () => {
     const handler = vi.fn();
-    renderHook(() =>
-      useKeyboardShortcuts([{ key: "a", handler, description: "Test" }])
-    );
+    renderHook(() => useKeyboardShortcuts([{ key: "a", handler, description: "Test" }]));
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "b" }));
     expect(handler).not.toHaveBeenCalled();
   });
@@ -134,9 +130,7 @@ describe("useKeyboardShortcuts", () => {
     document.body.appendChild(input);
     input.focus();
 
-    renderHook(() =>
-      useKeyboardShortcuts([{ key: "a", handler, description: "Test" }])
-    );
+    renderHook(() => useKeyboardShortcuts([{ key: "a", handler, description: "Test" }]));
 
     const event = new KeyboardEvent("keydown", { key: "a", bubbles: true });
     Object.defineProperty(event, "target", { value: input });
@@ -305,10 +299,9 @@ describe("useUpdateEffect", () => {
 
   it("fires on subsequent updates", () => {
     const effect = vi.fn();
-    const { rerender } = renderHook(
-      ({ dep }) => useUpdateEffect(effect, [dep]),
-      { initialProps: { dep: 1 } }
-    );
+    const { rerender } = renderHook(({ dep }) => useUpdateEffect(effect, [dep]), {
+      initialProps: { dep: 1 },
+    });
     rerender({ dep: 2 });
     expect(effect).toHaveBeenCalledTimes(1);
   });

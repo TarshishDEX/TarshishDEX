@@ -118,12 +118,10 @@ describe("graceful-shutdown timeout + SIGTERM", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const handlers: Record<string, () => void> = {};
     const onSpy = vi.spyOn(process, "on").mockImplementation((() => process) as never);
-    vi.mocked(onSpy).mockImplementation(
-      ((event: string, cb: () => void) => {
-        handlers[event] = cb;
-        return process;
-      }) as never
-    );
+    vi.mocked(onSpy).mockImplementation(((event: string, cb: () => void) => {
+      handlers[event] = cb;
+      return process;
+    }) as never);
 
     registerGracefulShutdown({
       timeoutMs: 1000,
@@ -141,12 +139,10 @@ describe("graceful-shutdown timeout + SIGTERM", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const handlers: Record<string, () => void> = {};
     const onSpy = vi.spyOn(process, "on").mockImplementation((() => process) as never);
-    vi.mocked(onSpy).mockImplementation(
-      ((event: string, cb: () => void) => {
-        handlers[event] = cb;
-        return process;
-      }) as never
-    );
+    vi.mocked(onSpy).mockImplementation(((event: string, cb: () => void) => {
+      handlers[event] = cb;
+      return process;
+    }) as never);
 
     registerGracefulShutdown({});
     await handlers["SIGTERM"]!();

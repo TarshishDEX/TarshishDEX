@@ -92,10 +92,9 @@ describe("useWhyDidYouUpdate", () => {
   });
 
   it("handles changing props without throwing", () => {
-    const { rerender } = renderHook(
-      (props) => useWhyDidYouUpdate("Test", props),
-      { initialProps: { a: 1, b: "hello" } }
-    );
+    const { rerender } = renderHook((props) => useWhyDidYouUpdate("Test", props), {
+      initialProps: { a: 1, b: "hello" },
+    });
     rerender({ a: 2, b: "hello" });
     // Should not throw
   });
@@ -184,9 +183,7 @@ describe("useTokenBalance", () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
   it("returns loading state when enabled", () => {
@@ -214,10 +211,7 @@ describe("useTokenBalance", () => {
   });
 
   it("is disabled when asset is null", () => {
-    const { result } = renderHook(
-      () => useTokenBalance(validKey, null),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useTokenBalance(validKey, null), { wrapper });
     expect(result.current.fetchStatus).toBe("idle");
   });
 });

@@ -31,8 +31,26 @@ global.ResizeObserver = class {
 } as unknown as typeof ResizeObserver;
 
 const mockCandles: Candle[] = [
-  { timestamp: 1700000000000, open: 0.10, high: 0.12, low: 0.09, close: 0.11, volumeBase: 10000, volumeCounter: 1100, tradeCount: 50 },
-  { timestamp: 1700003600000, open: 0.11, high: 0.13, low: 0.10, close: 0.12, volumeBase: 15000, volumeCounter: 1725, tradeCount: 65 },
+  {
+    timestamp: 1700000000000,
+    open: 0.1,
+    high: 0.12,
+    low: 0.09,
+    close: 0.11,
+    volumeBase: 10000,
+    volumeCounter: 1100,
+    tradeCount: 50,
+  },
+  {
+    timestamp: 1700003600000,
+    open: 0.11,
+    high: 0.13,
+    low: 0.1,
+    close: 0.12,
+    volumeBase: 15000,
+    volumeCounter: 1725,
+    tradeCount: 65,
+  },
 ];
 
 describe("CandlestickChart", () => {

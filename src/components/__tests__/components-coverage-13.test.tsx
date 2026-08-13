@@ -287,7 +287,10 @@ describe("AllocationDonut", () => {
 
 describe("SwapExecutionPanel order marking", () => {
   const QUOTE = {
-    path: [{ code: "XLM", isNative: true }, { code: "USDC", issuer: VALID_ADDRESS }],
+    path: [
+      { code: "XLM", isNative: true },
+      { code: "USDC", issuer: VALID_ADDRESS },
+    ],
     sourceAmount: "100",
     outputAmount: "90",
     executionPrice: 0.9,
@@ -312,7 +315,10 @@ describe("SwapExecutionPanel order marking", () => {
       }
     );
     signAndSubmitMock.mockResolvedValue({ success: true });
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ xdr: "AAAA" }) }) as unknown as typeof fetch;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ xdr: "AAAA" }),
+    }) as unknown as typeof fetch;
     render(
       <SwapExecutionPanel
         address={VALID_ADDRESS}
@@ -361,7 +367,11 @@ describe("SwapExecutionPanel order marking", () => {
   it("shows multi-hop route and warnings", () => {
     const multiQuote = {
       ...QUOTE,
-      path: [{ code: "XLM", isNative: true }, { code: "USDC", issuer: VALID_ADDRESS }, { code: "EURT", issuer: VALID_ADDRESS }],
+      path: [
+        { code: "XLM", isNative: true },
+        { code: "USDC", issuer: VALID_ADDRESS },
+        { code: "EURT", issuer: VALID_ADDRESS },
+      ],
       warnings: ["High price impact (3.00%). Consider a smaller amount."],
       priceImpactPct: 6,
     };
@@ -515,8 +525,20 @@ describe("PriceChartPanel", () => {
 describe("AssetBrowser", () => {
   beforeEach(() => {
     fetchCatalogMock.mockResolvedValue([
-      { token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS }, trustlines: 100, supply: 5000, accounts: 50, flags: { authRequired: true, authImmutable: false } },
-      { token: { code: "EURT", name: "Euro Token", issuer: VALID_ADDRESS }, trustlines: 50, supply: 1000, accounts: 20, flags: { authRequired: false, authImmutable: false } },
+      {
+        token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS },
+        trustlines: 100,
+        supply: 5000,
+        accounts: 50,
+        flags: { authRequired: true, authImmutable: false },
+      },
+      {
+        token: { code: "EURT", name: "Euro Token", issuer: VALID_ADDRESS },
+        trustlines: 50,
+        supply: 1000,
+        accounts: 20,
+        flags: { authRequired: false, authImmutable: false },
+      },
     ]);
   });
 
@@ -595,9 +617,11 @@ describe("TokenSelector", () => {
   let RealTokenSelector: typeof TokenSelector;
 
   beforeEach(async () => {
-    RealTokenSelector = await vi.importActual<typeof import("@/components/swap/token-selector")>(
-      "@/components/swap/token-selector"
-    ).then((m) => m.TokenSelector);
+    RealTokenSelector = await vi
+      .importActual<typeof import("@/components/swap/token-selector")>(
+        "@/components/swap/token-selector"
+      )
+      .then((m) => m.TokenSelector);
   });
 
   it("closes the listbox on outside click", () => {
@@ -646,9 +670,7 @@ describe("OnChainPreferences", () => {
     });
     fireEvent.click(screen.getByText("bridge"));
     fireEvent.click(screen.getByText("Save on-chain"));
-    await waitFor(() =>
-      expect(toast.success).toHaveBeenCalledWith("On-chain preferences updated")
-    );
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("On-chain preferences updated"));
     expect(screen.getByText(/deadbeef/)).toBeTruthy();
   });
 
@@ -759,8 +781,22 @@ describe("MarketTable", () => {
   beforeEach(() => {
     useMarketStatsMock.mockReturnValue({
       data: [
-        { token: { code: "USDC", name: "USD Coin" }, priceInXlm: 0.5, change24hPct: null, volume24hXlm: 1000, bestBid: 0.49, bestAsk: 0.51 },
-        { token: { code: "EURT", name: "Euro" }, priceInXlm: null, change24hPct: 5, volume24hXlm: 100, bestBid: null, bestAsk: null },
+        {
+          token: { code: "USDC", name: "USD Coin" },
+          priceInXlm: 0.5,
+          change24hPct: null,
+          volume24hXlm: 1000,
+          bestBid: 0.49,
+          bestAsk: 0.51,
+        },
+        {
+          token: { code: "EURT", name: "Euro" },
+          priceInXlm: null,
+          change24hPct: 5,
+          volume24hXlm: 100,
+          bestBid: null,
+          bestAsk: null,
+        },
       ],
       isLoading: false,
       isError: false,

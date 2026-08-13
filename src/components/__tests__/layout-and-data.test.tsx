@@ -75,9 +75,7 @@ describe("Footer", () => {
 
 describe("Pagination", () => {
   it("returns null when totalPages <= 1", () => {
-    const { container } = render(
-      <Pagination page={1} totalPages={1} onPageChange={vi.fn()} />
-    );
+    const { container } = render(<Pagination page={1} totalPages={1} onPageChange={vi.fn()} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -113,7 +111,13 @@ describe("DataTable", () => {
   it("renders children when not loading/empty/error", () => {
     render(
       <DataTable>
-        <table><tbody><tr><td>data</td></tr></tbody></table>
+        <table>
+          <tbody>
+            <tr>
+              <td>data</td>
+            </tr>
+          </tbody>
+        </table>
       </DataTable>
     );
     expect(screen.getByText("data")).toBeInTheDocument();
@@ -153,30 +157,20 @@ describe("DropdownMenu", () => {
   ];
 
   it("renders trigger button", () => {
-    render(
-      <DropdownMenu
-        trigger="Options"
-        items={items}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<DropdownMenu trigger="Options" items={items} onSelect={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Options" })).toBeInTheDocument();
   });
 
   it("shows menu on click", () => {
     const onSelect = vi.fn();
-    render(
-      <DropdownMenu trigger="Menu" items={items} onSelect={onSelect} />
-    );
+    render(<DropdownMenu trigger="Menu" items={items} onSelect={onSelect} />);
     fireEvent.click(screen.getByRole("button"));
     expect(screen.getByRole("menu")).toBeInTheDocument();
   });
 
   it("calls onSelect when item clicked", () => {
     const onSelect = vi.fn();
-    render(
-      <DropdownMenu trigger="Menu" items={items} onSelect={onSelect} />
-    );
+    render(<DropdownMenu trigger="Menu" items={items} onSelect={onSelect} />);
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(screen.getByText("Edit"));
     expect(onSelect).toHaveBeenCalledWith("edit");

@@ -30,7 +30,9 @@ vi.mock("@/components/portfolio/portfolio-widget", () => ({
   PortfolioWidget: () => <div data-testid="portfolio-widget" />,
 }));
 vi.mock("@/components/ui/spinner", () => ({
-  Spinner: ({ className }: { className?: string }) => <div data-testid="spinner" className={className} />,
+  Spinner: ({ className }: { className?: string }) => (
+    <div data-testid="spinner" className={className} />
+  ),
 }));
 vi.mock("@/lib/stellar/config", () => ({
   getActiveNetwork: () => ({ name: "testnet", label: "Testnet" }),
@@ -150,7 +152,9 @@ describe("ErrorPage", () => {
   });
 
   it("shows the digest when present", () => {
-    render(<ErrorPage error={Object.assign(new Error("x"), { digest: "abc123" })} reset={() => {}} />);
+    render(
+      <ErrorPage error={Object.assign(new Error("x"), { digest: "abc123" })} reset={() => {}} />
+    );
     expect(screen.getByText(/abc123/)).toBeTruthy();
   });
 

@@ -1,17 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { HORIZON_POOL_CONFIG } from "@/lib/server/horizon-pool";
-import {
-  cacheGet,
-  cacheSet,
-  cacheDelete,
-  cacheClear,
-  cacheSize,
-} from "@/lib/server/query-cache";
-import {
-  runWithContext,
-  getRequestContext,
-  getRequestId,
-} from "@/lib/server/request-context";
+import { cacheGet, cacheSet, cacheDelete, cacheClear, cacheSize } from "@/lib/server/query-cache";
+import { runWithContext, getRequestContext, getRequestId } from "@/lib/server/request-context";
 import { buildServerTiming, measureTiming } from "@/lib/server/server-timing";
 
 // =========================================================================

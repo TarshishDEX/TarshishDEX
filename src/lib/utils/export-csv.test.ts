@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  objectsToCsv,
-  exportCsv,
-} from "@/lib/utils/export-csv";
+import { objectsToCsv, exportCsv } from "@/lib/utils/export-csv";
 
 describe("objectsToCsv", () => {
   it("converts objects to CSV with headers", () => {

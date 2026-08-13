@@ -47,10 +47,7 @@ export interface RateLimitResult {
  * Check whether a request identified by `key` (typically IP) is rate-limited.
  * Returns metadata for setting `X-RateLimit-*` headers.
  */
-export function checkRateLimit(
-  key: string,
-  options: RateLimitOptions
-): RateLimitResult {
+export function checkRateLimit(key: string, options: RateLimitOptions): RateLimitResult {
   cleanup();
   const { maxRequests, windowMs, keyPrefix = "rl" } = options;
   const fullKey = `${keyPrefix}:${key}`;

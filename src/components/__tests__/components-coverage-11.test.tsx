@@ -133,7 +133,16 @@ describe("VolumeChart", () => {
     render(
       <VolumeChart
         candles={[
-          { timestamp: 1700000000000, open: 1, high: 2, low: 0.5, close: 1.5, volumeBase: 10, volumeCounter: 2000, tradeCount: 5 },
+          {
+            timestamp: 1700000000000,
+            open: 1,
+            high: 2,
+            low: 0.5,
+            close: 1.5,
+            volumeBase: 10,
+            volumeCounter: 2000,
+            tradeCount: 5,
+          },
         ]}
       />
     );
@@ -161,14 +170,16 @@ describe("WalletProvider", () => {
   it("subscribes to wallet events and syncs on state update", async () => {
     let onStateUpdated: (a: string | undefined, n: string) => void = () => {};
     let onDisconnect: () => void = () => {};
-    subscribeMock.mockImplementation((callbacks: {
-      onStateUpdated?: (a: string | undefined, n: string) => void;
-      onDisconnect?: () => void;
-    }) => {
-      onStateUpdated = callbacks.onStateUpdated ?? (() => {});
-      onDisconnect = callbacks.onDisconnect ?? (() => {});
-      return Promise.resolve(() => undefined);
-    });
+    subscribeMock.mockImplementation(
+      (callbacks: {
+        onStateUpdated?: (a: string | undefined, n: string) => void;
+        onDisconnect?: () => void;
+      }) => {
+        onStateUpdated = callbacks.onStateUpdated ?? (() => {});
+        onDisconnect = callbacks.onDisconnect ?? (() => {});
+        return Promise.resolve(() => undefined);
+      }
+    );
     render(<WalletProvider>child</WalletProvider>);
     await act(async () => {});
     expect(subscribeMock).toHaveBeenCalled();
@@ -227,8 +238,22 @@ const NOTIFS: Array<{
   timestamp: number;
   read: boolean;
 }> = [
-  { id: "n1", title: "Swap completed", body: "1 XLM → 0.5 USDC", type: "swap", timestamp: 1700000000000, read: false },
-  { id: "n2", title: "Price alert", body: "XLM above 0.15", type: "alert", timestamp: 1700003600000, read: true },
+  {
+    id: "n1",
+    title: "Swap completed",
+    body: "1 XLM → 0.5 USDC",
+    type: "swap",
+    timestamp: 1700000000000,
+    read: false,
+  },
+  {
+    id: "n2",
+    title: "Price alert",
+    body: "XLM above 0.15",
+    type: "alert",
+    timestamp: 1700003600000,
+    read: true,
+  },
 ];
 
 describe("NotificationCenter", () => {
@@ -404,15 +429,23 @@ describe("useTokenBalance", () => {
             Promise.resolve({
               balances: [
                 { asset_type: "native", balance: "77.7" },
-                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "5" },
+                {
+                  asset_type: "credit_alphanum4",
+                  asset_code: "USDC",
+                  asset_issuer: VALID_ADDRESS,
+                  balance: "5",
+                },
               ],
             }),
         }),
       }),
     });
-    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "XLM", isNative: true }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useTokenBalance(VALID_ADDRESS, { code: "XLM", isNative: true }),
+      {
+        wrapper: makeWrapper(),
+      }
+    );
     await waitFor(() => expect(result.current.data).toBe("77.7"));
   });
 
@@ -424,7 +457,12 @@ describe("useTokenBalance", () => {
             Promise.resolve({
               balances: [
                 { asset_type: "liquidity_pool_shares", balance: "99" },
-                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "12.5" },
+                {
+                  asset_type: "credit_alphanum4",
+                  asset_code: "USDC",
+                  asset_issuer: VALID_ADDRESS,
+                  balance: "12.5",
+                },
               ],
             }),
         }),
@@ -438,9 +476,12 @@ describe("useTokenBalance", () => {
   });
 
   it("returns null when the asset is not held", async () => {
-    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "EURT", issuer: VALID_ADDRESS }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useTokenBalance(VALID_ADDRESS, { code: "EURT", issuer: VALID_ADDRESS }),
+      {
+        wrapper: makeWrapper(),
+      }
+    );
     await waitFor(() => expect(result.current.data).toBeNull());
   });
 
@@ -465,15 +506,23 @@ describe("useTokenBalance", () => {
           call: () =>
             Promise.resolve({
               balances: [
-                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "5" },
+                {
+                  asset_type: "credit_alphanum4",
+                  asset_code: "USDC",
+                  asset_issuer: VALID_ADDRESS,
+                  balance: "5",
+                },
               ],
             }),
         }),
       }),
     });
-    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "XLM", isNative: true }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useTokenBalance(VALID_ADDRESS, { code: "XLM", isNative: true }),
+      {
+        wrapper: makeWrapper(),
+      }
+    );
     await waitFor(() => expect(result.current.data).toBeNull());
   });
 
@@ -485,15 +534,23 @@ describe("useTokenBalance", () => {
             Promise.resolve({
               balances: [
                 { asset_type: "native", balance: "10" },
-                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "3.3" },
+                {
+                  asset_type: "credit_alphanum4",
+                  asset_code: "USDC",
+                  asset_issuer: VALID_ADDRESS,
+                  balance: "3.3",
+                },
               ],
             }),
         }),
       }),
     });
-    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "USDC", issuer: VALID_ADDRESS }), {
-      wrapper: makeWrapper(),
-    });
+    const { result } = renderHook(
+      () => useTokenBalance(VALID_ADDRESS, { code: "USDC", issuer: VALID_ADDRESS }),
+      {
+        wrapper: makeWrapper(),
+      }
+    );
     await waitFor(() => expect(result.current.data).toBe("3.3"));
   });
 });
@@ -567,7 +624,12 @@ describe("useSwapHistory", () => {
         <button
           data-testid="sh-add"
           onClick={() =>
-            addEntry({ inputAsset: "XLM", outputAsset: "USDC", inputAmount: "1", outputAmount: "0.5" })
+            addEntry({
+              inputAsset: "XLM",
+              outputAsset: "USDC",
+              inputAmount: "1",
+              outputAmount: "0.5",
+            })
           }
         >
           add
@@ -599,7 +661,14 @@ describe("useSwapHistory", () => {
     localStorage.setItem(
       "tarshishdex-swap-history",
       JSON.stringify([
-        { id: "x", timestamp: 1, inputAsset: "XLM", outputAsset: "USDT", inputAmount: "2", outputAmount: "1" },
+        {
+          id: "x",
+          timestamp: 1,
+          inputAsset: "XLM",
+          outputAsset: "USDT",
+          inputAmount: "2",
+          outputAmount: "1",
+        },
       ])
     );
     render(<Harness />);

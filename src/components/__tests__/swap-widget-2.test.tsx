@@ -24,9 +24,9 @@ vi.mock("@/lib/stellar/asset", () => ({
   isSameAsset: (a: unknown, b: unknown) =>
     Boolean(
       a &&
-        b &&
-        (a as { code: string }).code === (b as { code: string }).code &&
-        (a as { isNative?: boolean }).isNative === (b as { isNative?: boolean }).isNative
+      b &&
+      (a as { code: string }).code === (b as { code: string }).code &&
+      (a as { isNative?: boolean }).isNative === (b as { isNative?: boolean }).isNative
     ),
 }));
 
@@ -186,9 +186,7 @@ describe("SwapWidget interactions", () => {
     fireEvent.change(screen.getByLabelText("Amount to pay"), {
       target: { value: "100" },
     });
-    expect(
-      screen.getByText(/Could not fetch a quote/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Could not fetch a quote/)).toBeInTheDocument();
   });
 
   it("shows Connect Wallet button when disconnected", () => {

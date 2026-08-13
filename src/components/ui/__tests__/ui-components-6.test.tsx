@@ -23,7 +23,10 @@ vi.mock("next/navigation", () => ({
 // ── DropdownMenu ───────────────────────────────────────────────────────
 
 describe("DropdownMenu", () => {
-  const items = [{ id: "1", label: "Edit" }, { id: "2", label: "Delete", danger: true }];
+  const items = [
+    { id: "1", label: "Edit" },
+    { id: "2", label: "Delete", danger: true },
+  ];
 
   it("renders trigger", () => {
     render(<DropdownMenu trigger="Options" items={items} onSelect={vi.fn()} />);
@@ -84,17 +87,29 @@ describe("InputErrorIcon", () => {
 
 describe("InputGroup", () => {
   it("renders children", () => {
-    render(<InputGroup><input aria-label="test" /></InputGroup>);
+    render(
+      <InputGroup>
+        <input aria-label="test" />
+      </InputGroup>
+    );
     expect(screen.getByLabelText("test")).toBeInTheDocument();
   });
 
   it("renders prepend", () => {
-    render(<InputGroup prepend={<span>$</span>}><input /></InputGroup>);
+    render(
+      <InputGroup prepend={<span>$</span>}>
+        <input />
+      </InputGroup>
+    );
     expect(screen.getByText("$")).toBeInTheDocument();
   });
 
   it("renders append", () => {
-    render(<InputGroup append={<span>XLM</span>}><input /></InputGroup>);
+    render(
+      <InputGroup append={<span>XLM</span>}>
+        <input />
+      </InputGroup>
+    );
     expect(screen.getByText("XLM")).toBeInTheDocument();
   });
 });
@@ -213,12 +228,20 @@ describe("ExpandableSection", () => {
 
 describe("FocusTrap", () => {
   it("renders children", () => {
-    render(<FocusTrap><button>Inside</button></FocusTrap>);
+    render(
+      <FocusTrap>
+        <button>Inside</button>
+      </FocusTrap>
+    );
     expect(screen.getByText("Inside")).toBeInTheDocument();
   });
 
   it("does not trap when inactive", () => {
-    render(<FocusTrap active={false}><button>Free</button></FocusTrap>);
+    render(
+      <FocusTrap active={false}>
+        <button>Free</button>
+      </FocusTrap>
+    );
     expect(screen.getByText("Free")).toBeInTheDocument();
   });
 });
@@ -227,7 +250,11 @@ describe("FocusTrap", () => {
 
 describe("StickyHeader", () => {
   it("renders children", () => {
-    render(<StickyHeader><h2>Title</h2></StickyHeader>);
+    render(
+      <StickyHeader>
+        <h2>Title</h2>
+      </StickyHeader>
+    );
     expect(screen.getByText("Title")).toBeInTheDocument();
   });
 });
@@ -236,7 +263,12 @@ describe("StickyHeader", () => {
 
 describe("ChipList", () => {
   it("renders children", () => {
-    render(<ChipList><span>Tag1</span><span>Tag2</span></ChipList>);
+    render(
+      <ChipList>
+        <span>Tag1</span>
+        <span>Tag2</span>
+      </ChipList>
+    );
     expect(screen.getByText("Tag1")).toBeInTheDocument();
     expect(screen.getByText("Tag2")).toBeInTheDocument();
   });

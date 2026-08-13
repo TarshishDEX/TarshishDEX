@@ -2,7 +2,14 @@ import { describe, it, expect, vi } from "vitest";
 
 // ── cache-headers ──────────────────────────────────────────────────────
 
-import { NO_CACHE, SHORT_CACHE, MEDIUM_CACHE, LONG_CACHE, ETAG_HEADER, IF_NONE_MATCH } from "@/lib/server/cache-headers";
+import {
+  NO_CACHE,
+  SHORT_CACHE,
+  MEDIUM_CACHE,
+  LONG_CACHE,
+  ETAG_HEADER,
+  IF_NONE_MATCH,
+} from "@/lib/server/cache-headers";
 
 describe("cache-headers", () => {
   it("NO_CACHE is a string", () => {
@@ -106,7 +113,11 @@ describe("etag", () => {
 
 // ── request-timeout ────────────────────────────────────────────────────
 
-import { createTimeoutSignal, withTimeout, DEFAULT_API_TIMEOUT_MS } from "@/lib/server/request-timeout";
+import {
+  createTimeoutSignal,
+  withTimeout,
+  DEFAULT_API_TIMEOUT_MS,
+} from "@/lib/server/request-timeout";
 
 describe("request-timeout", () => {
   it("DEFAULT_API_TIMEOUT_MS is 10 seconds", () => {

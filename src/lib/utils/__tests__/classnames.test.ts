@@ -32,16 +32,7 @@ describe("cn (classnames utility)", () => {
 
   it("merges multiple conditional and static classes", () => {
     expect(
-      cn(
-        "base-class",
-        "px-4",
-        true && "visible",
-        false && "hidden",
-        "py-2",
-        undefined,
-        null,
-        ""
-      )
+      cn("base-class", "px-4", true && "visible", false && "hidden", "py-2", undefined, null, "")
     ).toBe("base-class px-4 visible py-2");
   });
 

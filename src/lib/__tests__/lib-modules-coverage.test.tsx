@@ -101,9 +101,7 @@ function I18nConsumer() {
       <span data-testid="locale">{locale}</span>
       <span data-testid="app-name">{t("app.name")}</span>
       <span data-testid="missing-key">{t("nonexistent.key")}</span>
-      <span data-testid="interpolated">
-        {t("hello {name}", { name: "World" })}
-      </span>
+      <span data-testid="interpolated">{t("hello {name}", { name: "World" })}</span>
     </div>
   );
 }

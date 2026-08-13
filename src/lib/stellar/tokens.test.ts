@@ -14,9 +14,7 @@ describe("findKnownToken", () => {
     const token = findKnownToken("USDC");
     expect(token).toBeDefined();
     expect(token!.code).toBe("USDC");
-    expect(token!.issuer).toBe(
-      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
-    );
+    expect(token!.issuer).toBe("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
   });
 
   it("is case-insensitive", () => {

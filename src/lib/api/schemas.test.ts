@@ -96,9 +96,9 @@ describe("limitSchema", () => {
 
 describe("addressSchema", () => {
   it("accepts valid Stellar key", () => {
-    expect(
-      addressSchema.parse("GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H")
-    ).toBe("GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H");
+    expect(addressSchema.parse("GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H")).toBe(
+      "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H"
+    );
   });
 
   it("rejects keys not starting with G", () => {

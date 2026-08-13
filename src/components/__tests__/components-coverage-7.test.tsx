@@ -8,15 +8,21 @@ const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
 // =========================================================================
 // Shared mocks
 // =========================================================================
-const { useWalletMock, useQueryMock, useOrderbookMock, usePriceHistoryMock, streamOpsMock, streamTradesMock } =
-  vi.hoisted(() => ({
-    useWalletMock: vi.fn(),
-    useQueryMock: vi.fn(),
-    useOrderbookMock: vi.fn(),
-    usePriceHistoryMock: vi.fn(),
-    streamOpsMock: vi.fn(),
-    streamTradesMock: vi.fn(),
-  }));
+const {
+  useWalletMock,
+  useQueryMock,
+  useOrderbookMock,
+  usePriceHistoryMock,
+  streamOpsMock,
+  streamTradesMock,
+} = vi.hoisted(() => ({
+  useWalletMock: vi.fn(),
+  useQueryMock: vi.fn(),
+  useOrderbookMock: vi.fn(),
+  usePriceHistoryMock: vi.fn(),
+  streamOpsMock: vi.fn(),
+  streamTradesMock: vi.fn(),
+}));
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
@@ -169,7 +175,7 @@ describe("OnChainPreferences", () => {
     render(<OnChainPreferences />);
     fireEvent.click(screen.getByText("Save on-chain"));
     await waitFor(() =>
-      expect(toastMockObj.info).toHaveBeenCalledWith("Transaction cancelled in your wallet"),
+      expect(toastMockObj.info).toHaveBeenCalledWith("Transaction cancelled in your wallet")
     );
   });
 
@@ -179,7 +185,7 @@ describe("OnChainPreferences", () => {
     render(<OnChainPreferences />);
     fireEvent.click(screen.getByText("Save on-chain"));
     await waitFor(() =>
-      expect(toastMockObj.error).toHaveBeenCalledWith("Contract execution failed"),
+      expect(toastMockObj.error).toHaveBeenCalledWith("Contract execution failed")
     );
   });
 });
@@ -279,7 +285,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <span>ok content</span>
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(screen.getByText("ok content")).toBeTruthy();
   });
@@ -291,7 +297,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <Bomb />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(screen.getByText("Something went wrong")).toBeTruthy();
     expect(screen.getByText("render blew up")).toBeTruthy();
@@ -306,7 +312,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary>
         <Flaky />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     shouldThrow = false;
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -320,7 +326,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary fallback={<span>custom fallback</span>}>
         <Bomb />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(screen.getByText("custom fallback")).toBeTruthy();
   });
@@ -333,7 +339,7 @@ describe("ErrorBoundary", () => {
     render(
       <ErrorBoundary onError={onError}>
         <Bomb />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(onError).toHaveBeenCalled();
   });
@@ -431,7 +437,7 @@ describe("WalletProvider", () => {
     render(
       <WalletProvider>
         <span>wallet child</span>
-      </WalletProvider>,
+      </WalletProvider>
     );
     expect(screen.getByText("wallet child")).toBeTruthy();
     await waitFor(() => expect(subscribeEventsMock).toHaveBeenCalled());
@@ -443,7 +449,7 @@ describe("WalletProvider", () => {
     const { unmount } = render(
       <WalletProvider>
         <span>child</span>
-      </WalletProvider>,
+      </WalletProvider>
     );
     await waitFor(() => expect(subscribeEventsMock).toHaveBeenCalled());
     unmount();
@@ -463,7 +469,11 @@ vi.mock("@/lib/stellar/account", () => ({
   isValidPublicKey: (a: string) => a.startsWith("G") && a.length === 56,
 }));
 
-import { useLiveAccountStream, useLiveMarketStream, useLiveOrderbookStream } from "@/components/providers/live-sync-hooks";
+import {
+  useLiveAccountStream,
+  useLiveMarketStream,
+  useLiveOrderbookStream,
+} from "@/components/providers/live-sync-hooks";
 
 describe("live-sync hooks", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -538,8 +548,26 @@ vi.mock("@/lib/stellar/tokens", () => ({
 import { PriceChartPanel } from "@/components/analytics/price-chart-panel";
 
 const CANDLES = [
-  { timestamp: 1, open: 1, high: 2, low: 0.5, close: 1.5, volumeBase: 10, volumeCounter: 20, tradeCount: 5 },
-  { timestamp: 2, open: 1.5, high: 3, low: 1, close: 2.5, volumeBase: 10, volumeCounter: 30, tradeCount: 5 },
+  {
+    timestamp: 1,
+    open: 1,
+    high: 2,
+    low: 0.5,
+    close: 1.5,
+    volumeBase: 10,
+    volumeCounter: 20,
+    tradeCount: 5,
+  },
+  {
+    timestamp: 2,
+    open: 1.5,
+    high: 3,
+    low: 1,
+    close: 2.5,
+    volumeBase: 10,
+    volumeCounter: 30,
+    tradeCount: 5,
+  },
 ];
 
 describe("PriceChartPanel", () => {

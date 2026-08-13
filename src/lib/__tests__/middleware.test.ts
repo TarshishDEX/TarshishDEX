@@ -23,7 +23,7 @@ describe("middleware", () => {
   function createRequest(path: string, headers?: Record<string, string>): NextRequest {
     const url = new URL(`http://localhost:3000${path}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new NextRequest(url, headers ? { headers } as any : undefined);
+    return new NextRequest(url, headers ? ({ headers } as any) : undefined);
   }
 
   it("passes through non-API routes", () => {

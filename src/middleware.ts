@@ -26,9 +26,7 @@ export function middleware(request: NextRequest) {
           "X-RateLimit-Limit": "100",
           "X-RateLimit-Remaining": "0",
           "X-RateLimit-Reset": String(rateLimit.resetAt),
-          "Retry-After": String(
-            Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
-          ),
+          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
         },
       }
     );
@@ -69,10 +67,7 @@ export function middleware(request: NextRequest) {
   // ── CORS (public API) ─────────────────────────────────────────────
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
-  response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, X-Request-Id, Authorization"
-  );
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type, X-Request-Id, Authorization");
 
   // ── HSTS (production only — HTTPS is assumed) ─────────────────────
   if (process.env.NODE_ENV === "production") {

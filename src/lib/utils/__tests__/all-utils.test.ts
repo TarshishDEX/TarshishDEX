@@ -192,11 +192,7 @@ describe("color utilities", () => {
 });
 
 // ── constants.ts ─────────────────────────────────────────────────────────
-import {
-  DEFAULT_SLIPPAGE_BPS,
-  MAX_SLIPPAGE_BPS,
-  QUOTE_EXPIRATION_MS,
-} from "@/lib/utils/constants";
+import { DEFAULT_SLIPPAGE_BPS, MAX_SLIPPAGE_BPS, QUOTE_EXPIRATION_MS } from "@/lib/utils/constants";
 
 describe("constants", () => {
   it("has sane defaults", () => {
@@ -338,7 +334,10 @@ import { objectsToCsv } from "@/lib/utils/export-csv";
 describe("CSV export", () => {
   it("objectsToCsv creates CSV with headers", () => {
     const csv = objectsToCsv(
-      [{ name: "Alice", age: 30 }, { name: "Bob", age: 25 }],
+      [
+        { name: "Alice", age: 30 },
+        { name: "Bob", age: 25 },
+      ],
       ["name", "age"]
     );
     const lines = csv.split("\n");
@@ -348,34 +347,28 @@ describe("CSV export", () => {
   });
 
   it("objectsToCsv escapes commas and quotes", () => {
-    const csv = objectsToCsv(
-      [{ name: 'Al"ice', age: 30 }],
-      ["name", "age"]
-    );
+    const csv = objectsToCsv([{ name: 'Al"ice', age: 30 }], ["name", "age"]);
     const lines = csv.split("\n");
     expect(lines[1]).toContain('Al""ice');
   });
 
   it("objectsToCsv uses custom headers", () => {
-    const csv = objectsToCsv(
-      [{ name: "Alice" }],
-      ["name"],
-      ["Full Name"]
-    );
+    const csv = objectsToCsv([{ name: "Alice" }], ["name"], ["Full Name"]);
     expect(csv.split("\n")[0]).toBe("Full Name");
   });
 
   it("objectsToCsv handles null values", () => {
-    const csv = objectsToCsv(
-      [{ name: null }],
-      ["name"]
-    );
+    const csv = objectsToCsv([{ name: null }], ["name"]);
     expect(csv.split("\n")[1]).toBe("");
   });
 });
 
 // ── format-currency.ts ───────────────────────────────────────────────────
-import { formatFiatCurrency, formatToken, formatPercentageChange } from "@/lib/utils/format-currency";
+import {
+  formatFiatCurrency,
+  formatToken,
+  formatPercentageChange,
+} from "@/lib/utils/format-currency";
 
 describe("format-currency", () => {
   it("formatFiatCurrency formats USD", () => {
@@ -397,7 +390,12 @@ describe("format-currency", () => {
 });
 
 // ── format-number.ts ─────────────────────────────────────────────────────
-import { formatNumber, formatPercent, formatCompact, formatSignificant } from "@/lib/utils/format-number";
+import {
+  formatNumber,
+  formatPercent,
+  formatCompact,
+  formatSignificant,
+} from "@/lib/utils/format-number";
 
 describe("format-number", () => {
   it("formatNumber adds thousands separators", () => {
@@ -581,18 +579,16 @@ describe("object utilities", () => {
   });
 
   it("deepMerge merges nested objects", () => {
-    const result = deepMerge(
-      { a: 1, b: { x: 1, y: 2 }, c: 0 },
-      { b: { y: 99 }, c: 3 } as Partial<{ a: number; b: { x: number; y: number }; c: number }>
-    );
+    const result = deepMerge({ a: 1, b: { x: 1, y: 2 }, c: 0 }, { b: { y: 99 }, c: 3 } as Partial<{
+      a: number;
+      b: { x: number; y: number };
+      c: number;
+    }>);
     expect(result).toEqual({ a: 1, b: { x: 1, y: 99 }, c: 3 });
   });
 
   it("deepMerge replaces arrays, not merges", () => {
-    const result = deepMerge(
-      { a: [1, 2] } as Record<string, unknown>,
-      { a: [3] }
-    );
+    const result = deepMerge({ a: [1, 2] } as Record<string, unknown>, { a: [3] });
     expect(result.a).toEqual([3]);
   });
 });
@@ -701,9 +697,9 @@ describe("retry", () => {
 
   it("throws after exhausting retries", async () => {
     const fn = vi.fn().mockRejectedValue(new Error("always fails"));
-    await expect(
-      withRetry(fn, { maxRetries: 2, baseDelayMs: 10, maxDelayMs: 30 })
-    ).rejects.toThrow("always fails");
+    await expect(withRetry(fn, { maxRetries: 2, baseDelayMs: 10, maxDelayMs: 30 })).rejects.toThrow(
+      "always fails"
+    );
     expect(fn).toHaveBeenCalledTimes(3); // initial + 2 retries
   });
 
@@ -939,7 +935,7 @@ describe("string utilities", () => {
 
   it("escapeHtml escapes HTML entities", () => {
     expect(escapeHtml("<script>")).toBe("&lt;script&gt;");
-    expect(escapeHtml('a"b&c\'d')).toBe("a&quot;b&amp;c&#039;d");
+    expect(escapeHtml("a\"b&c'd")).toBe("a&quot;b&amp;c&#039;d");
     expect(escapeHtml("plain text")).toBe("plain text");
   });
 });

@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   scorecard:
-    name: Quality Scorecard (target: 20/20)
+    name: "Quality Scorecard (target: 20/20)"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -231,12 +231,9 @@ jobs:
 
           echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
 
-          cat << 'EOF' | tee scorecard.md
-      # 🏆 Contract Quality Scorecard
-
-      | # | Check | Category | Score |
-      |---|-------|----------|-------|
-      EOF
+          printf '# 🏆 Contract Quality Scorecard\n\n' > scorecard.md
+          printf '| # | Check | Category | Score |\n' >> scorecard.md
+          printf '|---|-------|----------|-------|\n' >> scorecard.md
           printf "| 1 | cargo fmt | Code Style | %s/2 |\n" "$FMT" >> scorecard.md
           printf "| 2 | cargo clippy | Static Analysis | %s/2 |\n" "$CLIPPY" >> scorecard.md
           printf "| 3 | cargo test | Testing | %s/2 |\n" "$TEST" >> scorecard.md

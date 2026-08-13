@@ -14,7 +14,7 @@ import { logger } from "@/lib/server/logger";
  *   export const GET = apiHandler(async (request, { params }) => { ... });
  */
 export function apiHandler<T extends unknown[]>(
-  handler: (request: Request, ...rest: T) => Promise<NextResponse>,
+  handler: (request: Request, ...rest: T) => Promise<NextResponse>
 ): (request: Request, ...rest: T) => Promise<NextResponse> {
   return async (request: Request, ...rest: T) => {
     try {

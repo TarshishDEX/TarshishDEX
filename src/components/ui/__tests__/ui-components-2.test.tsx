@@ -33,9 +33,7 @@ describe("Select", () => {
 
   it("renders placeholder option", () => {
     const onChange = vi.fn();
-    render(
-      <Select options={options} value="" onChange={onChange} placeholder="Choose asset..." />
-    );
+    render(<Select options={options} value="" onChange={onChange} placeholder="Choose asset..." />);
     expect(screen.getByText("Choose asset...")).toBeInTheDocument();
   });
 
@@ -145,9 +143,7 @@ describe("EmptyState", () => {
   });
 
   it("renders description", () => {
-    render(
-      <EmptyState title="Empty" description="Try adjusting your filters" />
-    );
+    render(<EmptyState title="Empty" description="Try adjusting your filters" />);
     expect(screen.getByText("Try adjusting your filters")).toBeInTheDocument();
   });
 

@@ -27,7 +27,9 @@ describe("assetSchema", () => {
   });
 
   it("parses a valid CODE:ISSUER pair", () => {
-    const result = assetSchema.parse("USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+    const result = assetSchema.parse(
+      "USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    );
     expect(result).toEqual({
       code: "USDC",
       issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
@@ -35,7 +37,9 @@ describe("assetSchema", () => {
   });
 
   it("uppercases the asset code", () => {
-    const result = assetSchema.parse("usdc:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+    const result = assetSchema.parse(
+      "usdc:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    );
     expect(result.code).toBe("USDC");
   });
 
@@ -152,9 +156,9 @@ describe("limitSchema", () => {
 
 describe("addressSchema", () => {
   it("accepts a valid Stellar address", () => {
-    expect(
-      addressSchema.parse("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")
-    ).toBe("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+    expect(addressSchema.parse("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")).toBe(
+      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    );
   });
 
   it("rejects an address not starting with G", () => {
@@ -227,7 +231,10 @@ describe("assetsParamsSchema", () => {
   });
 
   it("accepts optional code and issuer", () => {
-    const result = assetsParamsSchema.parse({ code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" });
+    const result = assetsParamsSchema.parse({
+      code: "USDC",
+      issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+    });
     expect(result.code).toBe("USDC");
     expect(result.issuer).toBe("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
   });

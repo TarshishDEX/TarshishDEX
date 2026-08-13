@@ -117,7 +117,10 @@ const USDC_ISSUER = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
 
 function makeRequest(url: string, init: RequestInit = {}): Request {
   return new Request(url, {
-    headers: { "x-forwarded-for": "1.2.3.4", ...(init.headers as Record<string, string> | undefined) },
+    headers: {
+      "x-forwarded-for": "1.2.3.4",
+      ...(init.headers as Record<string, string> | undefined),
+    },
     method: init.method ?? "GET",
     body: init.body,
   });
@@ -126,7 +129,11 @@ function makeRequest(url: string, init: RequestInit = {}): Request {
 beforeEach(() => {
   vi.clearAllMocks();
   getClientIdMock.mockReturnValue("1.2.3.4");
-  checkRateLimitMock.mockReturnValue({ allowed: true, remaining: 99, resetAt: Date.now() + 60_000 });
+  checkRateLimitMock.mockReturnValue({
+    allowed: true,
+    remaining: 99,
+    resetAt: Date.now() + 60_000,
+  });
 });
 
 // =========================================================================
@@ -165,14 +172,16 @@ describe("GET /api/assets", () => {
 
   it("passes code/issuer filters", async () => {
     fetchAssetCatalogMock.mockResolvedValue([]);
-    await getAssets(
-      makeRequest(`http://localhost/api/assets?code=USDC&issuer=${USDC_ISSUER}`),
-    );
+    await getAssets(makeRequest(`http://localhost/api/assets?code=USDC&issuer=${USDC_ISSUER}`));
     expect(fetchAssetCatalogMock).toHaveBeenCalledWith(24, "USDC", USDC_ISSUER);
   });
 
   it("returns 429 when rate-limited", async () => {
-    checkRateLimitMock.mockReturnValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60_000 });
+    checkRateLimitMock.mockReturnValue({
+      allowed: false,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+    });
     const res = await getAssets(makeRequest("http://localhost/api/assets"));
     expect(res.status).toBe(429);
     const body = await res.json();
@@ -213,7 +222,7 @@ describe("GET /api/market/candles", () => {
   it("returns candles for a valid pair", async () => {
     fetchCandlesMock.mockResolvedValue([{ timestamp: 1, open: 1, close: 2 }]);
     const res = await getCandles(
-      makeRequest(`http://localhost/api/market/candles?base=XLM&counter=USDC:${USDC_ISSUER}`),
+      makeRequest(`http://localhost/api/market/candles?base=XLM&counter=USDC:${USDC_ISSUER}`)
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -231,7 +240,7 @@ describe("GET /api/market/candles", () => {
   it("returns 502 when the candle fetch fails", async () => {
     fetchCandlesMock.mockRejectedValue(new Error("boom"));
     const res = await getCandles(
-      makeRequest(`http://localhost/api/market/candles?base=XLM&counter=USDC:${USDC_ISSUER}`),
+      makeRequest(`http://localhost/api/market/candles?base=XLM&counter=USDC:${USDC_ISSUER}`)
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -252,7 +261,9 @@ describe("GET /api/market/orderbook", () => {
       midPrice: 1,
     });
     const res = await getOrderbook(
-      makeRequest(`http://localhost/api/market/orderbook?selling=XLM&buying=USDC:${USDC_ISSUER}&limit=20`),
+      makeRequest(
+        `http://localhost/api/market/orderbook?selling=XLM&buying=USDC:${USDC_ISSUER}&limit=20`
+      )
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -260,19 +271,21 @@ describe("GET /api/market/orderbook", () => {
     expect(fetchOrderbookMock).toHaveBeenCalledWith(
       { code: "XLM", isNative: true },
       { code: "USDC", issuer: USDC_ISSUER },
-      20,
+      20
     );
   });
 
   it("returns 400 when params are invalid", async () => {
-    const res = await getOrderbook(makeRequest("http://localhost/api/market/orderbook?selling=XLM"));
+    const res = await getOrderbook(
+      makeRequest("http://localhost/api/market/orderbook?selling=XLM")
+    );
     expect(res.status).toBe(400);
   });
 
   it("returns 502 when orderbook fetch fails", async () => {
     fetchOrderbookMock.mockRejectedValue(new Error("boom"));
     const res = await getOrderbook(
-      makeRequest(`http://localhost/api/market/orderbook?selling=XLM&buying=USDC:${USDC_ISSUER}`),
+      makeRequest(`http://localhost/api/market/orderbook?selling=XLM&buying=USDC:${USDC_ISSUER}`)
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -288,7 +301,7 @@ describe("GET /api/market/pools", () => {
     fetchLiquidityPoolsMock.mockResolvedValue([{ id: "pool-1" }]);
     buildPoolSummaryMock.mockReturnValue({ id: "pool-1", tvlXlm: 100 });
     const res = await getPools(
-      makeRequest(`http://localhost/api/market/pools?base=XLM&counter=USDC:${USDC_ISSUER}`),
+      makeRequest(`http://localhost/api/market/pools?base=XLM&counter=USDC:${USDC_ISSUER}`)
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -304,7 +317,7 @@ describe("GET /api/market/pools", () => {
   it("returns 502 when pool fetch fails", async () => {
     fetchLiquidityPoolsMock.mockRejectedValue(new Error("boom"));
     const res = await getPools(
-      makeRequest(`http://localhost/api/market/pools?base=XLM&counter=USDC:${USDC_ISSUER}`),
+      makeRequest(`http://localhost/api/market/pools?base=XLM&counter=USDC:${USDC_ISSUER}`)
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -358,7 +371,11 @@ describe("GET /api/orders", () => {
   });
 
   it("returns 429 when rate-limited", async () => {
-    checkRateLimitMock.mockReturnValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60_000 });
+    checkRateLimitMock.mockReturnValue({
+      allowed: false,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+    });
     const res = await getOrders(makeRequest("http://localhost/api/orders"));
     expect(res.status).toBe(429);
   });
@@ -387,7 +404,7 @@ describe("POST /api/orders", () => {
           expiryLedger: 0,
           side: "buy",
         }),
-      }),
+      })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -400,7 +417,7 @@ describe("POST /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "POST",
         body: JSON.stringify({ userAddress: VALID_ADDRESS }),
-      }),
+      })
     );
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -420,7 +437,7 @@ describe("POST /api/orders", () => {
           amount: 1,
           side: "sell",
         }),
-      }),
+      })
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -440,7 +457,7 @@ describe("POST /api/orders", () => {
           amount: 1,
           side: "buy",
         }),
-      }),
+      })
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -455,7 +472,7 @@ describe("DELETE /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "DELETE",
         body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS }),
-      }),
+      })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -469,7 +486,7 @@ describe("DELETE /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "DELETE",
         body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS, txHash: "hash" }),
-      }),
+      })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -482,7 +499,7 @@ describe("DELETE /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "DELETE",
         body: JSON.stringify({ userAddress: VALID_ADDRESS }),
-      }),
+      })
     );
     expect(res.status).toBe(400);
   });
@@ -493,7 +510,7 @@ describe("DELETE /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "DELETE",
         body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS }),
-      }),
+      })
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -506,7 +523,7 @@ describe("DELETE /api/orders", () => {
       makeRequest("http://localhost/api/orders", {
         method: "DELETE",
         body: JSON.stringify({ id: 3, userAddress: VALID_ADDRESS }),
-      }),
+      })
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -554,9 +571,12 @@ describe("GET /api/portfolio/:address", () => {
 describe("GET /api/trades/:address", () => {
   it("returns trade history", async () => {
     fetchTradeHistoryMock.mockResolvedValue([{ id: "t1", asset: "XLM" }]);
-    const res = await getTrades(makeRequest(`http://localhost/api/trades/${VALID_ADDRESS}?limit=40`), {
-      params: Promise.resolve({ address: VALID_ADDRESS }),
-    });
+    const res = await getTrades(
+      makeRequest(`http://localhost/api/trades/${VALID_ADDRESS}?limit=40`),
+      {
+        params: Promise.resolve({ address: VALID_ADDRESS }),
+      }
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.count).toBe(1);
@@ -592,7 +612,9 @@ describe("GET /api/swap/quote", () => {
       method: "direct",
     });
     const res = await getQuote(
-      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100&slippage=1`),
+      makeRequest(
+        `http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100&slippage=1`
+      )
     );
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -602,7 +624,7 @@ describe("GET /api/swap/quote", () => {
 
   it("returns 400 for invalid params", async () => {
     const res = await getQuote(
-      makeRequest("http://localhost/api/swap/quote?input=XLM&output=USDC&amount=abc"),
+      makeRequest("http://localhost/api/swap/quote?input=XLM&output=USDC&amount=abc")
     );
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -612,7 +634,7 @@ describe("GET /api/swap/quote", () => {
   it("returns 404 when no route exists", async () => {
     findBestRouteMock.mockResolvedValue(null);
     const res = await getQuote(
-      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100`),
+      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100`)
     );
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -622,7 +644,7 @@ describe("GET /api/swap/quote", () => {
   it("returns 502 when quoting fails", async () => {
     findBestRouteMock.mockRejectedValue(new Error("boom"));
     const res = await getQuote(
-      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100`),
+      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100`)
     );
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -647,21 +669,31 @@ describe("OPTIONS (CORS)", () => {
 // =========================================================================
 describe("rate limiting", () => {
   beforeEach(() => {
-    checkRateLimitMock.mockReturnValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60_000 });
+    checkRateLimitMock.mockReturnValue({
+      allowed: false,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+    });
   });
 
   it("rejects candles with 429", async () => {
-    const res = await getCandles(makeRequest("http://localhost/api/market/candles?base=XLM&counter=USDC:" + USDC_ISSUER));
+    const res = await getCandles(
+      makeRequest("http://localhost/api/market/candles?base=XLM&counter=USDC:" + USDC_ISSUER)
+    );
     expect(res.status).toBe(429);
   });
 
   it("rejects orderbook with 429", async () => {
-    const res = await getOrderbook(makeRequest("http://localhost/api/market/orderbook?base=XLM&counter=USDC:" + USDC_ISSUER));
+    const res = await getOrderbook(
+      makeRequest("http://localhost/api/market/orderbook?base=XLM&counter=USDC:" + USDC_ISSUER)
+    );
     expect(res.status).toBe(429);
   });
 
   it("rejects pools with 429", async () => {
-    const res = await getPools(makeRequest("http://localhost/api/market/pools?base=XLM&counter=USDC:" + USDC_ISSUER));
+    const res = await getPools(
+      makeRequest("http://localhost/api/market/pools?base=XLM&counter=USDC:" + USDC_ISSUER)
+    );
     expect(res.status).toBe(429);
   });
 
@@ -678,7 +710,11 @@ describe("rate limiting", () => {
   });
 
   it("rejects quote with 429", async () => {
-    const res = await getQuote(makeRequest("http://localhost/api/swap/quote?input=XLM&output=USDC:" + USDC_ISSUER + "&amount=10"));
+    const res = await getQuote(
+      makeRequest(
+        "http://localhost/api/swap/quote?input=XLM&output=USDC:" + USDC_ISSUER + "&amount=10"
+      )
+    );
     expect(res.status).toBe(429);
   });
 
@@ -693,7 +729,15 @@ describe("rate limiting", () => {
     const res = await postOrders(
       makeRequest("http://localhost/api/orders", {
         method: "POST",
-        body: JSON.stringify({ userAddress: VALID_ADDRESS, base: "XLM", counter: "USDC", price: 1, amount: 1, expiryLedger: 0, side: "buy" }),
+        body: JSON.stringify({
+          userAddress: VALID_ADDRESS,
+          base: "XLM",
+          counter: "USDC",
+          price: 1,
+          amount: 1,
+          expiryLedger: 0,
+          side: "buy",
+        }),
       })
     );
     expect(res.status).toBe(429);

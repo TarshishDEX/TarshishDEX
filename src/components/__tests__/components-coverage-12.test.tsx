@@ -33,9 +33,24 @@ vi.mock("@/components/ui/tooltip", () => ({
 }));
 
 vi.mock("next/image", () => ({
-  default: (props: { src: string; alt: string; width: number; height: number; onError?: (e: unknown) => void; className?: string }) => (
+  default: (props: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+    onError?: (e: unknown) => void;
+    className?: string;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={props.src} alt={props.alt} width={props.width} height={props.height} data-testid="avatar-img" onError={props.onError} className={props.className} />
+    <img
+      src={props.src}
+      alt={props.alt}
+      width={props.width}
+      height={props.height}
+      data-testid="avatar-img"
+      onError={props.onError}
+      className={props.className}
+    />
   ),
 }));
 
@@ -177,7 +192,9 @@ describe("DropdownMenu", () => {
   });
 
   it("renders left-aligned menus", () => {
-    render(<DropdownMenu trigger={<span>menu</span>} items={items} onSelect={onSelect} align="left" />);
+    render(
+      <DropdownMenu trigger={<span>menu</span>} items={items} onSelect={onSelect} align="left" />
+    );
     fireEvent.click(screen.getByText("menu"));
     expect(screen.queryByRole("menu")).not.toBeNull();
   });

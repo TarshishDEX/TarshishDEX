@@ -62,7 +62,11 @@ describe("LinkButton", () => {
   });
 
   it("opens external links in new tab", () => {
-    render(<LinkButton href="https://stellar.org" external>Stellar</LinkButton>);
+    render(
+      <LinkButton href="https://stellar.org" external>
+        Stellar
+      </LinkButton>
+    );
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
@@ -206,12 +210,20 @@ describe("InputErrorIcon", () => {
 
 describe("InputGroup", () => {
   it("renders children", () => {
-    render(<InputGroup><input /></InputGroup>);
+    render(
+      <InputGroup>
+        <input />
+      </InputGroup>
+    );
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
   it("renders prepend element", () => {
-    render(<InputGroup prepend={<span>$</span>}><input /></InputGroup>);
+    render(
+      <InputGroup prepend={<span>$</span>}>
+        <input />
+      </InputGroup>
+    );
     expect(screen.getByText("$")).toBeInTheDocument();
   });
 });

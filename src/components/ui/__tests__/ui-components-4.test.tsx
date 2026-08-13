@@ -240,9 +240,7 @@ describe("PageHeader", () => {
   });
 
   it("renders actions", () => {
-    render(
-      <PageHeader title="Markets" actions={<button>Filter</button>} />
-    );
+    render(<PageHeader title="Markets" actions={<button>Filter</button>} />);
     expect(screen.getByText("Filter")).toBeInTheDocument();
   });
 });

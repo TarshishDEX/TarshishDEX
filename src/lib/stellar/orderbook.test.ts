@@ -23,7 +23,10 @@ vi.mock("@/lib/stellar/asset", () => ({
 const XLM = { code: "XLM", isNative: true };
 const USDC = { code: "USDC", issuer: "GA5Z..." };
 
-function mockResponse(bids: Array<{ price: string; amount: string }>, asks: Array<{ price: string; amount: string }>) {
+function mockResponse(
+  bids: Array<{ price: string; amount: string }>,
+  asks: Array<{ price: string; amount: string }>
+) {
   return { bids, asks, base: XLM, counter: USDC };
 }
 
@@ -34,10 +37,7 @@ beforeEach(() => {
 describe("fetchOrderbook", () => {
   it("returns normalized orderbook with bids and asks", async () => {
     mockOrderbookCall.mockResolvedValue(
-      mockResponse(
-        [{ price: "0.125", amount: "1000" }],
-        [{ price: "0.126", amount: "500" }]
-      )
+      mockResponse([{ price: "0.125", amount: "1000" }], [{ price: "0.126", amount: "500" }])
     );
 
     const result = await fetchOrderbook(XLM, USDC, 50);
@@ -52,10 +52,7 @@ describe("fetchOrderbook", () => {
 
   it("computes midPrice as average of best bid and ask", async () => {
     mockOrderbookCall.mockResolvedValue(
-      mockResponse(
-        [{ price: "0.100", amount: "1000" }],
-        [{ price: "0.200", amount: "500" }]
-      )
+      mockResponse([{ price: "0.100", amount: "1000" }], [{ price: "0.200", amount: "500" }])
     );
 
     const result = await fetchOrderbook(XLM, USDC);
@@ -63,18 +60,14 @@ describe("fetchOrderbook", () => {
   });
 
   it("returns null midPrice when no bids", async () => {
-    mockOrderbookCall.mockResolvedValue(
-      mockResponse([], [{ price: "0.126", amount: "500" }])
-    );
+    mockOrderbookCall.mockResolvedValue(mockResponse([], [{ price: "0.126", amount: "500" }]));
 
     const result = await fetchOrderbook(XLM, USDC);
     expect(result.midPrice).toBeNull();
   });
 
   it("returns null midPrice when no asks", async () => {
-    mockOrderbookCall.mockResolvedValue(
-      mockResponse([{ price: "0.125", amount: "1000" }], [])
-    );
+    mockOrderbookCall.mockResolvedValue(mockResponse([{ price: "0.125", amount: "1000" }], []));
 
     const result = await fetchOrderbook(XLM, USDC);
     expect(result.midPrice).toBeNull();
@@ -82,10 +75,7 @@ describe("fetchOrderbook", () => {
 
   it("computes spreadPct correctly", async () => {
     mockOrderbookCall.mockResolvedValue(
-      mockResponse(
-        [{ price: "0.100", amount: "1000" }],
-        [{ price: "0.105", amount: "500" }]
-      )
+      mockResponse([{ price: "0.100", amount: "1000" }], [{ price: "0.105", amount: "500" }])
     );
 
     const result = await fetchOrderbook(XLM, USDC);
@@ -93,9 +83,7 @@ describe("fetchOrderbook", () => {
   });
 
   it("returns null spread when no bids", async () => {
-    mockOrderbookCall.mockResolvedValue(
-      mockResponse([], [{ price: "0.105", amount: "500" }])
-    );
+    mockOrderbookCall.mockResolvedValue(mockResponse([], [{ price: "0.105", amount: "500" }]));
 
     const result = await fetchOrderbook(XLM, USDC);
     expect(result.spreadPct).toBeNull();
@@ -103,10 +91,7 @@ describe("fetchOrderbook", () => {
 
   it("returns null spread when bestBid is 0", async () => {
     mockOrderbookCall.mockResolvedValue(
-      mockResponse(
-        [{ price: "0", amount: "1000" }],
-        [{ price: "0.105", amount: "500" }]
-      )
+      mockResponse([{ price: "0", amount: "1000" }], [{ price: "0.105", amount: "500" }])
     );
 
     const result = await fetchOrderbook(XLM, USDC);

@@ -145,10 +145,7 @@ describe("stellar asset utilities", () => {
   it("compares assets structurally", () => {
     expect(isSameAsset({ code: "XLM", isNative: true }, { code: "XLM" })).toBe(true);
     expect(
-      isSameAsset(
-        { code: "USDC", issuer: VALID_ADDRESS },
-        { code: "USDT", issuer: VALID_ADDRESS }
-      )
+      isSameAsset({ code: "USDC", issuer: VALID_ADDRESS }, { code: "USDT", issuer: VALID_ADDRESS })
     ).toBe(false);
   });
 
@@ -161,12 +158,18 @@ describe("stellar asset utilities", () => {
 
   it("converts horizon issued records", () => {
     expect(
-      fromHorizonAssetRecord({ asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS })
+      fromHorizonAssetRecord({
+        asset_type: "credit_alphanum4",
+        asset_code: "USDC",
+        asset_issuer: VALID_ADDRESS,
+      })
     ).toEqual({ code: "USDC", issuer: VALID_ADDRESS });
   });
 
   it("defaults missing horizon code to XLM", () => {
-    expect(fromHorizonAssetRecord({ asset_type: "credit_alphanum12", asset_issuer: VALID_ADDRESS })).toEqual({
+    expect(
+      fromHorizonAssetRecord({ asset_type: "credit_alphanum12", asset_issuer: VALID_ADDRESS })
+    ).toEqual({
       code: "XLM",
       issuer: VALID_ADDRESS,
     });

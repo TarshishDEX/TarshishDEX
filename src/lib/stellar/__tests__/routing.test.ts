@@ -34,7 +34,11 @@ vi.mock("@/lib/stellar/asset", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/stellar/asset")>();
   return {
     ...actual,
-    fromHorizonAssetRecord: (r: { asset_code: string; asset_issuer?: string; asset_type: string }) => ({
+    fromHorizonAssetRecord: (r: {
+      asset_code: string;
+      asset_issuer?: string;
+      asset_type: string;
+    }) => ({
       code: r.asset_code,
       issuer: r.asset_issuer,
       isNative: r.asset_type === "native",

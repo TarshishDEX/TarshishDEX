@@ -589,9 +589,7 @@ describe("SwapExecutionPanel marking failure + steps", () => {
         return Promise.resolve({ phase: "success", hash: "abc", explorerUrl: null });
       }
     );
-    global.fetch = vi
-      .fn()
-      .mockRejectedValue(new Error("network down")) as unknown as typeof fetch;
+    global.fetch = vi.fn().mockRejectedValue(new Error("network down")) as unknown as typeof fetch;
     render(
       <SwapExecutionPanel
         address={VALID_ADDRESS}

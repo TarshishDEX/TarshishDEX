@@ -50,7 +50,7 @@ describe("RootLayout", () => {
     render(
       <RootLayout>
         <main data-testid="page-content">Page body</main>
-      </RootLayout>,
+      </RootLayout>
     );
     expect(screen.getByTestId("header")).toBeTruthy();
     expect(screen.getByTestId("footer")).toBeTruthy();

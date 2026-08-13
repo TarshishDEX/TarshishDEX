@@ -32,12 +32,10 @@ export function TransitionHeight({
       setMounted(true);
       // Measure DOM after the mount state update flushes.
       if (ref.current) {
-         
         setHeight(ref.current.scrollHeight);
       }
       return;
     } else {
-       
       setHeight(0);
       const timer = setTimeout(() => setMounted(false), duration);
       return () => clearTimeout(timer);

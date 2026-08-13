@@ -107,13 +107,7 @@ describe("ListItem", () => {
   });
 
   it("renders icon and action", () => {
-    render(
-      <ListItem
-        icon={<span>🪙</span>}
-        primary="Asset"
-        action={<button>Select</button>}
-      />
-    );
+    render(<ListItem icon={<span>🪙</span>} primary="Asset" action={<button>Select</button>} />);
     expect(screen.getByText("🪙")).toBeInTheDocument();
     expect(screen.getByText("Select")).toBeInTheDocument();
   });

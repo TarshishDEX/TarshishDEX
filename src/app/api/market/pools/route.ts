@@ -16,15 +16,12 @@ export const GET = apiHandler(async (request) => {
     windowMs: 60_000,
   });
   if (!rateLimit.allowed) {
-    return NextResponse.json(
-      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
-        },
+    return NextResponse.json(buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"), {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
       },
-    );
+    });
   }
 
   const url = new URL(request.url);
@@ -33,7 +30,7 @@ export const GET = apiHandler(async (request) => {
   if (!base || !counter) {
     return NextResponse.json(
       buildErrorResponse(ErrorCode.BAD_REQUEST, 400, "Missing base/counter params"),
-      { status: 400 },
+      { status: 400 }
     );
   }
   try {
@@ -49,7 +46,7 @@ export const GET = apiHandler(async (request) => {
     logger.error("pools fetch failed", { error: String(error) });
     return NextResponse.json(
       buildErrorResponse(ErrorCode.POOLS_FETCH_FAILED, 502, "Failed to fetch pools"),
-      { status: 502 },
+      { status: 502 }
     );
   }
 });

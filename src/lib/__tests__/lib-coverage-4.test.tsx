@@ -78,7 +78,7 @@ describe("registerSW", () => {
   it("returns early when serviceWorker is unavailable", () => {
     vi.stubGlobal(
       "navigator",
-      Object.defineProperty({}, "serviceWorker", { value: undefined, configurable: true }),
+      Object.defineProperty({}, "serviceWorker", { value: undefined, configurable: true })
     );
     expect(() => registerSW()).not.toThrow();
     vi.unstubAllGlobals();
@@ -92,11 +92,11 @@ describe("registerSW", () => {
     });
     vi.stubGlobal(
       "navigator",
-      Object.defineProperty({}, "serviceWorker", { value: { register }, configurable: true }),
+      Object.defineProperty({}, "serviceWorker", { value: { register }, configurable: true })
     );
     vi.stubGlobal(
       "window",
-      Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true }),
+      Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true })
     );
     vi.stubEnv("NODE_ENV", "test");
 
@@ -110,11 +110,11 @@ describe("registerSW", () => {
     const addEventListener = vi.fn((_event: string, cb: () => void) => cb());
     vi.stubGlobal(
       "navigator",
-      Object.defineProperty({}, "serviceWorker", { value: { register }, configurable: true }),
+      Object.defineProperty({}, "serviceWorker", { value: { register }, configurable: true })
     );
     vi.stubGlobal(
       "window",
-      Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true }),
+      Object.defineProperty({}, "addEventListener", { value: addEventListener, configurable: true })
     );
     const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
     vi.stubEnv("NODE_ENV", "development");
@@ -209,7 +209,10 @@ describe("pool-queries", () => {
           fee_bp: 30,
           total_shares: "1000",
           total_trustlines: 5,
-          reserves: [{ asset: "XLM", amount: "500" }, { asset: "USDC:GA5Z", amount: "500" }],
+          reserves: [
+            { asset: "XLM", amount: "500" },
+            { asset: "USDC:GA5Z", amount: "500" },
+          ],
         },
       ],
     });
@@ -218,7 +221,7 @@ describe("pool-queries", () => {
     });
     const pools = await fetchLiquidityPools(
       { code: "XLM", isNative: true },
-      { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" },
+      { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" }
     );
     expect(pools).toHaveLength(1);
     expect(pools[0]?.id).toBe("pool-1");
@@ -226,7 +229,9 @@ describe("pool-queries", () => {
   });
 
   it("buildPoolSummary returns null with <2 reserves", () => {
-    expect(buildPoolSummary({ id: "p", feeBp: 30, totalShares: "1", totalTrustlines: "1", reserves: [] })).toBeNull();
+    expect(
+      buildPoolSummary({ id: "p", feeBp: 30, totalShares: "1", totalTrustlines: "1", reserves: [] })
+    ).toBeNull();
   });
 
   it("buildPoolSummary returns null with zero reserves", () => {
@@ -236,8 +241,11 @@ describe("pool-queries", () => {
         feeBp: 30,
         totalShares: "1",
         totalTrustlines: "1",
-        reserves: [{ asset: "XLM", amount: "0" }, { asset: "USDC:GA5Z", amount: "10" }],
-      }),
+        reserves: [
+          { asset: "XLM", amount: "0" },
+          { asset: "USDC:GA5Z", amount: "10" },
+        ],
+      })
     ).toBeNull();
   });
 
@@ -247,7 +255,10 @@ describe("pool-queries", () => {
       feeBp: 30,
       totalShares: "1",
       totalTrustlines: "1",
-      reserves: [{ asset: "XLM", amount: "100" }, { asset: "USDC:GA5Z", amount: "200" }],
+      reserves: [
+        { asset: "XLM", amount: "100" },
+        { asset: "USDC:GA5Z", amount: "200" },
+      ],
     });
     expect(summary).not.toBeNull();
     expect(summary?.midPrice).toBe(2);
@@ -279,7 +290,7 @@ describe("limit-order query hooks", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({ orders: [{ id: 1, base: "XLM" }] }),
-      }),
+      })
     );
   });
   afterEach(() => {
@@ -300,10 +311,7 @@ describe("limit-order query hooks", () => {
   });
 
   it("useUserLimitOrders throws when the request fails", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({ ok: false, json: vi.fn() }),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: vi.fn() }));
     const { result } = renderHook(() => useUserLimitOrders("GABC"), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));
   });

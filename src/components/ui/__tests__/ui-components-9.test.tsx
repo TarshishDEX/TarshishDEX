@@ -240,12 +240,7 @@ describe("KeyValuePair", () => {
   });
 
   it("renders ReactNode values", () => {
-    render(
-      <KeyValuePair
-        label="Status"
-        value={<span className="text-success">Active</span>}
-      />
-    );
+    render(<KeyValuePair label="Status" value={<span className="text-success">Active</span>} />);
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
 

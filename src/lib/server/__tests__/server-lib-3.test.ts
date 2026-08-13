@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { NO_CACHE, SHORT_CACHE, MEDIUM_CACHE, LONG_CACHE, ETAG_HEADER, IF_NONE_MATCH } from "@/lib/server/cache-headers";
+import {
+  NO_CACHE,
+  SHORT_CACHE,
+  MEDIUM_CACHE,
+  LONG_CACHE,
+  ETAG_HEADER,
+  IF_NONE_MATCH,
+} from "@/lib/server/cache-headers";
 import { CONTENT_TYPES, acceptsContentType, setContentType } from "@/lib/server/content-type";
 import { corsMiddleware, handleCorsPreflight } from "@/lib/server/cors";
 import { paginateWithCursor, encodeCursor, decodeCursor } from "@/lib/server/cursor-pagination";
@@ -113,13 +120,7 @@ describe("cors", () => {
 // Cursor Pagination
 // =========================================================================
 describe("cursor-pagination", () => {
-  const items = [
-    { id: "a" },
-    { id: "b" },
-    { id: "c" },
-    { id: "d" },
-    { id: "e" },
-  ];
+  const items = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }, { id: "e" }];
 
   it("returns first page without cursor", () => {
     const page = paginateWithCursor(items, null, 2);
@@ -189,12 +190,13 @@ describe("graceful-shutdown", () => {
 
     // Capture the registered handler and invoke it
     let handler: (() => Promise<void>) | undefined;
-    vi.mocked(onSpy).mockImplementation(
-      ((_event: string | symbol, cb: (...args: unknown[]) => void) => {
-        handler = cb as () => Promise<void>;
-        return process;
-      }) as never
-    );
+    vi.mocked(onSpy).mockImplementation(((
+      _event: string | symbol,
+      cb: (...args: unknown[]) => void
+    ) => {
+      handler = cb as () => Promise<void>;
+      return process;
+    }) as never);
 
     registerGracefulShutdown({ onShutdown });
     expect(handler).toBeDefined();
@@ -207,12 +209,13 @@ describe("graceful-shutdown", () => {
     const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
     const onSpy = vi.spyOn(process, "on").mockImplementation((() => process) as never);
     let handler: (() => Promise<void>) | undefined;
-    vi.mocked(onSpy).mockImplementation(
-      ((_event: string | symbol, cb: (...args: unknown[]) => void) => {
-        handler = cb as () => Promise<void>;
-        return process;
-      }) as never
-    );
+    vi.mocked(onSpy).mockImplementation(((
+      _event: string | symbol,
+      cb: (...args: unknown[]) => void
+    ) => {
+      handler = cb as () => Promise<void>;
+      return process;
+    }) as never);
 
     registerGracefulShutdown({
       onShutdown: () => Promise.reject(new Error("boom")),
@@ -244,9 +247,7 @@ describe("response-headers", () => {
   it("applyCacheHeaders sets Cache-Control", () => {
     const response = new Response(null, { status: 200 });
     const updated = applyCacheHeaders(response, 300);
-    expect(updated.headers.get("Cache-Control")).toBe(
-      "public, max-age=300, s-maxage=300"
-    );
+    expect(updated.headers.get("Cache-Control")).toBe("public, max-age=300, s-maxage=300");
   });
 
   it("applyCacheHeaders preserves status", () => {

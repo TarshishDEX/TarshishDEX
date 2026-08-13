@@ -91,10 +91,9 @@ describe("useWalletStore", () => {
 
   it("setConnected updates address and passphrase", () => {
     act(() => {
-      useWalletStore.getState().setConnected(
-        "GDEF456...",
-        "Public Global Stellar Network ; September 2015"
-      );
+      useWalletStore
+        .getState()
+        .setConnected("GDEF456...", "Public Global Stellar Network ; September 2015");
     });
 
     const state = useWalletStore.getState();

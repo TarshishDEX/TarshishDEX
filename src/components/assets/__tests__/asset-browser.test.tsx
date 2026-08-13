@@ -93,7 +93,7 @@ describe("AssetBrowser", () => {
 
     const { container } = render(<AssetBrowser />);
     // Skeleton component renders div with animate-pulse class
-    const skeletonDivs = container.querySelectorAll('.animate-pulse');
+    const skeletonDivs = container.querySelectorAll(".animate-pulse");
     expect(skeletonDivs.length).toBeGreaterThan(0);
   });
 

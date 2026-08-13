@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  isValidPublicKey,
-  fetchXlmBalance,
-  fetchPortfolioSummary,
-} from "@/lib/stellar/account";
+import { isValidPublicKey, fetchXlmBalance, fetchPortfolioSummary } from "@/lib/stellar/account";
 // ── Mock Horizon ───────────────────────────────────────────────────────
 const { mockAccountCall, mockOrderbookCall } = vi.hoisted(() => ({
   mockAccountCall: vi.fn(),
@@ -24,16 +20,8 @@ vi.mock("@/lib/stellar/orderbook", () => ({
 
 describe("isValidPublicKey", () => {
   it("accepts valid Stellar public keys", () => {
-    expect(
-      isValidPublicKey(
-        "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
-      )
-    ).toBe(true);
-    expect(
-      isValidPublicKey(
-        "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
-      )
-    ).toBe(true);
+    expect(isValidPublicKey("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")).toBe(true);
+    expect(isValidPublicKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")).toBe(true);
   });
 
   it("rejects strings that are too short", () => {
@@ -54,11 +42,9 @@ describe("isValidPublicKey", () => {
   });
 
   it("trims whitespace before validation", () => {
-    expect(
-      isValidPublicKey(
-        "  GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN  "
-      )
-    ).toBe(true);
+    expect(isValidPublicKey("  GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN  ")).toBe(
+      true
+    );
   });
 
   it("rejects invalid base32 characters", () => {
@@ -67,11 +53,9 @@ describe("isValidPublicKey", () => {
   });
 
   it("rejects keys with spaces in the middle", () => {
-    expect(
-      isValidPublicKey(
-        "GA5ZSE JYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
-      )
-    ).toBe(false);
+    expect(isValidPublicKey("GA5ZSE JYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN")).toBe(
+      false
+    );
   });
 });
 
@@ -143,9 +127,7 @@ describe("fetchPortfolioSummary", () => {
     const summary = await fetchPortfolioSummary(
       "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
     );
-    expect(summary.address).toBe(
-      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
-    );
+    expect(summary.address).toBe("GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
     expect(summary.totalValueXlm).toBe(100);
     expect(summary.balances).toHaveLength(1);
     const xlm = summary.balances[0]!;

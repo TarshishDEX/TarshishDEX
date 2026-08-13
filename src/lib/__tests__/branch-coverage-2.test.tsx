@@ -50,9 +50,7 @@ describe("useLocalStorageValue storage event", () => {
   it("ignores storage events for other keys", () => {
     const { result } = renderHook(() => useLocalStorageValue("lsv-key", "default"));
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", { key: "other-key", newValue: "ignored" })
-      );
+      window.dispatchEvent(new StorageEvent("storage", { key: "other-key", newValue: "ignored" }));
     });
     expect(result.current[0]).toBe("default");
   });

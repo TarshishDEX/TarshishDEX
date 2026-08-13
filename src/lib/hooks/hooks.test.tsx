@@ -70,10 +70,9 @@ describe("useDebounce", () => {
   });
 
   it("debounces value changes", () => {
-    const { result, rerender } = renderHook(
-      ({ val }) => useDebounce(val, 500),
-      { initialProps: { val: "first" } }
-    );
+    const { result, rerender } = renderHook(({ val }) => useDebounce(val, 500), {
+      initialProps: { val: "first" },
+    });
     rerender({ val: "second" });
     // Value hasn't changed yet because timer hasn't fired
     expect(result.current).toBe("first");

@@ -20,15 +20,12 @@ export const GET = apiHandler(async (request) => {
     windowMs: 60_000,
   });
   if (!rateLimit.allowed) {
-    return NextResponse.json(
-      buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"),
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
-        },
+    return NextResponse.json(buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"), {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
       },
-    );
+    });
   }
 
   const url = new URL(request.url);
@@ -48,7 +45,7 @@ export const GET = apiHandler(async (request) => {
     }));
     return NextResponse.json(
       buildErrorResponse(ErrorCode.VALIDATION_ERROR, 400, "Invalid parameters", details),
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -64,7 +61,7 @@ export const GET = apiHandler(async (request) => {
     if (!route) {
       return NextResponse.json(
         buildErrorResponse(ErrorCode.NO_VIABLE_ROUTE, 404, "No viable route found for this pair"),
-        { status: 404 },
+        { status: 404 }
       );
     }
     logger.info("swap quote served", {
@@ -77,7 +74,7 @@ export const GET = apiHandler(async (request) => {
     logger.error("swap quote failed", { error: String(error) });
     return NextResponse.json(
       buildErrorResponse(ErrorCode.SWAP_QUOTE_FAILED, 502, "Failed to compute swap quote"),
-      { status: 502 },
+      { status: 502 }
     );
   }
 });

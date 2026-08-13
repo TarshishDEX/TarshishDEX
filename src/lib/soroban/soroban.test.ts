@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 // ── trading-preferences pure functions ───────────────────────────────────
-import {
-  preferencesToScVal,
-  preferencesFromScVal,
-} from "@/lib/soroban/trading-preferences";
+import { preferencesToScVal, preferencesFromScVal } from "@/lib/soroban/trading-preferences";
 import type { OnChainPreferences } from "@/lib/soroban/trading-preferences";
 import { xdr } from "@stellar/stellar-sdk";
 
@@ -70,7 +67,10 @@ describe("observationFromScVal", () => {
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol("price"),
         val: xdr.ScVal.scvI128(
-          new xdr.Int128Parts({ lo: xdr.Uint64.fromString("10000000"), hi: xdr.Int64.fromString("0") })
+          new xdr.Int128Parts({
+            lo: xdr.Uint64.fromString("10000000"),
+            hi: xdr.Int64.fromString("0"),
+          })
         ),
       }),
       new xdr.ScMapEntry({

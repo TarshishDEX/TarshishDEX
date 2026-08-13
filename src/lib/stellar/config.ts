@@ -46,9 +46,7 @@ export function getActiveNetwork(): NetworkConfig {
   const override = process.env.NEXT_PUBLIC_STELLAR_NETWORK;
   if (override === "public") {
     if (typeof console !== "undefined") {
-      console.warn(
-        "⚠️  TarshishDEX running on STELLAR MAINNET — real-value transactions enabled."
-      );
+      console.warn("⚠️  TarshishDEX running on STELLAR MAINNET — real-value transactions enabled.");
     }
     return NETWORKS.public;
   }

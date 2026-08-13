@@ -44,9 +44,7 @@ describe("OnChainPreferences", () => {
 
   it("shows connect prompt when wallet disconnected", () => {
     render(<OnChainPreferences />);
-    expect(
-      screen.getByText(/Connect your wallet/)
-    ).toBeDefined();
+    expect(screen.getByText(/Connect your wallet/)).toBeDefined();
   });
 
   it("shows Contract ready badge", () => {

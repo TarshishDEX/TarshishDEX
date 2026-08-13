@@ -46,7 +46,14 @@ describe("AllocationDonut", () => {
   });
 
   it("renders a donut with total", () => {
-    render(<AllocationDonut data={[{ name: "XLM", value: 100 }, { name: "USDC", value: 50 }]} />);
+    render(
+      <AllocationDonut
+        data={[
+          { name: "XLM", value: 100 },
+          { name: "USDC", value: 50 },
+        ]}
+      />
+    );
     expect(screen.getByTestId("pie-chart")).toBeTruthy();
     expect(screen.getByText("150.00")).toBeTruthy();
   });
@@ -85,18 +92,39 @@ vi.mock("lightweight-charts", () => {
 import { CandlestickChart } from "@/components/charts/candlestick-chart";
 
 const CANDLES = [
-  { timestamp: 1700000000000, open: 1, high: 2, low: 0.5, close: 1.5, volumeBase: 10, volumeCounter: 20, tradeCount: 5 },
-  { timestamp: 1700003600000, open: 1.5, high: 3, low: 1, close: 2.5, volumeBase: 10, volumeCounter: 30, tradeCount: 5 },
+  {
+    timestamp: 1700000000000,
+    open: 1,
+    high: 2,
+    low: 0.5,
+    close: 1.5,
+    volumeBase: 10,
+    volumeCounter: 20,
+    tradeCount: 5,
+  },
+  {
+    timestamp: 1700003600000,
+    open: 1.5,
+    high: 3,
+    low: 1,
+    close: 2.5,
+    volumeBase: 10,
+    volumeCounter: 30,
+    tradeCount: 5,
+  },
 ];
 
 describe("CandlestickChart", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("creates a chart with candle and volume series", () => {
-    vi.stubGlobal("ResizeObserver", class {
-      observe() {}
-      disconnect() {}
-    });
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    );
     const { unmount } = render(<CandlestickChart candles={CANDLES} />);
     expect(createChartMock).toHaveBeenCalled();
     unmount();
@@ -142,7 +170,7 @@ describe("NetworkIndicator", () => {
       Object.defineProperty({ onLine: true }, "connection", {
         value: { effectiveType: "2g" },
         configurable: true,
-      }),
+      })
     );
     render(<NetworkIndicator />);
     expect(screen.getByText("Slow network")).toBeTruthy();
@@ -203,7 +231,7 @@ describe("useWatchlist", () => {
     const { result } = renderHook(() => useWatchlist());
     for (let i = 0; i < 25; i++) {
       act(() =>
-        result.current.add({ code: `T${i}`, name: `Token ${i}`, decimals: 7, issuer: "GX" }),
+        result.current.add({ code: `T${i}`, name: `Token ${i}`, decimals: 7, issuer: "GX" })
       );
     }
     expect(result.current.tokens.length).toBeLessThanOrEqual(20);
@@ -241,7 +269,13 @@ describe("useIsClient", () => {
 // wallet-kit helpers (pure)
 // =========================================================================
 vi.mock("@/lib/stellar/config", () => ({
-  getActiveNetwork: () => ({ name: "testnet", passphrase: "test", horizonUrl: "https://h", rpcUrl: "https://r", label: "Testnet" }),
+  getActiveNetwork: () => ({
+    name: "testnet",
+    passphrase: "test",
+    horizonUrl: "https://h",
+    rpcUrl: "https://r",
+    label: "Testnet",
+  }),
 }));
 
 vi.mock("@stellar/freighter-api", () => ({
@@ -271,7 +305,7 @@ import { logger } from "@/lib/server/logger";
 
 describe("logger", () => {
   const spies = ["info", "warn", "error", "debug"].map((m) =>
-    vi.spyOn(console, m as "info").mockImplementation(() => {}),
+    vi.spyOn(console, m as "info").mockImplementation(() => {})
   );
   afterEach(() => vi.restoreAllMocks());
 

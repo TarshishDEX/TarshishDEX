@@ -201,10 +201,7 @@ describe("export-csv", () => {
   });
 
   it("objectsToCsv escapes commas and quotes", () => {
-    const csv = objectsToCsv(
-      [{ note: 'He said "hi", ok' }],
-      ["note"]
-    );
+    const csv = objectsToCsv([{ note: 'He said "hi", ok' }], ["note"]);
     expect(csv).toContain('"He said ""hi"", ok"');
   });
 
@@ -214,9 +211,7 @@ describe("export-csv", () => {
   });
 
   it("downloadFile creates and clicks an anchor", () => {
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {});
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     const revokeSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
     const blobSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
     downloadFile("a,b", "data.csv");
@@ -235,9 +230,7 @@ describe("export-csv", () => {
   });
 
   it("exportCsv downloads with timestamped filename", () => {
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {});
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
     vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
     exportCsv([{ a: 1 }], ["a"], "portfolio");

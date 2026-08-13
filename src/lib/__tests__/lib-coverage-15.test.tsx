@@ -58,8 +58,7 @@ describe("routing bridge failure branches", () => {
     // Direct route fills fully; the XLM->USDC bridge leg reports not-fully-filled.
     fetchOrderbookMock.mockResolvedValue(makeOrderbook(1));
     simulateFillMock.mockImplementation((amountIn: string, orderbook: unknown) => {
-      const isBridgeLeg =
-        (orderbook as { counter?: { code?: string } })?.counter?.code === "USDC";
+      const isBridgeLeg = (orderbook as { counter?: { code?: string } })?.counter?.code === "USDC";
       if (isBridgeLeg) {
         return { output: "5", avgPrice: 0.5, fullyFilled: false };
       }
@@ -181,7 +180,10 @@ describe("wallet-kit subscribed events", () => {
       defaultModules: () => [],
     }));
     vi.doMock("@/lib/stellar/config", () => ({
-      getActiveNetwork: () => ({ name: "testnet", passphrase: "Test SDF Network ; September 2015" }),
+      getActiveNetwork: () => ({
+        name: "testnet",
+        passphrase: "Test SDF Network ; September 2015",
+      }),
     }));
     const onStateUpdated = vi.fn();
     const onDisconnect = vi.fn();
@@ -216,11 +218,12 @@ describe("sw-register", () => {
       configurable: true,
     });
     const listeners: Record<string, () => void> = {};
-    const addSpy = vi
-      .spyOn(window, "addEventListener")
-      .mockImplementation(((type: string, cb: EventListenerOrEventListenerObject) => {
-        listeners[type] = cb as () => void;
-      }) as typeof window.addEventListener);
+    const addSpy = vi.spyOn(window, "addEventListener").mockImplementation(((
+      type: string,
+      cb: EventListenerOrEventListenerObject
+    ) => {
+      listeners[type] = cb as () => void;
+    }) as typeof window.addEventListener);
     const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
     registerSW();
     listeners["load"]?.();

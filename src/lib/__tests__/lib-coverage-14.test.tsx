@@ -34,7 +34,11 @@ vi.mock("@/lib/stellar/asset", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/stellar/asset")>();
   return {
     ...actual,
-    fromHorizonAssetRecord: (r: { asset_code: string; asset_issuer?: string; asset_type: string }) => ({
+    fromHorizonAssetRecord: (r: {
+      asset_code: string;
+      asset_issuer?: string;
+      asset_type: string;
+    }) => ({
       code: r.asset_code,
       issuer: r.asset_issuer,
       isNative: r.asset_type === "native",
@@ -93,8 +97,18 @@ describe("routing bridge branches", () => {
     strictSendPathsMock.mockReturnValue({
       call: vi.fn().mockResolvedValue({
         records: [
-          { destination_amount: "5", path: [{ asset_code: "EURT", asset_issuer: USDC.issuer, asset_type: "credit_alphanum4" }] },
-          { destination_amount: "8", path: [{ asset_code: "USDC", asset_issuer: USDC.issuer, asset_type: "credit_alphanum4" }] },
+          {
+            destination_amount: "5",
+            path: [
+              { asset_code: "EURT", asset_issuer: USDC.issuer, asset_type: "credit_alphanum4" },
+            ],
+          },
+          {
+            destination_amount: "8",
+            path: [
+              { asset_code: "USDC", asset_issuer: USDC.issuer, asset_type: "credit_alphanum4" },
+            ],
+          },
         ],
       }),
     });
@@ -131,7 +145,10 @@ describe("wallet-kit facade", () => {
       defaultModules: () => [],
     }));
     vi.doMock("@/lib/stellar/config", () => ({
-      getActiveNetwork: () => ({ name: "testnet", passphrase: "Test SDF Network ; September 2015" }),
+      getActiveNetwork: () => ({
+        name: "testnet",
+        passphrase: "Test SDF Network ; September 2015",
+      }),
     }));
     const kit = await import("@/lib/stellar/wallet-kit");
     const address = await kit.connectWallet();
@@ -141,10 +158,7 @@ describe("wallet-kit facade", () => {
 
   it("subscribes to events and unsubscribes", async () => {
     const unsubscribe = vi.fn();
-    const on = vi
-      .fn()
-      .mockReturnValueOnce(unsubscribe)
-      .mockReturnValueOnce(unsubscribe);
+    const on = vi.fn().mockReturnValueOnce(unsubscribe).mockReturnValueOnce(unsubscribe);
     vi.doMock("@creit.tech/stellar-wallets-kit", () => ({
       StellarWalletsKit: {
         init: vi.fn(),
@@ -217,7 +231,13 @@ describe("wallet-store useWallet", () => {
 
 import { readTradingPreferences, writeTradingPreferences } from "@/lib/soroban/trading-preferences";
 
-import { queryOrder, queryUserOrders, queryOrderCount, buildPlaceOrderTx, buildCancelOrExecuteTx } from "@/lib/soroban/limit-order";
+import {
+  queryOrder,
+  queryUserOrders,
+  queryOrderCount,
+  buildPlaceOrderTx,
+  buildCancelOrExecuteTx,
+} from "@/lib/soroban/limit-order";
 
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
 
@@ -272,19 +292,33 @@ describe("useWatchlist", () => {
     return (
       <div>
         <span data-testid="wl-count">{tokens.length}</span>
-        <button data-testid="wl-add" onClick={() => add({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}>
+        <button
+          data-testid="wl-add"
+          onClick={() => add({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}
+        >
           add
         </button>
-        <button data-testid="wl-add2" onClick={() => add({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}>
+        <button
+          data-testid="wl-add2"
+          onClick={() => add({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}
+        >
           add2
         </button>
-        <button data-testid="wl-remove" onClick={() => remove({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}>
+        <button
+          data-testid="wl-remove"
+          onClick={() => remove({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 })}
+        >
           remove
         </button>
-        <button data-testid="wl-toggle" onClick={() => toggle({ code: "USDC", issuer: "G", name: "USDC", decimals: 7 })}>
+        <button
+          data-testid="wl-toggle"
+          onClick={() => toggle({ code: "USDC", issuer: "G", name: "USDC", decimals: 7 })}
+        >
           toggle
         </button>
-        <span data-testid="wl-watched">{String(isWatched({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 }))}</span>
+        <span data-testid="wl-watched">
+          {String(isWatched({ code: "XLM", isNative: true, name: "Lumen", decimals: 7 }))}
+        </span>
       </div>
     );
   }
@@ -321,7 +355,14 @@ describe("useWatchlist", () => {
           <span data-testid="big-count">{tokens.length}</span>
           <button
             data-testid="big-add"
-            onClick={() => add({ code: "T" + tokens.length, name: "T", decimals: 7, issuer: "G" + tokens.length })}
+            onClick={() =>
+              add({
+                code: "T" + tokens.length,
+                name: "T",
+                decimals: 7,
+                issuer: "G" + tokens.length,
+              })
+            }
           >
             add
           </button>

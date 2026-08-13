@@ -31,7 +31,9 @@ describe("env", () => {
       vi.stubEnv("NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID", "not-a-contract-id");
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       validateEnv();
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid contract ID format"));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid contract ID format")
+      );
       consoleSpy.mockRestore();
     });
 
@@ -39,7 +41,9 @@ describe("env", () => {
       vi.stubEnv("NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS", "invalid");
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       validateEnv();
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Invalid fee collector address"));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid fee collector address")
+      );
       consoleSpy.mockRestore();
     });
 

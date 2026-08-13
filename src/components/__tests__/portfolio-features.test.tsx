@@ -235,9 +235,7 @@ describe("PortfolioWidget", () => {
     fireEvent.change(screen.getByLabelText("Stellar public key"), {
       target: { value: "bad-address" },
     });
-    expect(
-      screen.getByText(/Enter a valid Stellar public key/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Enter a valid Stellar public key/)).toBeInTheDocument();
   });
 });
 
@@ -251,9 +249,7 @@ describe("PriceAlertPanel", () => {
 
   it("shows connect-wallet prompt when disconnected", () => {
     render(<PriceAlertPanel />);
-    expect(
-      screen.getByText(/Connect your wallet to set price alerts/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Connect your wallet to set price alerts/)).toBeInTheDocument();
   });
 
   it("shows no-alerts message when connected with no alerts", () => {

@@ -35,16 +35,12 @@ vi.mock("@/lib/stellar/routing", async (importOriginal) => {
 });
 
 vi.mock("@/lib/stellar/orderbook", () => ({
-  fetchOrderbook: vi.fn(() =>
-    Promise.resolve({ bids: [], asks: [], midPrice: 0.5, spreadPct: 1 })
-  ),
+  fetchOrderbook: vi.fn(() => Promise.resolve({ bids: [], asks: [], midPrice: 0.5, spreadPct: 1 })),
 }));
 
 vi.mock("@/lib/stellar/prices", () => ({
   fetchTopAssets: vi.fn(() =>
-    Promise.resolve([
-      { code: "XLM", name: "Lumen", decimals: 7, isNative: true },
-    ])
+    Promise.resolve([{ code: "XLM", name: "Lumen", decimals: 7, isNative: true }])
   ),
   getMarketStatsForTokens: vi.fn(() => Promise.resolve([])),
   fetchCandles: vi.fn(() => Promise.resolve([])),
@@ -75,9 +71,7 @@ vi.mock("@creit.tech/stellar-wallets-kit", () => ({
     ),
     disconnect: vi.fn(() => Promise.resolve()),
     on: vi.fn(() => vi.fn()),
-    signTransaction: vi.fn(() =>
-      Promise.resolve({ signedTxXdr: "signed-xdr" })
-    ),
+    signTransaction: vi.fn(() => Promise.resolve({ signedTxXdr: "signed-xdr" })),
   },
   KitEventType: {
     STATE_UPDATED: "STATE_UPDATED",
@@ -119,10 +113,7 @@ describe("queries hooks", () => {
   });
 
   it("useSwapQuote is disabled without valid input", () => {
-    const { result } = renderHook(
-      () => useSwapQuote(xlm, usdc, "", 1),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useSwapQuote(xlm, usdc, "", 1), { wrapper: queryWrapper });
     expect(result.current.fetchStatus).toBe("idle");
   });
 
@@ -140,20 +131,16 @@ describe("queries hooks", () => {
       warnings: [],
     };
     vi.mocked(findBestRoute).mockResolvedValue(mockRoute);
-    const { result } = renderHook(
-      () => useSwapQuote(xlm, usdc, "10", 1),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useSwapQuote(xlm, usdc, "10", 1), {
+      wrapper: queryWrapper,
+    });
     await waitFor(() => {
       expect(result.current.data).toEqual(mockRoute);
     });
   });
 
   it("useOrderbook fetches orderbook data", async () => {
-    const { result } = renderHook(
-      () => useOrderbook(xlm, usdc),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useOrderbook(xlm, usdc), { wrapper: queryWrapper });
     await waitFor(() => {
       expect(result.current.data).toBeDefined();
       expect(result.current.data?.midPrice).toBe(0.5);
@@ -168,38 +155,28 @@ describe("queries hooks", () => {
   });
 
   it("usePortfolioSummary is disabled for invalid address", () => {
-    const { result } = renderHook(
-      () => usePortfolioSummary("invalid"),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => usePortfolioSummary("invalid"), { wrapper: queryWrapper });
     expect(result.current.fetchStatus).toBe("idle");
   });
 
   it("usePortfolioSummary fetches for valid address", async () => {
-    const { result } = renderHook(
-      () => usePortfolioSummary(VALID_ADDRESS),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => usePortfolioSummary(VALID_ADDRESS), {
+      wrapper: queryWrapper,
+    });
     await waitFor(() => {
       expect(result.current.data?.address).toBe(VALID_ADDRESS);
     });
   });
 
   it("useXlmBalance fetches balance", async () => {
-    const { result } = renderHook(
-      () => useXlmBalance(VALID_ADDRESS),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useXlmBalance(VALID_ADDRESS), { wrapper: queryWrapper });
     await waitFor(() => {
       expect(result.current.data).toBe("100");
     });
   });
 
   it("useTradeHistory fetches history", async () => {
-    const { result } = renderHook(
-      () => useTradeHistory(VALID_ADDRESS),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useTradeHistory(VALID_ADDRESS), { wrapper: queryWrapper });
     await waitFor(() => {
       expect(result.current.data).toEqual([]);
     });
@@ -207,12 +184,13 @@ describe("queries hooks", () => {
 
   it("usePriceHistory fetches candles", async () => {
     const { result } = renderHook(
-      () => usePriceHistory(
-        { code: "XLM", name: "Lumen", decimals: 7, isNative: true },
-        { code: "USDC", issuer: "GA5Z", name: "USD", decimals: 7, isNative: false },
-        3600000,
-        86400000
-      ),
+      () =>
+        usePriceHistory(
+          { code: "XLM", name: "Lumen", decimals: 7, isNative: true },
+          { code: "USDC", issuer: "GA5Z", name: "USD", decimals: 7, isNative: false },
+          3600000,
+          86400000
+        ),
       { wrapper: queryWrapper }
     );
     await waitFor(() => {
@@ -221,10 +199,7 @@ describe("queries hooks", () => {
   });
 
   it("useOraclePrice fetches observation", async () => {
-    const { result } = renderHook(
-      () => useOraclePrice("XLM", "USDC"),
-      { wrapper: queryWrapper }
-    );
+    const { result } = renderHook(() => useOraclePrice("XLM", "USDC"), { wrapper: queryWrapper });
     await waitFor(() => {
       expect(result.current.data).toEqual({ price: 10000000 });
     });
