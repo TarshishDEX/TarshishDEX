@@ -1,22 +1,24 @@
 # Coverage Progress — TarshishDEX
 
-Status snapshot as of **2026-08-13** (post batch-16).
+Status snapshot as of **2026-08-13** (post branch-coverage batches).
 
 ## Current state
 
 | Metric | Coverage | Target |
 |---|---|---|
 | Statements | **99.77%** (3461/3469) | 99.5% |
-| Branches | **95.09%** (2210/2324) | 99.5% |
+| Branches | **96.6%** (2245/2324) | 99.5% |
 | Functions | **99.72%** (1073/1076) | 99.5% |
-| Lines | **99.97%** (3114/3115) | 99.5% |
+| Lines | **99.96%** (3114/3115) | 99.5% |
 
 - **Statements target met** — 99.5% achieved at 99.77%.
 - Only **8 statements** remain uncovered, all defensively-unreachable guards (see below).
-- **Branches** are the remaining gap: 95.09%. ~30 of the 114 uncovered branch edges are
-  defensive/SSR-only (e.g. `?? default` after a null guard, `sorted[0] ?? null` after a length
-  check, `typeof navigator === "undefined"`). The rest are UI render branches in swap-widget,
-  limit-order-form, swap-execution-panel, etc.
+- **Branches** improved 91.31% → **96.6%** across three batches (+126 branch edges). The 79
+  remaining branch edges are ~half defensive/SSR-only guards (`?? default` after a null guard,
+  `typeof navigator === "undefined"`, the logger's `shouldLog("error")` max-level check) and
+  ~half genuinely-unreachable render branches (limit-order-form's `submitting` phase label,
+  price-chart-panel's negative-change stat, `focus-trap` first/last guard, etc.). 99.5% branch
+  coverage is not reachable without test-only refactors of production source.
 - Thresholds in `vitest.config.ts` (`coverage.thresholds`) are far below actuals and are all green.
 
 ## The 8 remaining uncovered statements (all defensively unreachable)
@@ -45,6 +47,11 @@ are intentionally left uncovered.
   logger levels (branches 92.51% → 94.28%).
 - `d27f3d1` — SSR hook snapshots, hook guards, try-catch non-Error, keyboard modifiers,
   oracle observation defaults, market-table null cells (branches → 95.09%).
+- `components-coverage-17` — swap-widget quote-null/loading/same-asset/slippage-empty render
+  states, swap-execution-panel impact >5% + multi-hop + error detail, limit-order-form phase
+  labels + error/non-Error catches, connect-wallet-button, price-chart-panel, token-selector,
+  animated-number/toast/quote-refresh branches, plus use-token-balance code-only-XLM /
+  native-record-skip branches (branches → 96.6%).
 
 ## Batch-16 summary (completed)
 
@@ -84,6 +91,8 @@ Technique notes worth reusing in future batches:
 ## Commit history for this effort (most recent first)
 
 ```
+<branch batch 3> — swap-widget/execution-panel/limit-order-form render branches + use-token-balance skip branches
+<branch batch 2> — docs: store coverage progress — 99.77% statements, 95.09% branches, remaining defensive-guard map
 d27f3d1 test: branch coverage — SSR hook snapshots, hook guards, try-catch non-Error, keyboard modifiers, oracle observation defaults, market-table null cells — 17 tests
 6246cc0 test: branch coverage batch — meter colors, format-currency locale fallbacks, pool-queries mapping, swap-execution fee/trustline/non-Error, order/prefs defaults, routing bridge/horizon, logger levels — 24 tests
 bbd69c3 test: batch-16 coverage — SSR theme/wallet-kit branches, shutdown timeout, routing bridge fill, soroban parser arrows, price-impact/swap impact levels, timer resets, disconnect cancel, 6 hooks — 33 tests

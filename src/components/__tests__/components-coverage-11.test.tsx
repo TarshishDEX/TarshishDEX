@@ -442,6 +442,59 @@ describe("useTokenBalance", () => {
     });
     await waitFor(() => expect(result.current.data).toBeNull());
   });
+
+  it("treats code-only XLM as native", async () => {
+    getHorizonServerMock.mockReturnValue({
+      accounts: () => ({
+        accountId: () => ({
+          call: () => Promise.resolve({ balances: [{ asset_type: "native", balance: "42" }] }),
+        }),
+      }),
+    });
+    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "XLM" }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.data).toBe("42"));
+  });
+
+  it("returns null when a native asset has no native record", async () => {
+    getHorizonServerMock.mockReturnValue({
+      accounts: () => ({
+        accountId: () => ({
+          call: () =>
+            Promise.resolve({
+              balances: [
+                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "5" },
+              ],
+            }),
+        }),
+      }),
+    });
+    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "XLM", isNative: true }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.data).toBeNull());
+  });
+
+  it("skips native records when looking for an issued asset", async () => {
+    getHorizonServerMock.mockReturnValue({
+      accounts: () => ({
+        accountId: () => ({
+          call: () =>
+            Promise.resolve({
+              balances: [
+                { asset_type: "native", balance: "10" },
+                { asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: VALID_ADDRESS, balance: "3.3" },
+              ],
+            }),
+        }),
+      }),
+    });
+    const { result } = renderHook(() => useTokenBalance(VALID_ADDRESS, { code: "USDC", issuer: VALID_ADDRESS }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.data).toBe("3.3"));
+  });
 });
 
 // =========================================================================
