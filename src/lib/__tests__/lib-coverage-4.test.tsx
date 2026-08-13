@@ -59,9 +59,11 @@ describe("debouncePromise", () => {
     });
     const debounced = debouncePromise(fn, 50);
     const p = debounced();
+    // Attach the rejection handler before timers fire so the rejection is
+    // observed and never surfaces as an unhandled rejection.
+    const assertion = expect(p).rejects.toThrow("boom");
     await vi.advanceTimersByTimeAsync(50);
-    await Promise.resolve();
-    await expect(p).rejects.toThrow("boom");
+    await assertion;
   });
 });
 

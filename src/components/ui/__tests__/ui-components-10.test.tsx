@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { PagePlaceholder } from "@/components/ui/page-placeholder";
 import { WalletStatusBadge } from "@/components/wallet/wallet-status-badge";
@@ -10,6 +10,14 @@ import {
   isValidAccountId,
   isValidAssetCode,
 } from "@/lib/utils/swap-validation";
+
+// Mock the wallet-kit facade so WalletProvider's subscribeWalletEvents doesn't
+// dynamically import the real stellar-wallets-kit, whose Freighter module
+// (`@stellar/freighter-api` v6) fails to load under Vitest's ESM loader.
+vi.mock("@/lib/stellar/wallet-kit", () => ({
+  subscribeWalletEvents: () => Promise.resolve(() => {}),
+  isWalletAvailable: vi.fn().mockResolvedValue(true),
+}));
 
 // =========================================================================
 // swap-validation

@@ -10,6 +10,14 @@ vi.mock("@creit.tech/stellar-wallets-kit", () => ({
   allowAllModules: vi.fn(() => []),
 }));
 
+// Mock the wallet-kit facade so WalletProvider's subscribeWalletEvents doesn't
+// dynamically import the real stellar-wallets-kit, whose Freighter module
+// (`@stellar/freighter-api` v6) fails to load under Vitest's ESM loader.
+vi.mock("@/lib/stellar/wallet-kit", () => ({
+  subscribeWalletEvents: () => Promise.resolve(() => {}),
+  isWalletAvailable: vi.fn().mockResolvedValue(true),
+}));
+
 // ── QueryProvider ──────────────────────────────────────────────────────
 
 describe("QueryProvider", () => {
