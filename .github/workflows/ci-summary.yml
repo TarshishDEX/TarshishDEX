@@ -81,7 +81,11 @@ jobs:
             for (const name of GATE_WORKFLOWS) {
               const run = runs.workflow_runs.find(r => r.name === name);
               if (!run) {
-                results.push({ name, conclusion: 'missing', status: 'pending' });
+                // No run for this SHA means the gate isn't applicable to this
+                // event (PR-only gate on a push, or a path filter that didn't
+                // match). Treat it as skipped, not pending, so it can't keep
+                // the fortress-gates status stuck in "pending" forever.
+                results.push({ name, conclusion: 'skipped', status: 'skip' });
                 continue;
               }
               const ok = run.conclusion === 'success' || run.conclusion === 'neutral';
@@ -95,6 +99,7 @@ jobs:
             const failed = results.filter(r => r.status === 'fail');
             const pending = results.filter(r => r.status === 'pending');
             const passed = results.filter(r => r.status === 'ok');
+            const skipped = results.filter(r => r.status === 'skip');
 
             const summary = [
               '## 🏰 Fortress Gate Summary',
@@ -102,7 +107,8 @@ jobs:
               `| Status | Gates |`,
               `|--------|-------|`,
               `| 🟢 Passing | ${passed.length} |`,
-              `| 🟡 Pending / Missing | ${pending.length} |`,
+              `| 🟡 Pending | ${pending.length} |`,
+              `| ⚪ Skipped (not applicable) | ${skipped.length} |`,
               `| 🔴 Failing | ${failed.length} |`,
               '',
             ];
@@ -117,10 +123,15 @@ jobs:
               for (const p of pending) summary.push(`- ${p.name}`);
               summary.push('');
             }
+            if (skipped.length > 0) {
+              summary.push('### ⚪ Skipped (not applicable to this event)');
+              for (const s of skipped) summary.push(`- ${s.name}`);
+              summary.push('');
+            }
 
             summary.push('### All gates');
             for (const r of results) {
-              const icon = r.status === 'ok' ? '✅' : r.status === 'fail' ? '❌' : '🟡';
+              const icon = r.status === 'ok' ? '✅' : r.status === 'fail' ? '❌' : r.status === 'skip' ? '⚪' : '🟡';
               summary.push(`- ${icon} ${r.name} — \`${r.conclusion || r.status}\``);
             }
 
@@ -128,7 +139,7 @@ jobs:
               : pending.length > 0 ? 'pending' : 'success';
             // GitHub's commit-status description rejects 4-byte Unicode (emoji),
             // so keep this ASCII-only.
-            const description = `Fortress gates: ${passed.length} pass, ${pending.length} pending, ${failed.length} fail`;
+            const description = `Fortress gates: ${passed.length} pass, ${pending.length} pending, ${failed.length} fail, ${skipped.length} skipped`;
 
             core.setOutput('state', state);
             core.setOutput('description', description);
