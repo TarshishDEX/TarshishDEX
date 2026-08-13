@@ -10,7 +10,7 @@
 ![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
 ![Coverage](https://img.shields.io/badge/coverage-99.01%25%20overall-2ea44f)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-29%20workflows-0ea5e9)
-![Contracts](https://img.shields.io/badge/error%20codes-153-7B1FA2)
+![Contracts](https://img.shields.io/badge/error%20codes-300-7B1FA2)
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
@@ -53,7 +53,7 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | Coverage | **99.77% statements** (96.6% branches, 99.72% functions, 99.96% lines) |
 | Rust contracts | **112 tests passing** — fmt ✅, clippy 0 warnings |
 | Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
-| Contract errors | **153 error codes** across 3 Soroban contracts |
+| Contract errors | **300 error codes** across 3 Soroban contracts |
 | E2E (Playwright) | **171 tests** across 5 suites |
 | npm vulns | **0 critical** |
 | CI workflows | **29** (23 verification + 6 maintenance) |
@@ -76,7 +76,7 @@ A comprehensive security and quality audit was conducted across all layers:
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
 | **Rust tests** | ✅ 112 tests, 0 failures |
 | **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
-| **Contract errors** | ✅ 153 error codes (49+54+50 per contract) |
+| **Contract errors** | ✅ 300 error codes (100+100+100 per contract) |
 | **Gas benchmarks** | ✅ 34 benchmarks, hard regression gate in CI |
 | **Dependencies** | ✅ 0 critical npm vulns |
 | **CI/CD** | ✅ 29 workflows, 23 verification gates |
