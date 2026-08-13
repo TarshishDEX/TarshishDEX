@@ -9,6 +9,8 @@ on:
       - "Gas Regression"
       - "E2E Smoke Tests"
       - "Contract Fuzz Testing"
+      - "Contract Security Audit"
+      - "Scout Audit (Soroban Vulnerability Scan)"
       - "Secret Scan"
       - "CodeQL Analysis"
       - "Dependency Audit"
