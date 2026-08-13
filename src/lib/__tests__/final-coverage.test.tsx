@@ -237,6 +237,14 @@ const mockStats = [
     bestBid: null,
     bestAsk: null,
   },
+  {
+    token: { code: "TEST", name: "Test Token", isNative: false },
+    priceInXlm: 0.7,
+    change24hPct: null,
+    volume24hXlm: 100,
+    bestBid: null,
+    bestAsk: null,
+  },
 ];
 
 describe("MarketTable", () => {
@@ -289,6 +297,18 @@ describe("MarketTable", () => {
   it("filters out rows with null price", () => {
     render(<MarketTable />, { wrapper });
     expect(screen.queryByText("No Market")).not.toBeInTheDocument();
+  });
+
+  it("renders dashes for null change and best bid/ask", () => {
+    render(<MarketTable />, { wrapper });
+    expect(screen.getByText("TEST")).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("sorts by 24h change with a null change row", () => {
+    render(<MarketTable />, { wrapper });
+    fireEvent.click(screen.getByText("24h Change"));
+    expect(screen.getByText("TEST")).toBeInTheDocument();
   });
 
   it("sorts by price when header clicked", () => {

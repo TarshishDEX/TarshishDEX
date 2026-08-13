@@ -554,6 +554,14 @@ describe("market-oracle client", () => {
     expect(obs.publisher).toBe(VALID_ADDRESS);
   });
 
+  it("observationFromScVal applies defaults for missing fields", () => {
+    const scv = nativeToScVal({});
+    const obs = observationFromScVal(scv);
+    expect(obs.price).toBe(0);
+    expect(obs.ledger).toBe(0);
+    expect(obs.publisher).toBe("");
+  });
+
   it("readPriceObservation returns null when unconfigured", async () => {
     mockOracleContractId.mockReturnValue(null);
     expect(await readPriceObservation("XLM", "USDC")).toBeNull();
