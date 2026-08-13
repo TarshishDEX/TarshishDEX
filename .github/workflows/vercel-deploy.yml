@@ -1,0 +1,66 @@
+name: Vercel Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.*"
+      - "tsconfig.json"
+      - "postcss.config.*"
+      - "tailwind.config.*"
+      - "vitest.config.ts"
+      - "vercel.json"
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Testnet contract IDs are the defaults; override via repository variables
+# (Settings → Secrets and variables → Actions → Variables) to point at a
+# different deployment (e.g. a fresh mainnet deploy).
+env:
+  NEXT_PUBLIC_STELLAR_NETWORK: testnet
+  NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID: ${{ vars.NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID || 'CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM' }}
+  NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID: ${{ vars.NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID || 'CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V' }}
+  NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID: ${{ vars.NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID || 'CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM' }}
+
+jobs:
+  deploy:
+    name: Deploy frontend to Vercel (production)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm install` (not `npm ci`) so a slightly-stale lockfile can't block a
+      # deployment — Vercel's own build uses `npm install` too.
+      - name: Install dependencies
+        run: npm install
+
+      # `vercel pull` reads project env (incl. any dashboard-set NEXT_PUBLIC_*
+      # vars); `vercel build` runs the framework build with the env above, and
+      # `deploy --prebuilt --prod` ships it to production.
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel@58 pull --yes --environment=production --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+          npx vercel@58 build --prod --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
+          npx vercel@58 deploy --prebuilt --prod --token="$VERCEL_TOKEN" \
+            --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"
