@@ -124,7 +124,9 @@ jobs:
 
             const state = failed.length > 0 ? 'failure'
               : pending.length > 0 ? 'pending' : 'success';
-            const description = `Fortress gates: ${passed.length}✅ ${pending.length}🟡 ${failed.length}❌`;
+            // GitHub's commit-status description rejects 4-byte Unicode (emoji),
+            // so keep this ASCII-only.
+            const description = `Fortress gates: ${passed.length} pass, ${pending.length} pending, ${failed.length} fail`;
 
             core.setOutput('state', state);
             core.setOutput('description', description);
