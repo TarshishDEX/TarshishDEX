@@ -70,7 +70,7 @@ export function SwapWidget() {
   return (
     <Card className="w-full max-w-md p-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-semibold">Swap</h2>
+        <h1 className="font-display text-lg font-semibold">Swap</h1>
         <Badge tone="accent">Native DEX</Badge>
       </div>
 

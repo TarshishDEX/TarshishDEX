@@ -51,7 +51,7 @@ export function OnChainPreferences() {
     return (
       <Card className="p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-base font-semibold">On-chain preferences</h3>
+          <h2 className="font-display text-base font-semibold">On-chain preferences</h2>
           <Badge tone="neutral">Not configured</Badge>
         </div>
         <p className="text-foreground-muted mt-2 text-sm">
@@ -66,7 +66,7 @@ export function OnChainPreferences() {
     return (
       <Card className="p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-base font-semibold">On-chain preferences</h3>
+          <h2 className="font-display text-base font-semibold">On-chain preferences</h2>
           <Badge tone="accent">Contract ready</Badge>
         </div>
         <p className="text-foreground-muted mt-2 text-sm">
@@ -102,7 +102,7 @@ export function OnChainPreferences() {
   return (
     <Card className="space-y-4 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-base font-semibold">On-chain preferences</h3>
+        <h2 className="font-display text-base font-semibold">On-chain preferences</h2>
         {isLoading ? (
           <Badge tone="neutral" dot>
             Loading…
