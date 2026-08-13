@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 description = "On-chain limit order registry for TarshishDEX — store, cancel, and query orders"
 repository.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]

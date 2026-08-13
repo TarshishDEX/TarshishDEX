@@ -7,6 +7,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.81"
 repository = "https://github.com/TarshishDEX/TarshishDEX"
+license = "MIT"
 
 [workspace.dependencies]
 soroban-sdk = "27.0.4"

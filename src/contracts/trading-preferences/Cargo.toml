@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Per-account trading preferences for TarshishDEX (slippage, routing, asset allow-list)"
 repository.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]

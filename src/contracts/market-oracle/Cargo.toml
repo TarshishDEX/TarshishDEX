@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Admin-managed price observation feed for TarshishDEX market analytics"
 repository.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]

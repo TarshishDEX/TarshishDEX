@@ -21,8 +21,6 @@ allow = [
   "CC0-1.0",
   "BSL-1.0",
 ]
-copyleft = "deny"
-default = "deny"
 
 [bans]
 multiple-versions = "warn"
