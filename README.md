@@ -8,7 +8,7 @@
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
 ![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-99.77%25%20statements-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-99.01%25%20overall-2ea44f)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-29%20workflows-0ea5e9)
 ![Contracts](https://img.shields.io/badge/error%20codes-153-7B1FA2)
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
