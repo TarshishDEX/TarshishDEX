@@ -10,7 +10,6 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
-[![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
 [![CodeQL](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml)
 ![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
 ![E2E](https://img.shields.io/badge/E2E-171%20Playwright%20tests-2ea44f)
