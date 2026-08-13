@@ -7,8 +7,8 @@
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
 [![Deploy](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/deploy.yml)
-![Tests](https://img.shields.io/badge/tests-1504%20passing-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-81%25%20statements-2ea44f)
+![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-99.77%25%20statements-2ea44f)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-29%20workflows-0ea5e9)
 ![Contracts](https://img.shields.io/badge/error%20codes-153-7B1FA2)
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
@@ -49,8 +49,8 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 |------|--------|
 | TypeScript | **4 strict flags** — 0 errors |
 | ESLint | 0 errors, 0 warnings |
-| Tests | **1,504 passing** (545 test files) |
-| Coverage | **80.98% statements** (72.33% branches, 82.53% functions, 82.38% lines) |
+| Tests | **2,083 passing** (119 test files) |
+| Coverage | **99.77% statements** (96.6% branches, 99.72% functions, 99.96% lines) |
 | Rust contracts | **112 tests passing** — fmt ✅, clippy 0 warnings |
 | Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
 | Contract errors | **153 error codes** across 3 Soroban contracts |
@@ -69,8 +69,8 @@ A comprehensive security and quality audit was conducted across all layers:
 |-------|--------|
 | **TypeScript** | ✅ 0 errors — 4 strict flags |
 | **ESLint** | ✅ 0 errors, 0 warnings |
-| **Vitest** | ✅ 1,504 tests, 545 files, 0 failures |
-| **Coverage** | ✅ 80.98% statements, thresholds: 80/72/82/82 |
+| **Vitest** | ✅ 2,083 tests, 119 files, 0 failures |
+| **Coverage** | ✅ 99.77% statements (96.6% branches, 99.72% functions, 99.96% lines), thresholds: 80/72/82/82 |
 | **E2E (Playwright)** | ✅ 171 tests, 5 suites (swap, portfolio, orders, navigation, analytics) |
 | **Rust fmt** | ✅ All contracts formatted |
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
@@ -84,7 +84,7 @@ A comprehensive security and quality audit was conducted across all layers:
 | **Secrets** | ✅ TruffleHog scanning in CI |
 | **CodeQL** | ✅ JS/TS analysis in CI |
 
-**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 81% statements with hard CI thresholds, the Soroban contracts are at 95.33% line coverage with a 90% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 171 Playwright tests. The project is well-structured with layered architecture, comprehensive error handling, and automated CI/CD verification at every push.
+**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 99.77% statements with hard CI thresholds, the Soroban contracts are at 95.33% line coverage with a 90% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 171 Playwright tests. The project is well-structured with layered architecture, comprehensive error handling, and automated CI/CD verification at every push.
 
 ## 🧰 Tech Stack
 
@@ -97,7 +97,7 @@ A comprehensive security and quality audit was conducted across all layers:
 | Data fetching   | TanStack Query + Horizon SSE streams                                         |
 | State           | zustand                                                                      |
 | Charts          | lightweight-charts + Recharts                                                |
-| Testing         | Vitest (1,504 tests) + Playwright E2E (171); Rust `cargo test` (112) + tarpaulin |
+| Testing         | Vitest (2,083 tests) + Playwright E2E (171); Rust `cargo test` (112) + tarpaulin |
 | Quality         | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy      |
 | CI/CD           | 19 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression…)  |
 | Deployment      | Docker (multi-stage standalone image) + docker-compose + Vercel              |
@@ -115,7 +115,7 @@ npm run dev
 # Quality gates
 npm run lint          # ESLint
 npm run typecheck     # strict TypeScript (4 flags)
-npm test              # Vitest suite (1,504 tests)
+npm test              # Vitest suite (2,083 tests)
 npm run format:check  # Prettier
 
 # Full verification
@@ -362,7 +362,7 @@ Captures for the submission checklist live in [`docs/screenshots/`](docs/screens
 | 5   | [`transaction-result.png`](docs/screenshots/transaction-result.png)                         | Second real on-chain transaction (publish → PricePublished) |
 | 6   | [`mobile-responsive.png`](docs/screenshots/mobile-responsive.png)                           | Swap page at 390×844 viewport                               |
 | 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
-| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 1,504 tests passing (545 files)           |
+| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 2,083 tests passing (119 files)           |
 
 ## 🗺 Roadmap
 
