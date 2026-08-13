@@ -320,6 +320,9 @@ See [`.env.example`](.env.example) for the full set:
 | `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID` | Testnet ID | Deployed `market-oracle` Soroban contract |
 | `NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID` | Testnet ID | Deployed `limit-order` Soroban contract |
 
+For a staging/QA setup with Stellar Testnet and debug logging, start from
+[`.env.staging.example`](.env.staging.example) instead.
+
 ## 🐳 Docker
 
 ```bash
