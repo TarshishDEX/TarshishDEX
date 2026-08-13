@@ -2,7 +2,11 @@
 
 <img src="docs/tarshishdex-logo.svg" alt="TarshishDEX" width="360" />
 
-**A decentralized trading interface built exclusively on Stellar's native DEX and Soroban smart contracts.**
+# TarshishDEX
+
+**Trade Stellar's native DEX — intelligently.**
+
+A professional decentralized trading platform built *exclusively* on **Stellar's native DEX** and **Soroban smart contracts** — intelligent order routing, pre-execution simulation, on-chain limit orders, portfolio analytics, and a read-only developer API, all at near-zero cost.
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
@@ -10,9 +14,9 @@
 [![CodeQL](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml)
 ![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
 ![E2E](https://img.shields.io/badge/E2E-171%20Playwright%20tests-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-99.01%25%20overall-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-99.77%25%20statements-2ea44f)
 ![Contract coverage](https://img.shields.io/badge/contract%20coverage-99.5%25%20lines-2ea44f)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-29%20workflows-0ea5e9)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-31%20workflows-0ea5e9)
 ![Contracts](https://img.shields.io/badge/error%20codes-300-7B1FA2)
 ![Soroban](https://img.shields.io/badge/Soroban-3%20contracts%20live-7B1FA2)
 ![Rust](https://img.shields.io/badge/Rust-1.82%2B-b7410e?logo=rust&logoColor=white)
@@ -32,24 +36,50 @@
 
 ---
 
-TarshishDEX is a complete decentralized trading platform for the **Stellar network** — intelligent trade execution, liquidity insights, portfolio management, market analytics, on-chain limit orders, transaction simulation, and advanced trading controls — all leveraging the speed, near-zero cost, and built-in liquidity of Stellar's native decentralized exchange.
+## 🚀 What is TarshishDEX?
 
-Unlike a basic token swap, TarshishDEX is a professional trading gateway into the Stellar ecosystem. **All three Soroban smart contracts are live on Testnet** — trading preferences, market oracle, and limit-order registry — with comprehensive test suites and gas benchmarks well under the 64 KB deploy limit.
+TarshishDEX is a **complete decentralized trading gateway into the Stellar ecosystem** — intelligent trade execution, liquidity insights, portfolio management, market analytics, on-chain limit orders, transaction simulation, and advanced trading controls. It runs directly on Stellar's native orderbook and Soroban smart contracts, so there are **no bridges, no wrapped assets, and no middlemen** — just the raw speed, liquidity, and near-zero cost of the Stellar network.
+
+Unlike a basic token swap, TarshishDEX is a professional terminal:
+
+- 🧭 **Intelligent routing** — path-finding picks the most efficient execution route across the orderbook (direct, multi-hop, and Horizon path-finding evaluated concurrently).
+- 🧪 **Simulate before you sign** — every quote shows expected output, price impact, minimum received, and fees *before* you authorize a transaction.
+- 📋 **On-chain limit orders** — a Soroban limit-order registry with expiry and execution tracking.
+- 🧩 **On-chain preferences** — per-account slippage, routing mode, and asset allow-lists stored in Soroban.
+- 📡 **Live price oracle** — an admin-gated on-chain observation feed with a 16-entry ring buffer.
+- 💸 **Ultra-low fees** — reads cost ~0.00001 XLM; writes cost 0.003–0.019 XLM (dominated by refundable state rent, not compute).
+- 🏦 **Developer API** — read-only REST + SSE endpoints for builders on Stellar's native DEX.
+
+**All three Soroban smart contracts are live on Stellar Testnet** — trading preferences, market oracle, and limit-order registry — with 121 Rust tests, 300 error codes, and gas benchmarks enforced in CI.
 
 ## ✨ Highlights
 
-|                                 |                                                                                                |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ⚡ **Native DEX trades**        | Executed directly on Stellar's orderbook — no bridges, no wrapping.                            |
-| 🧭 **Intelligent routing**      | Path-finding picks the most efficient execution route across the orderbook.                    |
-| 🔍 **Full transparency**        | Every quote shows expected output, price impact, minimum received, and fees _before_ you sign. |
-| 🧪 **Pre-execution simulation** | Detect failed transactions before they hit the network.                                        |
-| 👥 **Multi-account portfolios** | Connect multiple wallets, switch accounts, compare performance.                                |
-| 📡 **Live market data**         | Real-time orderbook depth and trades via Horizon SSE streams.                                  |
-| 🧩 **On-chain preferences**     | Per-account slippage, routing mode, and asset allow-lists stored in Soroban contracts.         |
-| 📋 **Limit orders**             | On-chain limit order registry — place, cancel, paginate orders with Soroban persistence.       |
-| 📡 **Price oracle**             | Admin-gated publisher feed for on-chain price observations with 16-entry ring-buffer history.  |
-| 📦 **Developer API**            | Read-only REST + SSE endpoints for builders on Stellar's native DEX.                           |
+| | |
+| --- | --- |
+| ⚡ **Native DEX trades** | Executed directly on Stellar's orderbook — no bridges, no wrapping. |
+| 🧭 **Intelligent routing** | Path-finding picks the most efficient execution route across the orderbook. |
+| 🔍 **Full transparency** | Every quote shows expected output, price impact, minimum received, and fees *before* you sign. |
+| 🧪 **Pre-execution simulation** | Detect failed transactions before they hit the network. |
+| 👥 **Multi-account portfolios** | Connect multiple wallets, switch accounts, compare performance. |
+| 📡 **Live market data** | Real-time orderbook depth and trades via Horizon SSE streams. |
+| 🧩 **On-chain preferences** | Per-account slippage, routing mode, and asset allow-lists stored in Soroban contracts. |
+| 📋 **Limit orders** | On-chain limit order registry — place, cancel, paginate orders with Soroban persistence. |
+| 📡 **Price oracle** | Admin-gated publisher feed for on-chain price observations with 16-entry ring-buffer history. |
+| 📦 **Developer API** | Read-only REST + SSE endpoints for builders on Stellar's native DEX. |
+
+## 💸 Gas & Fees — verified ultra-low
+
+Every contract function is benchmarked against a local protocol-27 network (`stellar-cli 27.1.0`) and the Soroban SDK v27 test sandbox. The full schedule is in [`docs/GAS_BENCHMARKS.md`](docs/GAS_BENCHMARKS.md).
+
+| Operation | Measured fee |
+| --- | --- |
+| Read (any `get_*`) | 100 stroops ≈ **0.00001 XLM** |
+| `initialize` | ~40k stroops ≈ **0.004 XLM** |
+| `set_preferences` / `cancel_order` / `mark_executed` | 37–58k ≈ **0.004–0.006 XLM** |
+| `place_order` / `set_publisher` | 71–144k ≈ **0.007–0.014 XLM** |
+| `publish` (first per pair) | ~190k ≈ **0.019 XLM** (heaviest op) |
+
+Fees are dominated by **refundable state rent** from TTL extension, not CPU or I/O — the compute + I/O portion of even the heaviest operation is only ~15–20k stroops. CPU stays ~216k max against a 100M-instruction transaction limit. Storage is **bounded** (no unbounded lists in instance storage), so write cost does not scale with order/pair/account count.
 
 ## 🏆 Quality Scoreboard
 
@@ -59,12 +89,12 @@ Unlike a basic token swap, TarshishDEX is a professional trading gateway into th
 | ESLint | 0 errors, 0 warnings |
 | Tests | **2,083 passing** (119 test files) |
 | Coverage | **99.77% statements** (96.6% branches, 99.72% functions, 99.96% lines) |
-| Rust contracts | **112 tests passing** — fmt ✅, clippy 0 warnings |
+| Rust contracts | **121 tests passing** — fmt ✅, clippy 0 warnings |
 | Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
 | Contract errors | **300 error codes** across 3 Soroban contracts |
 | E2E (Playwright) | **171 tests** across 5 suites |
 | npm vulns | **0 critical** |
-| CI workflows | **29** (23 verification + 6 maintenance) |
+| CI workflows | **31** (verification + maintenance) |
 | CSP headers | Applied in middleware — no `unsafe-eval` |
 | PWA | SVG icons, network-first service worker |
 | Build | Next.js standalone, non-root Docker |
@@ -82,33 +112,62 @@ A comprehensive security and quality audit was conducted across all layers:
 | **E2E (Playwright)** | ✅ 171 tests, 5 suites (swap, portfolio, orders, navigation, analytics) |
 | **Rust fmt** | ✅ All contracts formatted |
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
-| **Rust tests** | ✅ 112 tests, 0 failures |
+| **Rust tests** | ✅ 121 tests, 0 failures |
 | **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
 | **Contract errors** | ✅ 300 error codes (100+100+100 per contract) |
 | **Gas benchmarks** | ✅ 37 benchmarks, hard regression gate in CI |
 | **Dependencies** | ✅ 0 critical npm vulns |
-| **CI/CD** | ✅ 29 workflows, 23 verification gates |
+| **CI/CD** | ✅ 31 workflows, security + quality gates |
 | **Dead code** | ✅ 0 orphaned files |
 | **Secrets** | ✅ TruffleHog scanning in CI |
 | **CodeQL** | ✅ JS/TS analysis in CI |
 
-**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 99.77% statements with hard CI thresholds, the Soroban contracts are at 95.33% line coverage with a 90% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 171 Playwright tests. The project is well-structured with layered architecture, comprehensive error handling, and automated CI/CD verification at every push.
+**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 99.77% statements with hard CI thresholds, the Soroban contracts are at 99.51% line coverage with a 95% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 171 Playwright tests.
+
+## 📸 Screenshots
+
+Captured against the live deploy (`tarshishdex.vercel.app`) with Playwright — wallet-backed pages use a stubbed Freighter extension plus a real funded Testnet account. Full-size images live in [`docs/screenshots/`](docs/screenshots).
+
+### The product
+
+| Swap | Markets |
+| --- | --- |
+| ![Swap](docs/screenshots/swap.png) | ![Markets](docs/screenshots/markets.png) |
+
+| Portfolio | Analytics |
+| --- | --- |
+| ![Portfolio](docs/screenshots/portfolio.png) | ![Analytics](docs/screenshots/analytics.png) |
+
+| Assets | Limit orders |
+| --- | --- |
+| ![Assets](docs/screenshots/assets.png) | ![Limit orders](docs/screenshots/orders.png) |
+
+### Wallet, mobile & proof of work
+
+| Wallet & account | On-chain transactions | Mobile & CI |
+| --- | --- | --- |
+| <img src="docs/screenshots/wallet-connected.png" width="300" alt="Connected wallet"/> | <img src="docs/screenshots/successful-testnet-transaction.png" width="300" alt="Testnet transaction"/> | <img src="docs/screenshots/mobile-responsive.png" width="300" alt="Mobile swap"/> |
+| Connected address chip (real funded account) | Real contract-call tx on stellar.expert (SUCCESS) | Swap page at 390×844 |
+| <img src="docs/screenshots/balance-displayed.png" width="300" alt="Balance"/> | <img src="docs/screenshots/transaction-result.png" width="300" alt="Price published"/> | <img src="docs/screenshots/ci-pipeline.png" width="300" alt="CI pipeline"/> |
+| Wallet dropdown with live XLM balance | `publish` → `PricePublished` event | GitHub Actions quality + contract gates |
+| <img src="docs/screenshots/wallet-options.png" width="300" alt="Wallet picker"/> | <img src="docs/screenshots/test-output.png" width="300" alt="Coverage report"/> |  |
+| Wallet picker (Freighter + StellarWalletsKit) | Coverage report — 2,083 tests passing |  |
 
 ## 🧰 Tech Stack
 
-| Layer           | Technology                                                                   |
-| --------------- | ---------------------------------------------------------------------------- |
-| Framework       | Next.js 16 (App Router), React 19, TypeScript (4 strict flags)               |
-| Styling         | Tailwind CSS v4 (custom dark DeFi design system)                             |
-| Blockchain      | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
-| Smart contracts | Soroban SDK (Rust, `#![no_std]`, `wasm32v1-none`)                            |
-| Data fetching   | TanStack Query + Horizon SSE streams                                         |
-| State           | zustand                                                                      |
-| Charts          | lightweight-charts + Recharts                                                |
-| Testing         | Vitest (2,083 tests) + Playwright E2E (171); Rust `cargo test` (112) + tarpaulin |
-| Quality         | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy      |
-| CI/CD           | 19 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression…)  |
-| Deployment      | Docker (multi-stage standalone image) + docker-compose + Vercel              |
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router), React 19, TypeScript (4 strict flags) |
+| Styling | Tailwind CSS v4 (custom dark DeFi design system) |
+| Blockchain | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
+| Smart contracts | Soroban SDK v27 (Rust, `#![no_std]`, `wasm32v1-none`) |
+| Data fetching | TanStack Query + Horizon SSE streams |
+| State | zustand |
+| Charts | lightweight-charts + Recharts |
+| Testing | Vitest (2,083 tests) + Playwright E2E (171); Rust `cargo test` (121) + cargo-llvm-cov |
+| Quality | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy |
+| CI/CD | 31 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression, coverage…) |
+| Deployment | Docker (multi-stage standalone image) + docker-compose + Vercel |
 
 ## 🚀 Getting Started
 
@@ -198,20 +257,20 @@ executeSwap  (phase machine: checking → building → signing → submitting �
 
 The three route strategies are evaluated concurrently (`Promise.all`), and `selectBestRoute` picks the winner by highest output, tie-breaking on fewer hops.
 
-| Module                              | Responsibility                                                             |
-| ----------------------------------- | -------------------------------------------------------------------------- |
-| `orderbook.ts`                      | Fetch + normalize orderbook depth (bids/asks, mid price, spread)           |
-| `simulation.ts`                     | Pure fill simulation, price impact, min received, fee & warning derivation |
-| `routing.ts`                        | Route discovery — direct, multi-hop, and Horizon path-finding              |
-| `swap-execution.ts`                 | Build/sign/submit path payments, trustline handling, error classification  |
-| `prices.ts`                         | OHLCV candles, 24h market stats, top-asset discovery                       |
-| `history.ts`                        | Account trade history                                                      |
-| `live.ts`                           | Horizon SSE streams (trades, operations) returning cleanup functions       |
-| `account.ts` / `asset.ts`           | Account loading, balance helpers, asset identity & conversion              |
-| `wallet-kit.ts` / `wallet-store.ts` | Wallet connection, session persistence, XDR signing                        |
-| `horizon.ts` / `config.ts`          | Horizon server factory, network config, base fee, explorer URLs            |
-| `tokens.ts` / `catalog.ts`          | Token metadata, discovery catalog, issuer info                             |
-| `queries.ts`                        | TanStack Query hooks wiring services to the UI                             |
+| Module | Responsibility |
+| --- | --- |
+| `orderbook.ts` | Fetch + normalize orderbook depth (bids/asks, mid price, spread) |
+| `simulation.ts` | Pure fill simulation, price impact, min received, fee & warning derivation |
+| `routing.ts` | Route discovery — direct, multi-hop, and Horizon path-finding |
+| `swap-execution.ts` | Build/sign/submit path payments, trustline handling, error classification |
+| `prices.ts` | OHLCV candles, 24h market stats, top-asset discovery |
+| `history.ts` | Account trade history |
+| `live.ts` | Horizon SSE streams (trades, operations) returning cleanup functions |
+| `account.ts` / `asset.ts` | Account loading, balance helpers, asset identity & conversion |
+| `wallet-kit.ts` / `wallet-store.ts` | Wallet connection, session persistence, XDR signing |
+| `horizon.ts` / `config.ts` | Horizon server factory, network config, base fee, explorer URLs |
+| `tokens.ts` / `catalog.ts` | Token metadata, discovery catalog, issuer info |
+| `queries.ts` | TanStack Query hooks wiring services to the UI |
 
 Pure logic (routing, simulation, swap execution, assets, prices, account, history, tokens) is extracted for unit testing — 20+ modules at 100% line/branch/function coverage.
 
@@ -226,23 +285,23 @@ Pure logic (routing, simulation, swap execution, assets, prices, account, histor
 - **Non-root Docker** user in production image
 - **Mainnet safety gates** — deploy script requires confirmation; runtime console warning when on public network
 - **Global API error handler** with correlation IDs for consistent error responses
-- **19 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, and contract security audit
+- **31 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, cargo-audit/cargo-deny, and contract security audit
 
 ## 📡 Developer API
 
 TarshishDEX exposes a **read-only REST + SSE API** for developers building on Stellar's native DEX. All endpoints are server-side and honour the configured network.
 
-| Method | Endpoint                                                                             | Description                                                         |
-| ------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| `GET`  | `/api/health`                                                                        | Service health, active network, Horizon URL                         |
-| `GET`  | `/api/market/stats?limit=10`                                                         | Market stats for the most traded assets (price, volume, 24h change) |
-| `GET`  | `/api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20`                      | Orderbook depth for a pair                                          |
-| `GET`  | `/api/market/candles?base=XLM&counter=USDC:ISSUER&resolution=3600000&range=86400000` | OHLCV candles from trade aggregations                               |
-| `GET`  | `/api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1`                 | Best-route quote: execution price, price impact, min received, fees |
-| `GET`  | `/api/portfolio/:address`                                                            | Portfolio valuation, allocation, and balances for an account        |
-| `GET`  | `/api/trades/:address?limit=40`                                                      | Recent trade history for an account                                 |
-| `GET`  | `/api/assets?limit=24&code=&issuer=`                                                 | Asset discovery with issuer, supply, and trustline stats            |
-| `GET`  | `/api/events?base=XLM&counter=USDC:ISSUER` _(SSE)_                                   | Live stream of trades for a pair (`event: trade`)                   |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/health` | Service health, active network, Horizon URL |
+| `GET` | `/api/market/stats?limit=10` | Market stats for the most traded assets (price, volume, 24h change) |
+| `GET` | `/api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20` | Orderbook depth for a pair |
+| `GET` | `/api/market/candles?base=XLM&counter=USDC:ISSUER&resolution=3600000&range=86400000` | OHLCV candles from trade aggregations |
+| `GET` | `/api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1` | Best-route quote: execution price, price impact, min received, fees |
+| `GET` | `/api/portfolio/:address` | Portfolio valuation, allocation, and balances for an account |
+| `GET` | `/api/trades/:address?limit=40` | Recent trade history for an account |
+| `GET` | `/api/assets?limit=24&code=&issuer=` | Asset discovery with issuer, supply, and trustline stats |
+| `GET` | `/api/events?base=XLM&counter=USDC:ISSUER` _(SSE)_ | Live stream of trades for a pair (`event: trade`) |
 
 ```bash
 curl "http://localhost:3000/api/swap/quote?input=XLM&output=USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN&amount=100"
@@ -252,15 +311,15 @@ curl "http://localhost:3000/api/swap/quote?input=XLM&output=USDC:GA5ZSEJYB37JRC5
 
 See [`.env.example`](.env.example) for the full set:
 
-| Variable                                      | Default         | Purpose                                                       |
-| --------------------------------------------- | --------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_STELLAR_NETWORK`                 | `testnet`       | Active network (`testnet` \| `public`)                        |
-| `HORIZON_URL`                                 | network default | Server-side Horizon URL override                              |
-| `LOG_LEVEL`                                   | `info`          | Server log threshold (`debug` \| `info` \| `warn` \| `error`) |
-| `NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS`           | —               | Treasury address for fee collection                           |
-| `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID      | Deployed `trading-preferences` Soroban contract               |
-| `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID`       | Testnet ID      | Deployed `market-oracle` Soroban contract                     |
-| `NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID`         | Testnet ID      | Deployed `limit-order` Soroban contract                       |
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_STELLAR_NETWORK` | `testnet` | Active network (`testnet` \| `public`) |
+| `HORIZON_URL` | network default | Server-side Horizon URL override |
+| `LOG_LEVEL` | `info` | Server log threshold (`debug` \| `info` \| `warn` \| `error`) |
+| `NEXT_PUBLIC_FEE_COLLECTOR_ADDRESS` | — | Treasury address for fee collection |
+| `NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID` | Testnet ID | Deployed `trading-preferences` Soroban contract |
+| `NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID` | Testnet ID | Deployed `market-oracle` Soroban contract |
+| `NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID` | Testnet ID | Deployed `limit-order` Soroban contract |
 
 ## 🐳 Docker
 
@@ -274,11 +333,11 @@ The image is multi-stage with `output: "standalone"`, runs as a **non-root user*
 
 The [`src/contracts/`](src/contracts) directory is a Cargo workspace of three Soroban contracts (Rust, `#![no_std]`, compiled to the `wasm32v1-none` target required by Soroban SDK v27 on Rust 1.82+). They extend the platform with on-chain state, secure authorization, and typed events — **all three are live on Stellar Testnet**.
 
-| Contract                                                   | Purpose                                                            | Storage                                               |
-| ---------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
-| [`trading-preferences`](src/contracts/trading-preferences) | Per-account slippage tolerance, routing mode, and asset allow-list | Persistent per-account (TTL-managed)                  |
-| [`market-oracle`](src/contracts/market-oracle)             | Admin-gated price observation feed for analytics                   | Persistent pair observations + instance pair registry |
-| [`limit-order`](src/contracts/limit-order)                 | On-chain limit order registry with expiry and execution tracking   | Persistent per-order + per-user indexing              |
+| Contract | Purpose | Storage |
+| --- | --- | --- |
+| [`trading-preferences`](src/contracts/trading-preferences) | Per-account slippage tolerance, routing mode, and asset allow-list | Persistent per-account (TTL-managed) |
+| [`market-oracle`](src/contracts/market-oracle) | Admin-gated price observation feed for analytics | Persistent pair observations + instance pair registry |
+| [`limit-order`](src/contracts/limit-order) | On-chain limit order registry with expiry and execution tracking | Persistent per-order + per-user indexing |
 
 All three contracts demonstrate the Soroban v27 SDK patterns used across TarshishDEX:
 
@@ -287,7 +346,7 @@ All three contracts demonstrate the Soroban v27 SDK patterns used across Tarshis
 - Authorization via `Address::require_auth` (per-account writes; admin-gated publisher grants)
 - TTL-managed persistent storage (`extend_ttl`) and instance storage for configuration
 - Unit tests with `Env::default()` + `mock_all_auths()` + generated clients (`try_*` variants for error assertions)
-- Gas benchmarks for every write operation using `env.cost_estimate().budget()` (see [Gas Benchmarks](docs/GAS_BENCHMARKS.md))
+- Gas benchmarks for every write operation using `env.cost_estimate()` (see [Gas Benchmarks](docs/GAS_BENCHMARKS.md))
 
 ### Build & test contracts
 
@@ -296,20 +355,21 @@ cd src/contracts
 cargo build --workspace                       # native (dev)
 cargo build --target wasm32v1-none --release  # wasm artifacts (Soroban v27 target)
 cargo test --workspace                        # full contract test suite
-cargo test --workspace -- gas_benchmarks --nocapture  # gas benchmarks
+cargo test --workspace -- gas_benchmarks --nocapture   # gas benchmarks
+cargo test --workspace -- bench_resource_table --nocapture  # per-tx resource + fee table
 cargo fmt --all -- --check                    # formatting gate
 cargo clippy --all-targets -- -D warnings
 ```
 
 ### WASM sizes
 
-| Contract | Size | % of 64KB limit |
-|---|---|---|
-| `trading-preferences.wasm` | 17.5 KB | 27.4% |
-| `limit-order.wasm` | 24.4 KB | 38.1% |
-| `market-oracle.wasm` | 26.4 KB | 41.3% |
+| Contract | Size | % of 64 KB limit |
+| --- | --- | --- |
+| `trading_preferences.wasm` | 20.6 KB | 32.2% |
+| `market_oracle.wasm` | 29.4 KB | 45.9% |
+| `limit_order.wasm` | 30.4 KB | 47.5% |
 
-> All comfortably under Soroban's deploy limit. Combined: 70 KB across 3 contracts. See [Gas Benchmarks](docs/GAS_BENCHMARKS.md) for per-function CPU instruction costs and estimated on-chain XLM fees.
+> All comfortably under Soroban's deploy limit. The release profile uses `opt-level="z"`, `lto`, `strip`, and `panic="abort"`. See [Gas Benchmarks](docs/GAS_BENCHMARKS.md) for per-function resource usage and measured on-chain XLM fees.
 
 ## 👛 Wallet Usage
 
@@ -357,32 +417,18 @@ stellar contract invoke \
   publish --publisher G... --base USDC --counter XLM --price 10000000
 ```
 
-## 📸 Screenshots
-
-Captures for the submission checklist live in [`docs/screenshots/`](docs/screenshots). Captured against the live deploy with `scripts/capture-screenshots.mjs` (stubbed Freighter extension + real funded Testnet account, verified on-chain transactions):
-
-| #   | Screenshot                                                                                  | Shows                                                       |
-| --- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 1   | [`wallet-options.png`](docs/screenshots/wallet-options.png)                                 | Wallet picker modal (Freighter + StellarWalletsKit options) |
-| 2   | [`wallet-connected.png`](docs/screenshots/wallet-connected.png)                             | Connected address chip in the header                        |
-| 3   | [`balance-displayed.png`](docs/screenshots/balance-displayed.png)                           | Connected dropdown with the live XLM balance                |
-| 4   | [`successful-testnet-transaction.png`](docs/screenshots/successful-testnet-transaction.png) | Real contract-call tx on stellar.expert (Testnet)           |
-| 5   | [`transaction-result.png`](docs/screenshots/transaction-result.png)                         | Second real on-chain transaction (publish → PricePublished) |
-| 6   | [`mobile-responsive.png`](docs/screenshots/mobile-responsive.png)                           | Swap page at 390×844 viewport                               |
-| 7   | [`ci-pipeline.png`](docs/screenshots/ci-pipeline.png)                                       | GitHub Actions `quality` + `contracts` jobs passing         |
-| 8   | [`test-output.png`](docs/screenshots/test-output.png)                                       | Coverage report — 2,083 tests passing (119 files)           |
-
 ## 🗺 Roadmap
 
-| Phase | Scope                                                                | Status  |
-| ----- | -------------------------------------------------------------------- | ------- |
-| 1     | Scaffold, design system, layout shell, UI primitives                 | ✅ Done |
-| 2     | Stellar services layer, swap engine, routing, simulation             | ✅ Done |
-| 3     | Portfolio dashboard, trade history, market analytics                 | ✅ Done |
-| 4     | Wallet integration (Freighter/StellarWalletsKit), live sync          | ✅ Done |
-| 5     | Soroban contracts, CI/CD hardening, documentation                    | ✅ Done |
-| 6     | Developer API (REST + SSE), server logging, Docker deployment        | ✅ Done |
-| 7     | Battle-hardening: security audit, test coverage, strict TS, vuln fix | ✅ Done |
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 1 | Scaffold, design system, layout shell, UI primitives | ✅ Done |
+| 2 | Stellar services layer, swap engine, routing, simulation | ✅ Done |
+| 3 | Portfolio dashboard, trade history, market analytics | ✅ Done |
+| 4 | Wallet integration (Freighter/StellarWalletsKit), live sync | ✅ Done |
+| 5 | Soroban contracts, CI/CD hardening, documentation | ✅ Done |
+| 6 | Developer API (REST + SSE), server logging, Docker deployment | ✅ Done |
+| 7 | Battle-hardening: security audit, test coverage, strict TS, vuln fix | ✅ Done |
+| 8 | Gas optimization: bounded storage, resource/fee benchmarks | ✅ Done |
 
 ## 🚢 Deployment
 
@@ -425,7 +471,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for th
 
 ## 📋 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed release notes. The latest release ([v0.2.0](CHANGELOG.md#020--2026-08-11--battle-hardening-release)) documents all 34 commits of security hardening, test coverage improvements, and quality gates added during the battle-hardening audit.
+See [CHANGELOG.md](CHANGELOG.md) for detailed release notes. The latest release ([v0.3.0](CHANGELOG.md#030--2026-08-12--fortress-release)) documents the coverage/testing/CI hardening, with the unreleased [gas & storage optimization](CHANGELOG.md#unreleased) work on top.
 
 ## 📄 License
 
