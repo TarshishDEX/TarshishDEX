@@ -50,7 +50,7 @@ vi.mock("@/lib/server/logger", () => ({
 }));
 
 vi.mock("@/lib/stellar/catalog", () => ({
-  fetchAssetCatalog: fetchAssetCatalogMock,
+  fetchAssetCatalogPage: fetchAssetCatalogMock,
 }));
 
 vi.mock("@/lib/stellar/prices", () => ({
@@ -161,19 +161,39 @@ describe("GET /api/health", () => {
 // =========================================================================
 describe("GET /api/assets", () => {
   it("returns the asset catalog", async () => {
-    fetchAssetCatalogMock.mockResolvedValue([{ code: "USDC", issuer: USDC_ISSUER }]);
+    fetchAssetCatalogMock.mockResolvedValue({
+      assets: [{ code: "USDC", issuer: USDC_ISSUER }],
+      nextCursor: null,
+    });
     const res = await getAssets(makeRequest("http://localhost/api/assets?limit=10"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.count).toBe(1);
     expect(body.assets[0]?.code).toBe("USDC");
-    expect(fetchAssetCatalogMock).toHaveBeenCalledWith(10, undefined, undefined);
+    expect(body.nextCursor).toBeNull();
+    expect(fetchAssetCatalogMock).toHaveBeenCalledWith(10, undefined, undefined, undefined);
   });
 
   it("passes code/issuer filters", async () => {
-    fetchAssetCatalogMock.mockResolvedValue([]);
+    fetchAssetCatalogMock.mockResolvedValue({ assets: [], nextCursor: null });
     await getAssets(makeRequest(`http://localhost/api/assets?code=USDC&issuer=${USDC_ISSUER}`));
-    expect(fetchAssetCatalogMock).toHaveBeenCalledWith(24, "USDC", USDC_ISSUER);
+    expect(fetchAssetCatalogMock).toHaveBeenCalledWith(24, undefined, "USDC", USDC_ISSUER);
+  });
+
+  it("passes the cursor for the next page", async () => {
+    fetchAssetCatalogMock.mockResolvedValue({ assets: [], nextCursor: "12345" });
+    await getAssets(makeRequest("http://localhost/api/assets?cursor=12345"));
+    expect(fetchAssetCatalogMock).toHaveBeenCalledWith(24, "12345", undefined, undefined);
+  });
+
+  it("exposes the nextCursor in the response", async () => {
+    fetchAssetCatalogMock.mockResolvedValue({
+      assets: [{ code: "USDC", issuer: USDC_ISSUER }],
+      nextCursor: "67890",
+    });
+    const res = await getAssets(makeRequest("http://localhost/api/assets"));
+    const body = await res.json();
+    expect(body.nextCursor).toBe("67890");
   });
 
   it("returns 429 when rate-limited", async () => {

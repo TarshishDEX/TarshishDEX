@@ -137,7 +137,7 @@ vi.mock("@/lib/stellar/live", () => ({
 }));
 
 vi.mock("@/lib/stellar/catalog", () => ({
-  fetchAssetCatalog: fetchCatalogMock,
+  fetchAssetCatalogPage: fetchCatalogMock,
 }));
 
 vi.mock("@/lib/soroban/trading-preferences", () => ({
@@ -524,22 +524,25 @@ describe("PriceChartPanel", () => {
 
 describe("AssetBrowser", () => {
   beforeEach(() => {
-    fetchCatalogMock.mockResolvedValue([
-      {
-        token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS },
-        trustlines: 100,
-        supply: 5000,
-        accounts: 50,
-        flags: { authRequired: true, authImmutable: false },
-      },
-      {
-        token: { code: "EURT", name: "Euro Token", issuer: VALID_ADDRESS },
-        trustlines: 50,
-        supply: 1000,
-        accounts: 20,
-        flags: { authRequired: false, authImmutable: false },
-      },
-    ]);
+    fetchCatalogMock.mockResolvedValue({
+      assets: [
+        {
+          token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS },
+          trustlines: 100,
+          supply: 5000,
+          accounts: 50,
+          flags: { authRequired: true, authImmutable: false },
+        },
+        {
+          token: { code: "EURT", name: "Euro Token", issuer: VALID_ADDRESS },
+          trustlines: 50,
+          supply: 1000,
+          accounts: 20,
+          flags: { authRequired: false, authImmutable: false },
+        },
+      ],
+      nextCursor: null,
+    });
   });
 
   it("loads and renders the asset table with sorting", async () => {

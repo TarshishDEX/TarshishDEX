@@ -28,6 +28,7 @@ const {
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: useQueryMock,
+  useInfiniteQuery: useQueryMock,
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
   QueryClient: class {
     constructor() {}
@@ -249,10 +250,9 @@ describe("SwapExecutionPanel", () => {
 // AssetBrowser
 // =========================================================================
 vi.mock("@/lib/stellar/catalog", () => ({
-  fetchAssetCatalog: vi.fn(),
+  fetchAssetCatalogPage: vi.fn(),
 }));
 
-import { fetchAssetCatalog } from "@/lib/stellar/catalog";
 import { AssetBrowser } from "@/components/assets/asset-browser";
 
 const ASSETS = [
@@ -275,7 +275,14 @@ const ASSETS = [
 describe("AssetBrowser", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useQueryMock.mockReturnValue({ data: ASSETS, isLoading: false, isError: false });
+    useQueryMock.mockReturnValue({
+      data: { pages: [{ assets: ASSETS, nextCursor: null }] },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
   });
 
   it("renders the asset table rows", () => {
@@ -314,15 +321,42 @@ describe("AssetBrowser", () => {
   });
 
   it("shows error state", () => {
-    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    useQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
     render(<AssetBrowser />);
     expect(screen.getByText(/Asset catalog is temporarily unavailable/)).toBeTruthy();
   });
 
   it("shows loading skeletons", () => {
-    useQueryMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+    useQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
     render(<AssetBrowser />);
     expect(screen.getByText("Asset Catalog")).toBeTruthy();
+  });
+
+  it("loads more assets when there is a next page", () => {
+    useQueryMock.mockReturnValue({
+      data: { pages: [{ assets: ASSETS, nextCursor: "abc123" }] },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+    });
+    render(<AssetBrowser />);
+    expect(screen.getByRole("button", { name: /load more assets/i })).toBeTruthy();
   });
 });
 

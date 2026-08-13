@@ -1,15 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchAssetCatalog } from "@/lib/stellar/catalog";
+import { fetchAssetCatalog, fetchAssetCatalogPage } from "@/lib/stellar/catalog";
 
 const mockAssetsCall = vi.fn();
+const mockForCode = vi.fn();
+const mockForIssuer = vi.fn();
+const mockCursor = vi.fn();
+
+function makeChain() {
+  const base = { call: mockAssetsCall };
+  mockForCode.mockReturnValue({ forIssuer: mockForIssuer, call: mockAssetsCall });
+  mockForIssuer.mockReturnValue(base);
+  mockCursor.mockReturnValue(base);
+  return {
+    forCode: mockForCode,
+    forIssuer: mockForIssuer,
+    cursor: mockCursor,
+    call: mockAssetsCall,
+  };
+}
+
 vi.mock("@/lib/stellar/horizon", () => ({
   getHorizonServer: () => ({
     assets: () => ({
-      limit: () => ({
-        forCode: () => ({ forIssuer: () => ({ call: mockAssetsCall }), call: mockAssetsCall }),
-        forIssuer: () => ({ call: mockAssetsCall }),
-        call: mockAssetsCall,
-      }),
+      limit: () => makeChain(),
     }),
   }),
 }));
@@ -18,10 +31,11 @@ vi.mock("@/lib/stellar/tokens", () => ({
   toToken: (code: string, issuer: string) => ({ code, issuer, isNative: !issuer }),
 }));
 
-function makeRecord(code: string, issuer: string) {
+function makeRecord(code: string, issuer: string, pagingToken?: string) {
   return {
     asset_code: code,
     asset_issuer: issuer,
+    paging_token: pagingToken,
     accounts: {
       authorized: 100,
       authorized_to_maintain_liabilities: 20,
@@ -88,12 +102,44 @@ describe("fetchAssetCatalog", () => {
   it("filters by code when provided", async () => {
     mockAssetsCall.mockResolvedValue({ records: [] });
     await fetchAssetCatalog(10, "USDC");
-    expect(mockAssetsCall).toHaveBeenCalled();
+    expect(mockForCode).toHaveBeenCalledWith("USDC");
   });
 
   it("filters by issuer when provided", async () => {
     mockAssetsCall.mockResolvedValue({ records: [] });
     await fetchAssetCatalog(10, undefined, "GA5Z...");
-    expect(mockAssetsCall).toHaveBeenCalled();
+    expect(mockForIssuer).toHaveBeenCalledWith("GA5Z...");
+  });
+});
+
+describe("fetchAssetCatalogPage", () => {
+  it("returns a nextCursor from the last paging token on a full page", async () => {
+    mockAssetsCall.mockResolvedValue({
+      records: [makeRecord("USDC", "GA5Z...", "111"), makeRecord("EURMTL", "GACK...", "222")],
+    });
+
+    const page = await fetchAssetCatalogPage(2);
+
+    expect(page.assets).toHaveLength(2);
+    expect(page.nextCursor).toBe("222");
+  });
+
+  it("returns a null nextCursor when the page is not full", async () => {
+    mockAssetsCall.mockResolvedValue({
+      records: [makeRecord("USDC", "GA5Z...", "111")],
+    });
+
+    const page = await fetchAssetCatalogPage(24);
+
+    expect(page.assets).toHaveLength(1);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it("forwards the cursor to Horizon for the next page", async () => {
+    mockAssetsCall.mockResolvedValue({ records: [] });
+
+    await fetchAssetCatalogPage(24, "222");
+
+    expect(mockCursor).toHaveBeenCalledWith("222");
   });
 });
