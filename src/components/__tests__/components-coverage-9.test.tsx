@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
+import type { ReactNode } from "react";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
@@ -16,18 +17,17 @@ vi.mock("@/lib/utils", () => ({
 // AllocationDonut
 // =========================================================================
 vi.mock("recharts", () => {
-  const React = require("react");
   return {
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    ResponsiveContainer: ({ children }: { children: ReactNode }) => (
       <div data-testid="container">{children}</div>
     ),
-    PieChart: ({ children }: { children: React.ReactNode }) => (
+    PieChart: ({ children }: { children: ReactNode }) => (
       <div data-testid="pie-chart">{children}</div>
     ),
     Pie: () => <div data-testid="pie" />,
     Cell: () => <div data-testid="cell" />,
     Tooltip: () => <div />,
-    BarChart: ({ children }: { children: React.ReactNode }) => (
+    BarChart: ({ children }: { children: ReactNode }) => (
       <div data-testid="bar-chart">{children}</div>
     ),
     Bar: () => <div />,

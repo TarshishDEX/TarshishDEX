@@ -67,15 +67,14 @@ const {
 // =========================================================================
 
 vi.mock("recharts", () => {
-  const React = require("react");
   return {
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    ResponsiveContainer: ({ children }: { children: ReactNode }) => (
       <div data-testid="container">{children}</div>
     ),
-    PieChart: ({ children }: { children: React.ReactNode }) => (
+    PieChart: ({ children }: { children: ReactNode }) => (
       <div data-testid="pie-chart">{children}</div>
     ),
-    Pie: ({ children }: { children: React.ReactNode }) => <div data-testid="pie">{children}</div>,
+    Pie: ({ children }: { children: ReactNode }) => <div data-testid="pie">{children}</div>,
     Cell: () => <div data-testid="cell" />,
     Tooltip: ({ formatter }: { formatter: (v: unknown) => unknown }) => {
       const result = formatter(123.456) as [string, string];
@@ -85,7 +84,7 @@ vi.mock("recharts", () => {
         </div>
       );
     },
-    BarChart: ({ children }: { children: React.ReactNode }) => (
+    BarChart: ({ children }: { children: ReactNode }) => (
       <div data-testid="bar-chart">{children}</div>
     ),
     Bar: () => <div />,
@@ -557,9 +556,11 @@ describe("AssetBrowser", () => {
 describe("live-sync-hooks", () => {
   function makeWrapper() {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    return ({ children }: { children: ReactNode }) => (
+    const Wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={qc}>{children}</QueryClientProvider>
     );
+    Wrapper.displayName = "QueryWrapper";
+    return Wrapper;
   }
 
   it("does not subscribe with an invalid address", () => {

@@ -33,12 +33,11 @@ const { connectMock, disconnectMock, setConnectedMock, setDisconnectedMock, getH
 
 // Recharts mock that invokes formatter functions so their branches get covered.
 vi.mock("recharts", () => {
-  const React = require("react");
   return {
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    ResponsiveContainer: ({ children }: { children: ReactNode }) => (
       <div data-testid="container">{children}</div>
     ),
-    BarChart: ({ children }: { children: React.ReactNode }) => (
+    BarChart: ({ children }: { children: ReactNode }) => (
       <div data-testid="bar-chart">{children}</div>
     ),
     Bar: () => <div data-testid="bar" />,
@@ -374,9 +373,11 @@ describe("useTokenBalance", () => {
 
   function makeWrapper() {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    return ({ children }: { children: ReactNode }) => (
+    const Wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={qc}>{children}</QueryClientProvider>
     );
+    Wrapper.displayName = "QueryWrapper";
+    return Wrapper;
   }
 
   it("leaves the query disabled with an invalid address", async () => {
