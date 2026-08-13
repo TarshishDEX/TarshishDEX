@@ -41,8 +41,8 @@ export async function fetchAssetCatalog(
   const server = getHorizonServer();
   let builder = server.assets().limit(limit);
 
-  if (code) builder = builder.forCode(code);
-  if (issuer) builder = builder.forIssuer(issuer);
+  if (code) builder = builder.forCode(code.trim().toUpperCase());
+  if (issuer) builder = builder.forIssuer(issuer.trim().toUpperCase());
 
   const response = await builder.call();
 
