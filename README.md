@@ -16,7 +16,8 @@
 ![Contracts](https://img.shields.io/badge/error%20codes-300-7B1FA2)
 ![Soroban](https://img.shields.io/badge/Soroban-3%20contracts%20live-7B1FA2)
 ![Rust](https://img.shields.io/badge/Rust-1.82%2B-b7410e?logo=rust&logoColor=white)
-![Gas benchmarks](https://img.shields.io/badge/gas%20benchmarks-34%20enforced-2ea44f)
+![Gas optimized](https://img.shields.io/badge/gas%20optimized-ultra--low%20fees-2ea44f)
+![Gas benchmarks](https://img.shields.io/badge/gas%20benchmarks-37%20enforced-2ea44f)
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![Audited](https://img.shields.io/badge/security-audited%20Aug%202026-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
@@ -84,7 +85,7 @@ A comprehensive security and quality audit was conducted across all layers:
 | **Rust tests** | ✅ 112 tests, 0 failures |
 | **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
 | **Contract errors** | ✅ 300 error codes (100+100+100 per contract) |
-| **Gas benchmarks** | ✅ 34 benchmarks, hard regression gate in CI |
+| **Gas benchmarks** | ✅ 37 benchmarks, hard regression gate in CI |
 | **Dependencies** | ✅ 0 critical npm vulns |
 | **CI/CD** | ✅ 29 workflows, 23 verification gates |
 | **Dead code** | ✅ 0 orphaned files |
