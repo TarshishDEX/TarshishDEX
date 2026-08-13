@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   formatFiatCurrency,
   formatToken,
@@ -48,6 +48,24 @@ describe("formatToken", () => {
   it("formats whole numbers without decimals", () => {
     const result = formatToken(100, 0, "en-US");
     expect(result).toBe("100");
+  });
+});
+
+describe("auto locale resolution", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("uses navigator.language for auto locale", () => {
+    expect(typeof formatToken(5, 2)).toBe("string");
+    expect(typeof formatPercentageChange(5)).toBe("string");
+  });
+
+  it("falls back to en-US when navigator is undefined", () => {
+    vi.stubGlobal("navigator", undefined);
+    expect(typeof formatFiatCurrency(5)).toBe("string");
+    expect(typeof formatToken(5, 2)).toBe("string");
+    expect(typeof formatPercentageChange(5)).toBe("string");
   });
 });
 

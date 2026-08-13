@@ -624,3 +624,65 @@ describe("parseResultXdr arrow bodies", () => {
     expect(capturedParse!(xdr.ScVal.scvVoid())).toBeNull();
   });
 });
+
+// =========================================================================
+// orderFromScVal default branches (missing fields)
+// =========================================================================
+
+describe("limit-order order defaults", () => {
+  beforeEach(() => {
+    mockLimitContractId.mockReturnValue("CABC");
+    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+      capturedParse = parseResultXdr;
+      return makeTx();
+    });
+  });
+
+  it("applies defaults for an order missing every field", async () => {
+    stubRawResult(xdr.ScVal.scvMap([]));
+    const order = await queryOrder(1);
+    expect(order).not.toBeNull();
+    expect(order?.id).toBe(0);
+    expect(order?.owner).toBe("");
+    expect(order?.base).toBe("");
+    expect(order?.counter).toBe("");
+    expect(order?.price).toBe(0);
+    expect(order?.amount).toBe(0);
+    expect(order?.expiryLedger).toBe(0);
+    expect(order?.placedAt).toBe(0);
+  });
+});
+
+// =========================================================================
+// trading-preferences batch defaults + non-Error rejection
+// =========================================================================
+
+describe("trading-preferences branch coverage", () => {
+  const addr2 = "GADQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQOBYHA4DQOZPI";
+
+  beforeEach(() => {
+    mockContractId.mockReturnValue("CABC");
+    buildMock.mockImplementation(async ({ parseResultXdr }: { parseResultXdr?: (scv: xdr.ScVal) => unknown }) => {
+      capturedParse = parseResultXdr;
+      return makeTx();
+    });
+  });
+
+  it("applies defaults for missing batch preference fields", async () => {
+    stubRawResult(nativeToScVal([[VALID_ADDRESS, {}]]));
+    const map = await batchReadTradingPreferences([VALID_ADDRESS, addr2]);
+    expect(map.get(VALID_ADDRESS)?.max_slippage_bps).toBe(100);
+    expect(map.get(VALID_ADDRESS)?.routing_mode).toBe("auto");
+    expect(map.get(VALID_ADDRESS)?.allowed_assets).toEqual([]);
+  });
+
+  it("returns failed when a non-Error is thrown during write", async () => {
+    buildMock.mockRejectedValue("plain string failure");
+    const result = await writeTradingPreferences(VALID_ADDRESS, {
+      max_slippage_bps: 100,
+      routing_mode: "auto",
+      allowed_assets: [],
+    });
+    expect(result).toEqual({ ok: false, reason: "failed" });
+  });
+});

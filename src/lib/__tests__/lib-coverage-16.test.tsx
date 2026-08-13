@@ -65,6 +65,35 @@ describe("routing bridge first-leg fill", () => {
     expect(route).not.toBeNull();
     expect(route?.method).toBe("direct");
   });
+
+  it("handles null bridge mid prices", async () => {
+    fetchOrderbookMock.mockImplementation(() =>
+      Promise.resolve({ bids: [], asks: [], midPrice: null })
+    );
+    simulateFillMock.mockReturnValue({ output: "9", avgPrice: 0.9, fullyFilled: true });
+    const route = await findBestRoute(XLM, AQUA, "10");
+    expect(route).not.toBeNull();
+    expect(route?.method).toBe("direct");
+  });
+
+  it("picks the best Horizon strict-send path", async () => {
+    strictSendPathsMock.mockReturnValue({
+      call: vi.fn().mockResolvedValue({
+        records: [
+          { destination_amount: "5", path: [] },
+          { destination_amount: "9", path: [] },
+          { destination_amount: "4", path: [] },
+        ],
+      }),
+    });
+    fetchOrderbookMock.mockImplementation(() =>
+      Promise.resolve({ bids: [], asks: [], midPrice: 1 })
+    );
+    simulateFillMock.mockReturnValue({ output: "5", avgPrice: 0.5, fullyFilled: true });
+    const route = await findBestRoute(XLM, AQUA, "10");
+    expect(route?.method).toBe("path-finding");
+    expect(route?.outputAmount).toBe("9");
+  });
 });
 
 // =========================================================================
@@ -379,6 +408,7 @@ describe("logger LOG_LEVEL", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
+    vi.restoreAllMocks();
   });
 
   it("applies a valid LOG_LEVEL from the environment", async () => {
@@ -391,6 +421,33 @@ describe("logger LOG_LEVEL", () => {
     logger.info("shown");
     expect(debugSpy).not.toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalled();
+  });
+
+  it("uses info level in production", async () => {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    const { logger } = await import("@/lib/server/logger");
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    logger.debug("suppressed");
+    logger.info("shown");
+    expect(debugSpy).not.toHaveBeenCalled();
+    expect(infoSpy).toHaveBeenCalled();
+  });
+
+  it("suppresses warn and info at error level", async () => {
+    vi.resetModules();
+    vi.stubEnv("LOG_LEVEL", "error");
+    const { logger } = await import("@/lib/server/logger");
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    logger.info("suppressed");
+    logger.warn("suppressed");
+    logger.error("shown");
+    expect(infoSpy).not.toHaveBeenCalled();
+    expect(warnSpy).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
   });
 });
 

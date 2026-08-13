@@ -112,6 +112,18 @@ describe("buildSwapOperations", () => {
     });
     expect(ops.length).toBe(1);
   });
+
+  it("defaults the fee method to direct when omitted", () => {
+    const ops = buildSwapOperations({
+      address: VALID_ADDRESS,
+      input: USDC,
+      output: XLM,
+      amountIn: "100",
+      minReceived: "98",
+      path: [USDC, XLM],
+    });
+    expect(ops.length).toBe(2);
+  });
 });
 
 describe("classifySwapError", () => {
@@ -219,6 +231,34 @@ describe("executeSwap", () => {
     );
     console.log("ERRMSG:", result.error); expect(result.phase).toBe("success");
     expect(onSuccess).toHaveBeenCalledWith("tx-hash-1");
+  });
+
+  it("skips change-trust when the output is native", async () => {
+    const result = await executeSwap({
+      address: VALID_ADDRESS,
+      input: USDC,
+      output: XLM,
+      amountIn: "100",
+      minReceived: "98",
+      path: [USDC, XLM],
+      method: "direct",
+    });
+    expect(result.phase).toBe("success");
+  });
+
+  it("returns a generic message for non-Error failures", async () => {
+    submitTxMock.mockRejectedValue("plain string failure");
+    const result = await executeSwap({
+      address: VALID_ADDRESS,
+      input: XLM,
+      output: USDC,
+      amountIn: "100",
+      minReceived: "98",
+      path: [XLM, USDC],
+      method: "direct",
+    });
+    expect(result.phase).toBe("failed");
+    expect(result.error).toBe("Transaction failed.");
   });
 });
 

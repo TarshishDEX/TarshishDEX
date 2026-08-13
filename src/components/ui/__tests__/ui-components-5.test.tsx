@@ -136,6 +136,46 @@ describe("Meter", () => {
     render(<Meter value={30} label="Gas used" />);
     expect(screen.getByText("Gas used")).toBeInTheDocument();
   });
+
+  it("colors success when value meets optimum", () => {
+    const { container } = render(<Meter value={90} optimum={80} />);
+    expect(container.querySelector(".bg-success")).toBeTruthy();
+  });
+
+  it("colors warning when below optimum but above the default low", () => {
+    const { container } = render(<Meter value={40} optimum={80} />);
+    expect(container.querySelector(".bg-warning")).toBeTruthy();
+  });
+
+  it("colors warning when below optimum but above an explicit low", () => {
+    const { container } = render(<Meter value={40} optimum={80} low={20} />);
+    expect(container.querySelector(".bg-warning")).toBeTruthy();
+  });
+
+  it("colors danger when below optimum and below low", () => {
+    const { container } = render(<Meter value={10} optimum={80} low={20} />);
+    expect(container.querySelector(".bg-danger")).toBeTruthy();
+  });
+
+  it("colors danger above the default high without optimum", () => {
+    const { container } = render(<Meter value={90} />);
+    expect(container.querySelector(".bg-danger")).toBeTruthy();
+  });
+
+  it("colors danger above an explicit high without optimum", () => {
+    const { container } = render(<Meter value={90} high={80} />);
+    expect(container.querySelector(".bg-danger")).toBeTruthy();
+  });
+
+  it("colors warning between low and high without optimum", () => {
+    const { container } = render(<Meter value={60} low={40} high={80} />);
+    expect(container.querySelector(".bg-warning")).toBeTruthy();
+  });
+
+  it("colors success below the default low without optimum", () => {
+    const { container } = render(<Meter value={20} />);
+    expect(container.querySelector(".bg-success")).toBeTruthy();
+  });
 });
 
 // ── NumberInput ────────────────────────────────────────────────────────
