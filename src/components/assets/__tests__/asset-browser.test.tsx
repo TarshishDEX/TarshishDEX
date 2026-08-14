@@ -99,26 +99,36 @@ describe("AssetBrowser", () => {
   });
 
   it("filters assets case-insensitively by code", async () => {
-    const { useQuery } = await import("@tanstack/react-query");
-    vi.mocked(useQuery).mockReturnValue({
-      data: [
-        {
-          token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
-          trustlines: 5000,
-          supply: 1000000,
-          accounts: 3500,
-          flags: { authRequired: false, authImmutable: false },
-        },
-        {
-          token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
-          trustlines: 3000,
-          supply: 500000,
-          accounts: 2000,
-          flags: { authRequired: true, authImmutable: false },
-        },
-      ],
+    const { useInfiniteQuery } = await import("@tanstack/react-query");
+    vi.mocked(useInfiniteQuery).mockReturnValue({
+      data: {
+        pages: [
+          {
+            assets: [
+              {
+                token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
+                trustlines: 5000,
+                supply: 1000000,
+                accounts: 3500,
+                flags: { authRequired: false, authImmutable: false },
+              },
+              {
+                token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
+                trustlines: 3000,
+                supply: 500000,
+                accounts: 2000,
+                flags: { authRequired: true, authImmutable: false },
+              },
+            ],
+            nextCursor: null,
+          },
+        ],
+      },
       isLoading: false,
       isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     } as never);
 
     render(<AssetBrowser />);
@@ -128,26 +138,36 @@ describe("AssetBrowser", () => {
   });
 
   it("filters assets case-insensitively by issuer", async () => {
-    const { useQuery } = await import("@tanstack/react-query");
-    vi.mocked(useQuery).mockReturnValue({
-      data: [
-        {
-          token: { code: "USDC", issuer: "GABC...ISSUER", name: "USD Coin", decimals: 7 },
-          trustlines: 5000,
-          supply: 1000000,
-          accounts: 3500,
-          flags: { authRequired: false, authImmutable: false },
-        },
-        {
-          token: { code: "EURMTL", issuer: "GXYZ...ISSUER", name: "EURMTL", decimals: 7 },
-          trustlines: 3000,
-          supply: 500000,
-          accounts: 2000,
-          flags: { authRequired: true, authImmutable: false },
-        },
-      ],
+    const { useInfiniteQuery } = await import("@tanstack/react-query");
+    vi.mocked(useInfiniteQuery).mockReturnValue({
+      data: {
+        pages: [
+          {
+            assets: [
+              {
+                token: { code: "USDC", issuer: "GABC...ISSUER", name: "USD Coin", decimals: 7 },
+                trustlines: 5000,
+                supply: 1000000,
+                accounts: 3500,
+                flags: { authRequired: false, authImmutable: false },
+              },
+              {
+                token: { code: "EURMTL", issuer: "GXYZ...ISSUER", name: "EURMTL", decimals: 7 },
+                trustlines: 3000,
+                supply: 500000,
+                accounts: 2000,
+                flags: { authRequired: true, authImmutable: false },
+              },
+            ],
+            nextCursor: null,
+          },
+        ],
+      },
       isLoading: false,
       isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     } as never);
 
     render(<AssetBrowser />);

@@ -4,13 +4,17 @@ import { fetchAssetCatalog, fetchAssetCatalogPage } from "@/lib/stellar/catalog"
 const mockAssetsCall = vi.fn();
 const mockForCode = vi.fn();
 const mockForIssuer = vi.fn();
+const mockCursor = vi.fn();
 
 function chain() {
   const issuer = { call: mockAssetsCall };
   mockForIssuer.mockReturnValue(issuer);
   const code = { forIssuer: () => issuer, call: mockAssetsCall };
   mockForCode.mockReturnValue(code);
+  const cursor = { forCode: mockForCode, forIssuer: mockForIssuer, call: mockAssetsCall };
+  mockCursor.mockReturnValue(cursor);
   return {
+    cursor: mockCursor,
     forCode: mockForCode,
     forIssuer: mockForIssuer,
     call: mockAssetsCall,

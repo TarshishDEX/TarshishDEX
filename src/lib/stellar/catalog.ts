@@ -74,10 +74,12 @@ export async function fetchAssetCatalogPage(
 
   const seen = new Set<string>();
   const entries: AssetCatalogEntry[] = [];
+  let lastPagingToken: string | null = null;
 
   for (const variant of codeVariants) {
     if (entries.length >= limit) break;
     let builder = server.assets().limit(limit - entries.length);
+    if (cursor) builder = builder.cursor(cursor);
     if (variant) builder = builder.forCode(variant);
     if (normalizedIssuer) builder = builder.forIssuer(normalizedIssuer);
 
@@ -87,6 +89,7 @@ export async function fetchAssetCatalogPage(
       const key = `${r.asset_code}:${r.asset_issuer}`;
       if (seen.has(key)) continue;
       seen.add(key);
+      lastPagingToken = r.paging_token ?? lastPagingToken;
 
       const accounts = sumAccounts(r.accounts);
       entries.push({
@@ -103,5 +106,21 @@ export async function fetchAssetCatalogPage(
     }
   }
 
-  return entries;
+  return {
+    assets: entries,
+    nextCursor: entries.length >= limit ? lastPagingToken : null,
+  };
+}
+
+/**
+ * Fetch the top assets on the network, optionally filtered by code/issuer.
+ * Returns the mapped entries without pagination metadata.
+ */
+export async function fetchAssetCatalog(
+  limit = 24,
+  code?: string,
+  issuer?: string
+): Promise<AssetCatalogEntry[]> {
+  const page = await fetchAssetCatalogPage(limit, undefined, code, issuer);
+  return page.assets;
 }
