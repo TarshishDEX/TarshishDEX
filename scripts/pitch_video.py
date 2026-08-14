@@ -123,6 +123,18 @@ def draw_text(d, xy, text, size, fill, bold=True, anchor="mm"):
     d.text(xy, text, font=F(size, bold), fill=fill, anchor=anchor)
 
 
+def draw_wordmark(d, cx, cy, size, alpha=1.0):
+    """Draw the 'TarshishDEX' wordmark (Tarshish light, DEX cyan), centered."""
+    f = F(size, True)
+    w1 = d.textlength("Tarshish", font=f)
+    w2 = d.textlength("DEX", font=f)
+    x0 = cx - (w1 + w2) / 2.0
+    c1 = blend(BG_TOP, (230, 236, 245), alpha)
+    c2 = blend(BG_TOP, ACCENT, alpha)
+    d.text((x0, cy), "Tarshish", font=f, fill=c1, anchor="lm")
+    d.text((x0 + w1, cy), "DEX", font=f, fill=c2, anchor="lm")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Assets
 # ─────────────────────────────────────────────────────────────────────────────
@@ -253,13 +265,14 @@ def scene2(t):
     return img
 
 
-def scene3(t, logo):
+def scene3(t, mark):
     img = new_canvas(glow_cy=330, glow_strength=0.6)
     d = ImageDraw.Draw(img)
 
     a = ease_out(seg(t, 0, 0.3))
     if a > 0.05:
-        paste_scaled(img, logo, 960, 300, int(1000 * a), alpha=int(255 * a))
+        paste_scaled(img, mark, 960, 210, int(130 * a), alpha=int(255 * a))
+    draw_wordmark(d, 960, 330, 76, a)
 
     # quote → route → simulate → sign → submit pipeline
     steps = ["Quote", "Route", "Simulate", "Sign", "Submit"]
@@ -417,7 +430,7 @@ def scene6(t):
     return img
 
 
-def scene7(t, logo, mark):
+def scene7(t, mark):
     img = new_canvas(glow_cy=360, glow_strength=0.8)
     d = ImageDraw.Draw(img)
 
@@ -428,7 +441,8 @@ def scene7(t, logo, mark):
 
     a = ease_out(seg(t, 0, 0.25))
     if a > 0.05:
-        paste_scaled(img, logo, 960, 290, int(1100 * a), alpha=int(255 * a))
+        paste_scaled(img, mark, 960, 180, int(120 * a), alpha=int(255 * a))
+    draw_wordmark(d, 960, 310, 84, a)
 
     draw_text(d, (960, 560), "Trade Stellar's native DEX.", 60, WHITE, bold=True)
     draw_text(d, (960, 650), "Intelligently.", 52, GREEN_LT, bold=True)
@@ -437,8 +451,6 @@ def scene7(t, logo, mark):
     draw_text(d, (960, 800), "tarshishdex.vercel.app", 36, blend(MUTED, WHITE, a2), bold=True)
     draw_text(d, (960, 860), "github.com/TarshishDEX/TarshishDEX", 28,
               blend(MUTED, WHITE, a2), bold=False)
-
-    paste_scaled(img, mark, 960, 940, 44, alpha=int(255 * a2))
     return img
 
 
@@ -479,12 +491,8 @@ def build_master_audio(manifest, sr=44100):
 # ─────────────────────────────────────────────────────────────────────────────
 def render_scene_frame(n, t, mark, logo):
     r = SCENE_RENDERERS[n]
-    if n == 1:
+    if n in (1, 3, 7):
         return r(t, mark)
-    if n == 3:
-        return r(t, logo)
-    if n == 7:
-        return r(t, logo, mark)
     return r(t)
 
 

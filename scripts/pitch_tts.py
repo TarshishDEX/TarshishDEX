@@ -14,8 +14,8 @@ import edge_tts
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORK = os.path.join(BASE, ".pitch-work")
 AUDIO_DIR = os.path.join(WORK, "audio")
-VOICE = "en-US-AriaNeural"
-RATE = "-3%"  # ~2:55 total incl. scene pauses; tuned for the 3-min target
+VOICE = "en-US-AndrewNeural"  # deep, authoritative male
+RATE = "-12%"  # deep male voice ~2:52 total incl. scene pauses
 
 # Scene number -> narration text (verbatim from scripts/pitch-video-script.md)
 SCENES = {
