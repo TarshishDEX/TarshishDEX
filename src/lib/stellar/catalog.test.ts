@@ -108,10 +108,35 @@ describe("fetchAssetCatalog", () => {
     expect(mockAssetsCall).toHaveBeenCalled();
   });
 
-  it("normalizes the code filter to uppercase for case-insensitive search", async () => {
+  it("queries both the exact and uppercase code forms for case-insensitive search", async () => {
     mockAssetsCall.mockResolvedValue({ records: [] });
     await fetchAssetCatalog(10, " usdc ");
+    expect(mockForCode).toHaveBeenCalledWith("usdc");
     expect(mockForCode).toHaveBeenCalledWith("USDC");
+  });
+
+  it("preserves genuine lowercase asset codes instead of replacing them", async () => {
+    mockAssetsCall.mockResolvedValue({ records: [] });
+    await fetchAssetCatalog(10, "LumenX");
+    expect(mockForCode).toHaveBeenCalledWith("LumenX");
+    expect(mockForCode).toHaveBeenCalledWith("LUMENX");
+  });
+
+  it("merges records from both code queries", async () => {
+    mockAssetsCall
+      .mockResolvedValueOnce({ records: [makeRecord("usdc", "GABC")] })
+      .mockResolvedValueOnce({ records: [makeRecord("USDC", "GABC")] });
+    const results = await fetchAssetCatalog(10, "usdc");
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.token.code)).toEqual(["usdc", "USDC"]);
+  });
+
+  it("dedupes the same asset returned by both queries", async () => {
+    mockAssetsCall
+      .mockResolvedValueOnce({ records: [makeRecord("usdc", "GABC")] })
+      .mockResolvedValueOnce({ records: [makeRecord("usdc", "GABC")] });
+    const results = await fetchAssetCatalog(10, "usdc");
+    expect(results).toHaveLength(1);
   });
 
   it("normalizes the issuer filter to uppercase for case-insensitive search", async () => {
