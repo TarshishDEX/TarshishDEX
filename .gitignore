@@ -46,6 +46,9 @@ yarn-error.log*
 # demo video intermediates (the assembled MP4 is the tracked deliverable)
 docs/videos/*.webm
 
+# pitch video intermediates
+.pitch-work/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

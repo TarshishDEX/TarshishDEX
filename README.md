@@ -28,8 +28,9 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-4%20strict%20flags-3178C6?logo=typescript&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
 [![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
+[![Pitch video](https://img.shields.io/badge/pitch_video-3%20min-0ea5e9?logo=youtube)](#pitch-video)
 
-[**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Demo Video**](#demo-video)
+[**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Pitch Video**](#pitch-video)
 
 </div>
 
@@ -465,11 +466,11 @@ The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or
 
 **🔗 Live demo: [https://tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — production build on Stellar **Testnet** with the deployed contract IDs baked in as build-time env vars. Verify the service with `curl https://tarshishdex.vercel.app/api/health`.
 
-## 🎬 Demo Video
+## 🎥 Pitch Video
 
-**▶️ [TarshishDEX demo (2 minutes)](docs/videos/tarshishdex-demo.mp4)** — walkthrough of the live app: wallet connect → balance → live swap quote → portfolio → analytics → markets → assets → mobile viewport.
+**▶️ [TarshishDEX pitch (3 minutes)](docs/videos/tarshishdex-pitch.mp4)** — a motion-graphics pitch with a neural voice-over covering the problem (opaque, fee-heavy trading), the solution (intelligent, direct, on-chain trading on Stellar's native DEX), the product tour, the Soroban engineering depth, and the call to action.
 
-Recorded against the live deploy with `scripts/capture-demo-video.mjs` (Playwright `recordVideo`) and assembled with `scripts/assemble-demo-video.sh` (ffmpeg title card + outro, trimmed to exactly 2:00).
+Generated with [`scripts/pitch_tts.py`](scripts/pitch_tts.py) (voice-over) and [`scripts/pitch_video.py`](scripts/pitch_video.py) (motion graphics + real app screenshots). Full script in [`scripts/pitch-video-script.md`](scripts/pitch-video-script.md).
 
 ## 🤝 Contributing
 
