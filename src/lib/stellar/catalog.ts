@@ -65,28 +65,43 @@ export async function fetchAssetCatalogPage(
   issuer?: string
 ): Promise<AssetCatalogPage> {
   const server = getHorizonServer();
-  let builder = server.assets().limit(limit);
+  const normalizedIssuer = issuer?.trim().toUpperCase();
 
-  if (cursor) builder = builder.cursor(cursor);
-  if (code) builder = builder.forCode(code);
-  if (issuer) builder = builder.forIssuer(issuer);
+  // Asset codes are case-sensitive identifiers on the ledger, so a code filter
+  // must not rewrite the requested identity. Query both the exact and the
+  // uppercase form (case-insensitive search UX) and dedupe the results.
+  const codeVariants = code ? [...new Set([code.trim(), code.trim().toUpperCase()])] : [undefined];
 
-  const response = await builder.call();
-  const records = response.records;
+  const seen = new Set<string>();
+  const entries: AssetCatalogEntry[] = [];
 
-  return {
-    assets: records.map(mapAssetRecord),
-    nextCursor:
-      records.length === limit ? (records[records.length - 1]?.paging_token ?? null) : null,
-  };
-}
+  for (const variant of codeVariants) {
+    if (entries.length >= limit) break;
+    let builder = server.assets().limit(limit - entries.length);
+    if (variant) builder = builder.forCode(variant);
+    if (normalizedIssuer) builder = builder.forIssuer(normalizedIssuer);
 
-/** Fetch the top assets on the network, optionally filtered by code/issuer. */
-export async function fetchAssetCatalog(
-  limit = 24,
-  code?: string,
-  issuer?: string
-): Promise<AssetCatalogEntry[]> {
-  const page = await fetchAssetCatalogPage(limit, undefined, code, issuer);
-  return page.assets;
+    const response = await builder.call();
+
+    for (const r of response.records) {
+      const key = `${r.asset_code}:${r.asset_issuer}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const accounts = sumAccounts(r.accounts);
+      entries.push({
+        token: toToken(r.asset_code, r.asset_issuer),
+        supply: sumBalances(r.balances),
+        accounts,
+        trustlines: accounts + r.num_claimable_balances + r.num_liquidity_pools,
+        flags: {
+          authRequired: r.flags.auth_required,
+          authRevocable: r.flags.auth_revocable,
+          authImmutable: r.flags.auth_immutable,
+        },
+      });
+    }
+  }
+
+  return entries;
 }

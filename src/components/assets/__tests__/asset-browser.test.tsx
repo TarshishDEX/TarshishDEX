@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { AssetBrowser } from "@/components/assets/asset-browser";
 
 // Mock the catalog fetch
@@ -96,6 +96,66 @@ describe("AssetBrowser", () => {
   it("renders auth filter checkbox", () => {
     render(<AssetBrowser />);
     expect(screen.getByText("Auth required")).toBeInTheDocument();
+  });
+
+  it("filters assets case-insensitively by code", async () => {
+    const { useQuery } = await import("@tanstack/react-query");
+    vi.mocked(useQuery).mockReturnValue({
+      data: [
+        {
+          token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
+          trustlines: 5000,
+          supply: 1000000,
+          accounts: 3500,
+          flags: { authRequired: false, authImmutable: false },
+        },
+        {
+          token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
+          trustlines: 3000,
+          supply: 500000,
+          accounts: 2000,
+          flags: { authRequired: true, authImmutable: false },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as never);
+
+    render(<AssetBrowser />);
+    fireEvent.change(screen.getByLabelText("Search assets"), { target: { value: "usdc" } });
+    expect(screen.getByText("USDC")).toBeTruthy();
+    expect(screen.queryByText("EURMTL")).toBeNull();
+  });
+
+  it("filters assets case-insensitively by issuer", async () => {
+    const { useQuery } = await import("@tanstack/react-query");
+    vi.mocked(useQuery).mockReturnValue({
+      data: [
+        {
+          token: { code: "USDC", issuer: "GABC...ISSUER", name: "USD Coin", decimals: 7 },
+          trustlines: 5000,
+          supply: 1000000,
+          accounts: 3500,
+          flags: { authRequired: false, authImmutable: false },
+        },
+        {
+          token: { code: "EURMTL", issuer: "GXYZ...ISSUER", name: "EURMTL", decimals: 7 },
+          trustlines: 3000,
+          supply: 500000,
+          accounts: 2000,
+          flags: { authRequired: true, authImmutable: false },
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    } as never);
+
+    render(<AssetBrowser />);
+    fireEvent.change(screen.getByLabelText("Search assets"), {
+      target: { value: "gabc...issuer" },
+    });
+    expect(screen.getByText("USDC")).toBeTruthy();
+    expect(screen.queryByText("EURMTL")).toBeNull();
   });
 
   it("shows loading state", async () => {
