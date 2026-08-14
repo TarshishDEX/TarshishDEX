@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchAssetCatalog, type AssetCatalogEntry } from "@/lib/stellar/catalog";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { fetchAssetCatalogPage, type AssetCatalogEntry } from "@/lib/stellar/catalog";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SortIndicator } from "@/components/ui/sort-indicator";
+import { Button } from "@/components/ui/button";
 import { cn, formatCompact } from "@/lib/utils";
 
 type SortKey = "trustlines" | "supply" | "accounts";
+
+const PAGE_SIZE = 24;
 
 export function AssetBrowser() {
   const [query, setQuery] = useState("");
@@ -17,15 +20,16 @@ export function AssetBrowser() {
   const [asc, setAsc] = useState(false);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
 
-  const {
-    data: assets,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["asset-catalog"],
-    queryFn: () => fetchAssetCatalog(24),
-    staleTime: 60_000,
-  });
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["asset-catalog"],
+      queryFn: ({ pageParam }) => fetchAssetCatalogPage(PAGE_SIZE, pageParam),
+      initialPageParam: undefined as string | undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      staleTime: 60_000,
+    });
+
+  const assets = useMemo(() => data?.pages.flatMap((page) => page.assets) ?? [], [data]);
 
   const filtered = useMemo(() => {
     if (!assets) return [];
@@ -131,6 +135,18 @@ export function AssetBrowser() {
               )}
             </tbody>
           </table>
+          {hasNextPage && (
+            <div className="border-border flex justify-center border-t px-6 py-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                isLoading={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                Load more assets
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </Card>

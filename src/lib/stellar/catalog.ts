@@ -16,6 +16,12 @@ export interface AssetCatalogEntry {
   };
 }
 
+/** A single page of catalog entries plus the cursor for the next page. */
+export interface AssetCatalogPage {
+  assets: AssetCatalogEntry[];
+  nextCursor: string | null;
+}
+
 /** Asset account/balance shapes derived from the SDK's exported AssetRecord. */
 type AssetAccounts = Horizon.ServerApi.AssetRecord["accounts"];
 type AssetBalances = Horizon.ServerApi.AssetRecord["balances"];
@@ -32,12 +38,32 @@ function sumBalances(balances: AssetBalances): number {
   );
 }
 
-/** Fetch the top assets on the network, optionally filtered by code/issuer. */
-export async function fetchAssetCatalog(
+function mapAssetRecord(r: Horizon.ServerApi.AssetRecord): AssetCatalogEntry {
+  const accounts = sumAccounts(r.accounts);
+  return {
+    token: toToken(r.asset_code, r.asset_issuer),
+    supply: sumBalances(r.balances),
+    accounts,
+    trustlines: accounts + r.num_claimable_balances + r.num_liquidity_pools,
+    flags: {
+      authRequired: r.flags.auth_required,
+      authRevocable: r.flags.auth_revocable,
+      authImmutable: r.flags.auth_immutable,
+    },
+  };
+}
+
+/**
+ * Fetch one page of the asset catalog, optionally filtered by code/issuer.
+ * Returns the mapped entries plus a cursor for the next page, or null when
+ * the last page has been reached.
+ */
+export async function fetchAssetCatalogPage(
   limit = 24,
+  cursor?: string,
   code?: string,
   issuer?: string
-): Promise<AssetCatalogEntry[]> {
+): Promise<AssetCatalogPage> {
   const server = getHorizonServer();
   const normalizedIssuer = issuer?.trim().toUpperCase();
 
@@ -48,10 +74,12 @@ export async function fetchAssetCatalog(
 
   const seen = new Set<string>();
   const entries: AssetCatalogEntry[] = [];
+  let lastPagingToken: string | null = null;
 
   for (const variant of codeVariants) {
     if (entries.length >= limit) break;
     let builder = server.assets().limit(limit - entries.length);
+    if (cursor) builder = builder.cursor(cursor);
     if (variant) builder = builder.forCode(variant);
     if (normalizedIssuer) builder = builder.forIssuer(normalizedIssuer);
 
@@ -61,6 +89,7 @@ export async function fetchAssetCatalog(
       const key = `${r.asset_code}:${r.asset_issuer}`;
       if (seen.has(key)) continue;
       seen.add(key);
+      lastPagingToken = r.paging_token ?? lastPagingToken;
 
       const accounts = sumAccounts(r.accounts);
       entries.push({
@@ -77,5 +106,21 @@ export async function fetchAssetCatalog(
     }
   }
 
-  return entries;
+  return {
+    assets: entries,
+    nextCursor: entries.length >= limit ? lastPagingToken : null,
+  };
+}
+
+/**
+ * Fetch the top assets on the network, optionally filtered by code/issuer.
+ * Returns the mapped entries without pagination metadata.
+ */
+export async function fetchAssetCatalog(
+  limit = 24,
+  code?: string,
+  issuer?: string
+): Promise<AssetCatalogEntry[]> {
+  const page = await fetchAssetCatalogPage(limit, undefined, code, issuer);
+  return page.assets;
 }
