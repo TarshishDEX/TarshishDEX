@@ -382,7 +382,7 @@ cargo clippy --all-targets -- -D warnings
 
 TarshishDEX connects through **Freighter** (and any other wallet in the StellarWalletsKit picker).
 
-1. **Install Freighter** — get the [Freighter browser extension](https://www.freighter.app/). The app detects a missing wallet and shows an install hint.
+1. **Install Freighter** — get the [Freighter browser extension](https://freighter.app/). The app detects a missing wallet and shows an install hint.
 2. **Create/fund an account** — create a Testnet account in Freighter and fund it from the [Stellar Lab friendbot](https://lab.stellar.org/account/create) or `stellar keys fund`.
 3. **Connect** — click **Connect Wallet** in the header, approve in Freighter. The session persists across page refreshes (localStorage).
 4. **Switch / disconnect** — click the address chip in the header to switch accounts or disconnect.

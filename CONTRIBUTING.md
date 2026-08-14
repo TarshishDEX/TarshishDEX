@@ -22,7 +22,7 @@ TarshishDEX is a decentralized trading interface built on Stellar's native DEX a
 
 - [Node.js](https://nodejs.org/) 20+ and npm
 - [Rust](https://rustup.rs/) 1.82+ with the `wasm32v1-none` target (only needed for the Soroban contracts)
-- Optional: the [Freighter](https://www.freighter.app/) browser extension and a funded Testnet account for wallet flows
+- Optional: the [Freighter](https://freighter.app/) browser extension and a funded Testnet account for wallet flows
 
 **Install & run**
 
