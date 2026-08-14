@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tooltip } from "@/components/ui/tooltip";
-import { cn, formatNumber } from "@/lib/utils";
+import { cn, formatNumber, sanitizeSwapAmount } from "@/lib/utils";
 import { isSameAsset } from "@/lib/stellar/asset";
 import type { StellarAsset } from "@/lib/stellar/types";
 
@@ -91,7 +91,7 @@ export function SwapWidget() {
         <div className="mt-2 flex items-center gap-3">
           <input
             value={amountIn}
-            onChange={(e) => setAmountIn(e.target.value)}
+            onChange={(e) => setAmountIn(sanitizeSwapAmount(e.target.value))}
             placeholder="0.0"
             inputMode="decimal"
             aria-label="Amount to pay"

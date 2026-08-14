@@ -6,6 +6,7 @@ import {
   formatPercent,
   formatPrice,
   normalizeAmount,
+  sanitizeSwapAmount,
   truncateAddress,
 } from "@/lib/utils";
 
@@ -73,5 +74,28 @@ describe("normalizeAmount", () => {
 
   it("handles negative values", () => {
     expect(normalizeAmount("-50000000", 7)).toBe("-5");
+  });
+});
+
+describe("sanitizeSwapAmount", () => {
+  it("rejects negative values", () => {
+    expect(sanitizeSwapAmount("-100")).toBe("100");
+    expect(sanitizeSwapAmount("-12.5")).toBe("12.5");
+    expect(sanitizeSwapAmount("-")).toBe("");
+  });
+
+  it("rejects a leading plus sign", () => {
+    expect(sanitizeSwapAmount("+5")).toBe("5");
+  });
+
+  it("keeps valid positive decimals unchanged", () => {
+    expect(sanitizeSwapAmount("100")).toBe("100");
+    expect(sanitizeSwapAmount("12.5")).toBe("12.5");
+    expect(sanitizeSwapAmount("0.0001")).toBe("0.0001");
+  });
+
+  it("strips non-numeric characters and extra dots", () => {
+    expect(sanitizeSwapAmount("1.2.3")).toBe("1.23");
+    expect(sanitizeSwapAmount("abc-5x")).toBe("5");
   });
 });

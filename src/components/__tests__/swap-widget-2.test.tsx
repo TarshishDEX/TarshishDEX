@@ -127,6 +127,14 @@ describe("SwapWidget interactions", () => {
     expect(input).toHaveValue("");
   });
 
+  it("rejects negative amount input", () => {
+    render(<SwapWidget />, { wrapper });
+    fireEvent.change(screen.getByLabelText("Amount to pay"), {
+      target: { value: "-100" },
+    });
+    expect(screen.getByLabelText("Amount to pay")).toHaveValue("100");
+  });
+
   it("selects slippage preset", () => {
     render(<SwapWidget />, { wrapper });
     fireEvent.click(screen.getByText("3%"));
