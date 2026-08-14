@@ -1,0 +1,15 @@
+{
+  "ci": {
+    "collect": {
+      "settings": {
+        "chromeFlags": "--no-sandbox --disable-gpu --disable-dev-shm-usage"
+      }
+    },
+    "assert": {
+      "preset": "none"
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

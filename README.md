@@ -178,6 +178,10 @@ npm install
 npm run dev
 # → Open http://localhost:3000
 
+# Test the production build locally
+npm run dev:prod
+# → Builds with `next build`, then serves it with `next start` on http://localhost:3000
+
 # Quality gates
 npm run lint          # ESLint
 npm run typecheck     # strict TypeScript (4 flags)

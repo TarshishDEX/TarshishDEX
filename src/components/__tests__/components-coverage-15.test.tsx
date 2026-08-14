@@ -96,7 +96,7 @@ vi.mock("@/lib/stellar/live", () => ({
 }));
 
 vi.mock("@/lib/stellar/catalog", () => ({
-  fetchAssetCatalog: fetchCatalogMock,
+  fetchAssetCatalogPage: fetchCatalogMock,
 }));
 
 vi.mock("@/lib/stellar/contract-submit", () => ({
@@ -222,15 +222,18 @@ afterEach(() => {
 
 describe("AssetBrowser trustlines sort", () => {
   it("sorts by trustlines when the header is clicked", async () => {
-    fetchCatalogMock.mockResolvedValue([
-      {
-        token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS },
-        trustlines: 100,
-        supply: 5000,
-        accounts: 50,
-        flags: { authRequired: true, authImmutable: false },
-      },
-    ]);
+    fetchCatalogMock.mockResolvedValue({
+      assets: [
+        {
+          token: { code: "USDC", name: "USD Coin", issuer: VALID_ADDRESS },
+          trustlines: 100,
+          supply: 5000,
+          accounts: 50,
+          flags: { authRequired: true, authImmutable: false },
+        },
+      ],
+      nextCursor: null,
+    });
     withProviders(<AssetBrowser />);
     expect(await screen.findByText("USDC")).toBeTruthy();
     fireEvent.click(screen.getByText("Trustlines"));

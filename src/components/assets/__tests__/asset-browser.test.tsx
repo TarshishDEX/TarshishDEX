@@ -1,50 +1,65 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { AssetBrowser } from "@/components/assets/asset-browser";
 
 // Mock the catalog fetch
 vi.mock("@/lib/stellar/catalog", () => ({
-  fetchAssetCatalog: vi.fn(() =>
-    Promise.resolve([
-      {
-        token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
-        trustlines: 5000,
-        supply: 1000000,
-        accounts: 3500,
-        flags: { authRequired: false, authImmutable: false },
-      },
-      {
-        token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
-        trustlines: 3000,
-        supply: 500000,
-        accounts: 2000,
-        flags: { authRequired: true, authImmutable: false },
-      },
-    ])
+  fetchAssetCatalogPage: vi.fn(() =>
+    Promise.resolve({
+      assets: [
+        {
+          token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
+          trustlines: 5000,
+          supply: 1000000,
+          accounts: 3500,
+          flags: { authRequired: false, authImmutable: false },
+        },
+        {
+          token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
+          trustlines: 3000,
+          supply: 500000,
+          accounts: 2000,
+          flags: { authRequired: true, authImmutable: false },
+        },
+      ],
+      nextCursor: null,
+    })
   ),
 }));
 
+const MOCK_DATA = {
+  pages: [
+    {
+      assets: [
+        {
+          token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
+          trustlines: 5000,
+          supply: 1000000,
+          accounts: 3500,
+          flags: { authRequired: false, authImmutable: false },
+        },
+        {
+          token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
+          trustlines: 3000,
+          supply: 500000,
+          accounts: 2000,
+          flags: { authRequired: true, authImmutable: false },
+        },
+      ],
+      nextCursor: null,
+    },
+  ],
+};
+
 // Mock the query provider wrapper
 vi.mock("@tanstack/react-query", () => ({
-  useQuery: vi.fn(() => ({
-    data: [
-      {
-        token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
-        trustlines: 5000,
-        supply: 1000000,
-        accounts: 3500,
-        flags: { authRequired: false, authImmutable: false },
-      },
-      {
-        token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
-        trustlines: 3000,
-        supply: 500000,
-        accounts: 2000,
-        flags: { authRequired: true, authImmutable: false },
-      },
-    ],
+  useInfiniteQuery: vi.fn(() => ({
+    data: MOCK_DATA,
     isLoading: false,
     isError: false,
+    fetchNextPage: vi.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
   })),
 }));
 
@@ -83,12 +98,95 @@ describe("AssetBrowser", () => {
     expect(screen.getByText("Auth required")).toBeInTheDocument();
   });
 
+  it("filters assets case-insensitively by code", async () => {
+    const { useInfiniteQuery } = await import("@tanstack/react-query");
+    vi.mocked(useInfiniteQuery).mockReturnValue({
+      data: {
+        pages: [
+          {
+            assets: [
+              {
+                token: { code: "USDC", issuer: "G...USDC", name: "USD Coin", decimals: 7 },
+                trustlines: 5000,
+                supply: 1000000,
+                accounts: 3500,
+                flags: { authRequired: false, authImmutable: false },
+              },
+              {
+                token: { code: "EURMTL", issuer: "G...EURMTL", name: "EURMTL", decimals: 7 },
+                trustlines: 3000,
+                supply: 500000,
+                accounts: 2000,
+                flags: { authRequired: true, authImmutable: false },
+              },
+            ],
+            nextCursor: null,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as never);
+
+    render(<AssetBrowser />);
+    fireEvent.change(screen.getByLabelText("Search assets"), { target: { value: "usdc" } });
+    expect(screen.getByText("USDC")).toBeTruthy();
+    expect(screen.queryByText("EURMTL")).toBeNull();
+  });
+
+  it("filters assets case-insensitively by issuer", async () => {
+    const { useInfiniteQuery } = await import("@tanstack/react-query");
+    vi.mocked(useInfiniteQuery).mockReturnValue({
+      data: {
+        pages: [
+          {
+            assets: [
+              {
+                token: { code: "USDC", issuer: "GABC...ISSUER", name: "USD Coin", decimals: 7 },
+                trustlines: 5000,
+                supply: 1000000,
+                accounts: 3500,
+                flags: { authRequired: false, authImmutable: false },
+              },
+              {
+                token: { code: "EURMTL", issuer: "GXYZ...ISSUER", name: "EURMTL", decimals: 7 },
+                trustlines: 3000,
+                supply: 500000,
+                accounts: 2000,
+                flags: { authRequired: true, authImmutable: false },
+              },
+            ],
+            nextCursor: null,
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    } as never);
+
+    render(<AssetBrowser />);
+    fireEvent.change(screen.getByLabelText("Search assets"), {
+      target: { value: "gabc...issuer" },
+    });
+    expect(screen.getByText("USDC")).toBeTruthy();
+    expect(screen.queryByText("EURMTL")).toBeNull();
+  });
+
   it("shows loading state", async () => {
-    const { useQuery } = await import("@tanstack/react-query");
-    vi.mocked(useQuery).mockReturnValue({
+    const { useInfiniteQuery } = await import("@tanstack/react-query");
+    vi.mocked(useInfiniteQuery).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     } as never);
 
     const { container } = render(<AssetBrowser />);
@@ -99,10 +197,13 @@ describe("AssetBrowser", () => {
 
   it("shows error state", async () => {
     const reactQuery = await import("@tanstack/react-query");
-    vi.mocked(reactQuery.useQuery).mockReturnValueOnce({
+    vi.mocked(reactQuery.useInfiniteQuery).mockReturnValueOnce({
       data: undefined,
       isLoading: false,
       isError: true,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
     } as never);
 
     render(<AssetBrowser />);
