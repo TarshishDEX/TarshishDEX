@@ -64,6 +64,7 @@ vi.mock("recharts", () => {
 const { subscribeMock } = vi.hoisted(() => ({ subscribeMock: vi.fn() }));
 vi.mock("@/lib/stellar/wallet-kit", () => ({
   subscribeWalletEvents: subscribeMock,
+  disconnectWallet: disconnectMock,
   isWalletAvailable: vi.fn().mockResolvedValue(true),
 }));
 
@@ -184,9 +185,12 @@ describe("WalletProvider", () => {
     await act(async () => {});
     expect(subscribeMock).toHaveBeenCalled();
     act(() => {
-      onStateUpdated(VALID_ADDRESS, "testnet");
+      onStateUpdated(VALID_ADDRESS, "Test SDF Network ; September 2015");
     });
-    expect(setConnectedMock).toHaveBeenCalledWith(VALID_ADDRESS, "testnet");
+    expect(setConnectedMock).toHaveBeenCalledWith(
+      VALID_ADDRESS,
+      "Test SDF Network ; September 2015"
+    );
     act(() => {
       onStateUpdated(undefined, "testnet");
     });
