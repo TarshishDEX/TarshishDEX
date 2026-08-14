@@ -194,7 +194,9 @@
     "xaxis",
     "yaxis",
     "ZMFSHONUCEOASW",
-    "GXYZ"
+    "GXYZ",
+    "LUMENX",
+    "LumenX"
   ],
   "ignorePaths": ["node_modules", ".next", "package-lock.json", "src/contracts/target", "coverage"]
 }
