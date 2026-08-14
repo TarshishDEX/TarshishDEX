@@ -28,9 +28,9 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-4%20strict%20flags-3178C6?logo=typescript&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
 [![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
-[![Pitch video](https://img.shields.io/badge/pitch_video-3%20min-0ea5e9?logo=loom&logoColor=white)](https://www.loom.com/share/13b105767e0a4f3cb46a87968d00afc1)
+[![Pitch video](https://img.shields.io/badge/pitch_video-3%20min-0ea5e9?logo=loom&logoColor=white)](https://www.loom.com/share/7443ced5440e4f129107ffe84bad1430)
 
-[**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Pitch Video**](https://www.loom.com/share/13b105767e0a4f3cb46a87968d00afc1)
+[**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Pitch Video**](https://www.loom.com/share/7443ced5440e4f129107ffe84bad1430)
 
 </div>
 
@@ -468,7 +468,7 @@ The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or
 
 ## 🎥 Pitch Video
 
-**▶️ [Watch the TarshishDEX pitch (3 minutes) on Loom](https://www.loom.com/share/13b105767e0a4f3cb46a87968d00afc1)** — a motion-graphics pitch with a neural voice-over covering the problem (opaque, fee-heavy trading), the solution (intelligent, direct, on-chain trading on Stellar's native DEX), the product tour, the Soroban engineering depth, and the call to action.
+**▶️ [Watch the TarshishDEX pitch (3 minutes) on Loom](https://www.loom.com/share/7443ced5440e4f129107ffe84bad1430)** — a motion-graphics pitch with a neural voice-over covering the problem (opaque, fee-heavy trading), the solution (intelligent, direct, on-chain trading on Stellar's native DEX), the product tour, the Soroban engineering depth, and the call to action.
 
 **Download the MP4:** [`docs/videos/tarshishdex-pitch.mp4`](docs/videos/tarshishdex-pitch.mp4)
 
