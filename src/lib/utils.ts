@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -72,4 +73,20 @@ export function sanitizeSwapAmount(raw: string): string {
   }
 
   return sanitized;
+}
+
+/**
+ * Format a decimal amount string to a fixed precision, trimming trailing
+ * zeros (Stellar amounts use 7 decimal places). Normalizes raw strings such
+ * as "0.0100000" to "0.01" and guards against non-finite input.
+ */
+export function formatAmount(value: string, decimals = 7): string {
+  let n: BigNumber;
+  try {
+    n = new BigNumber(value);
+  } catch {
+    return "0";
+  }
+  if (!n.isFinite()) return "0";
+  return n.toFixed(decimals).replace(/\.?0+$/, "");
 }

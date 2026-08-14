@@ -5,11 +5,13 @@ import type { OrderbookData, OrderbookFill, StellarAsset, SwapRoute } from "@/li
 // =========================================================================
 // Mocks
 // =========================================================================
-const { fetchOrderbookMock, simulateFillMock, strictSendPathsMock } = vi.hoisted(() => ({
-  fetchOrderbookMock: vi.fn(),
-  simulateFillMock: vi.fn(),
-  strictSendPathsMock: vi.fn(),
-}));
+const { fetchOrderbookMock, simulateFillMock, strictSendPathsMock, computePriceImpactMock } =
+  vi.hoisted(() => ({
+    fetchOrderbookMock: vi.fn(),
+    simulateFillMock: vi.fn(),
+    strictSendPathsMock: vi.fn(),
+    computePriceImpactMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/stellar/orderbook", () => ({
   fetchOrderbook: fetchOrderbookMock,
@@ -17,7 +19,7 @@ vi.mock("@/lib/stellar/orderbook", () => ({
 
 vi.mock("@/lib/stellar/simulation", () => ({
   simulateOrderbookFill: simulateFillMock,
-  computePriceImpact: (_avg: number, _mid: number | null) => 0.5,
+  computePriceImpact: computePriceImpactMock,
   computeMinReceived: (output: string, slippage: number) =>
     (Number(output) * (1 - slippage / 100)).toString(),
   estimateSwapFeeXlm: (hops: number) => (0.01 * hops).toFixed(7),
@@ -99,6 +101,7 @@ function makeRoute(overrides: Partial<SwapRoute> = {}): SwapRoute {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  computePriceImpactMock.mockReturnValue(0.5);
   strictSendPathsMock.mockReturnValue({
     call: vi.fn().mockResolvedValue({ records: [] }),
   });
@@ -222,6 +225,21 @@ describe("findBestRoute", () => {
     const route = await findBestRoute(XLM, USDC, "100", 5);
     expect(route).not.toBeNull();
     expect(route?.slippagePct).toBe(5);
-    expect(route?.minReceived).toBe((98.5 * 0.95).toString());
+    expect(route?.minReceived).toBe("93.575");
+  });
+
+  it("rounds priceImpactPct to two decimal places", async () => {
+    computePriceImpactMock.mockReturnValue(1.23456789);
+    const route = await findBestRoute(XLM, USDC, "100", 1);
+    expect(route).not.toBeNull();
+    expect(route?.priceImpactPct).toBe(1.23);
+  });
+
+  it("normalizes feeEstimateXlm and minReceived decimals", async () => {
+    // estimateSwapFeeXlm mock returns "0.0100000"; buildRoute trims it to "0.01".
+    const route = await findBestRoute(XLM, USDC, "100", 1);
+    expect(route).not.toBeNull();
+    expect(route?.feeEstimateXlm).toBe("0.01");
+    expect(route?.minReceived).toBe("97.515"); // 98.5 * 0.99 → "97.515"
   });
 });
