@@ -9,6 +9,7 @@ import {
   estimateSwapFeeXlm,
   simulateOrderbookFill,
 } from "@/lib/stellar/simulation";
+import { formatAmount } from "@/lib/utils";
 import { logger } from "@/lib/server/logger";
 import type { OrderbookFill, StellarAsset, SwapRoute } from "@/lib/stellar/types";
 
@@ -132,16 +133,19 @@ function buildRoute(
   if (!candidate.fill || candidate.fill.output === "0" || candidate.fill.output === "") {
     return null;
   }
-  const priceImpactPct = computePriceImpact(candidate.fill.avgPrice, candidate.midPrice);
-  const warnings = buildWarnings(candidate.fill, priceImpactPct, slippagePct);
+  const rawPriceImpactPct = computePriceImpact(candidate.fill.avgPrice, candidate.midPrice);
+  // Round the response value to 2 decimals; warnings still use the raw value
+  // so their thresholds are unaffected by display rounding.
+  const priceImpactPct = Number(rawPriceImpactPct.toFixed(2));
+  const warnings = buildWarnings(candidate.fill, rawPriceImpactPct, slippagePct);
   return {
     path: candidate.path,
     sourceAmount: amountIn,
     outputAmount: candidate.fill.output,
     executionPrice: candidate.fill.avgPrice,
     priceImpactPct,
-    minReceived: computeMinReceived(candidate.fill.output, slippagePct),
-    feeEstimateXlm: estimateSwapFeeXlm(Math.max(1, candidate.path.length - 1)),
+    minReceived: formatAmount(computeMinReceived(candidate.fill.output, slippagePct)),
+    feeEstimateXlm: formatAmount(estimateSwapFeeXlm(Math.max(1, candidate.path.length - 1))),
     slippagePct,
     method: candidate.method,
     warnings,

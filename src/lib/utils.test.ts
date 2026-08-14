@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cn,
+  formatAmount,
   formatCompact,
   formatNumber,
   formatPercent,
@@ -97,5 +98,26 @@ describe("sanitizeSwapAmount", () => {
   it("strips non-numeric characters and extra dots", () => {
     expect(sanitizeSwapAmount("1.2.3")).toBe("1.23");
     expect(sanitizeSwapAmount("abc-5x")).toBe("5");
+  });
+});
+
+describe("formatAmount", () => {
+  it("trims trailing zeros to Stellar's 7-decimal precision", () => {
+    expect(formatAmount("0.0100000")).toBe("0.01");
+    expect(formatAmount("93.5750000")).toBe("93.575");
+    expect(formatAmount("93.0000000")).toBe("93");
+  });
+
+  it("rounds long decimals to 7 places", () => {
+    expect(formatAmount("1.123456789")).toBe("1.1234568");
+  });
+
+  it("keeps clean values unchanged", () => {
+    expect(formatAmount("97.515")).toBe("97.515");
+    expect(formatAmount("0.00002")).toBe("0.00002");
+  });
+
+  it("returns 0 for non-finite input", () => {
+    expect(formatAmount("not-a-number")).toBe("0");
   });
 });

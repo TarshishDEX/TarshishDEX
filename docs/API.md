@@ -54,6 +54,8 @@ Get a swap quote comparing direct orderbook, multi-hop bridge, and path-finding 
 }
 ```
 
+> **Formatting**: `priceImpactPct` is rounded to 2 decimal places. `minReceived` and `feeEstimateXlm` are decimal strings normalized to at most 7 decimal places (Stellar's standard), with trailing zeros trimmed.
+
 **Response 400**: Invalid or missing parameters.
 **Response 502**: Horizon/Soroban RPC unreachable.
 
