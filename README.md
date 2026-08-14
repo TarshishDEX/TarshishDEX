@@ -439,7 +439,17 @@ stellar contract invoke \
 
 ## 🚢 Deployment
 
-### Contracts (Stellar Testnet)
+### Soroban contracts — live on Stellar Testnet
+
+All three contracts are deployed, initialized, and exercised on Stellar Testnet (August 2026):
+
+| Contract | Address | Network |
+| --- | --- | --- |
+| `trading-preferences` | `CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM` | Testnet |
+| `market-oracle` | `CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V` | Testnet |
+| `limit-order` | `CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM` | Testnet |
+
+Deployer account, verified contract-call transaction hashes, and explorer links are all in [`docs/deployment.md`](docs/deployment.md). To redeploy, run the deploy script (or the `Deploy` CI workflow — see the same doc for the full runbook):
 
 ```bash
 cd src/contracts
@@ -447,24 +457,16 @@ cargo build --workspace --target wasm32v1-none --release
 STELLAR_SOURCE_ACCOUNT=S... bash ../../scripts/deploy-contracts.sh
 ```
 
-The script deploys and initializes all three contracts, then prints their IDs. **All three contracts are deployed on Testnet** — live addresses and verified contract-call transaction hashes are documented in [`docs/deployment.md`](docs/deployment.md).
-
 > ⚠️ **Mainnet deployment** requires `STELLAR_MAINNET_CONFIRM=yes` and uses the public network passphrase.
-
-### Contracts via CI (GitHub Actions)
-
-The `Deploy` workflow (`workflow_dispatch`) deploys the contracts to Testnet (or Mainnet) from CI:
-
-1. Add the **`STELLAR_SOURCE_ACCOUNT`** repository secret (the deployer's `S...` secret key — must be funded on the target network).
-2. Run **Actions → Deploy → Run workflow**, pick the network (default `testnet`).
-3. The job builds the wasm, deploys + initializes all three contracts, uploads a deployment manifest artifact, and prints the fresh contract IDs in the summary.
 
 ### Frontend
 
-- **Docker**: `docker compose up --build` serves on `http://localhost:3000`.
-- **Vercel (recommended)**: add the `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets, link the project with `npx vercel link`, then run the `Deploy` workflow with **deploy_frontend: true**. The frontend job builds with the freshly deployed contract IDs and ships a production build.
+**🔗 Live demo: [https://tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — production build on Stellar **Testnet** with the deployed contract IDs baked in as build-time env vars.
 
-**🔗 Live demo: [https://tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — production build on Stellar **Testnet** with the deployed contract IDs baked in as build-time env vars. Verify the service with `curl https://tarshishdex.vercel.app/api/health`.
+- **Docker**: `docker compose up --build` serves on `http://localhost:3000`.
+- **Health check**: `curl https://tarshishdex.vercel.app/api/health`
+
+Full deployment details (CI deploy workflow, Vercel secrets, deployer account, transaction hashes) live in [`docs/deployment.md`](docs/deployment.md).
 
 ## 🎥 Pitch Video
 
