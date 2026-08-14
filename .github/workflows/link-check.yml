@@ -25,9 +25,10 @@ jobs:
             --verbose
             --no-progress
             --accept 200,301,302,429
-            --timeout 15
+            --timeout 30
             --retry-wait-time 5
             --max-retries 2
             --exclude "http://localhost:3000.*"
+            --exclude "freighter.app"
             "**/*.md"
           fail: true
