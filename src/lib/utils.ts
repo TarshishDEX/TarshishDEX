@@ -52,3 +52,24 @@ export function normalizeAmount(rawAmount: string, decimals: number): string {
     .replace(/0+$/, "");
   return `${negative ? "-" : ""}${fraction ? `${integer}.${fraction}` : integer}`;
 }
+
+/**
+ * Sanitize a swap amount input into a non-negative decimal string.
+ *
+ * Swap amounts flow into BigNumber math downstream, so the field must never
+ * hold a leading minus sign (typed or pasted), a plus sign, or non-decimal
+ * characters. Returns the cleaned string.
+ */
+export function sanitizeSwapAmount(raw: string): string {
+  // Reject sign characters — negative amounts are never valid here.
+  let sanitized = raw.replace(/[+-]/g, "");
+
+  // Keep only digits and a single decimal point.
+  sanitized = sanitized.replace(/[^0-9.]/g, "");
+  const firstDot = sanitized.indexOf(".");
+  if (firstDot !== -1) {
+    sanitized = sanitized.slice(0, firstDot + 1) + sanitized.slice(firstDot + 1).replace(/\./g, "");
+  }
+
+  return sanitized;
+}
