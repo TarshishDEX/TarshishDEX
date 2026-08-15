@@ -44,7 +44,7 @@ const TESTNET = {
   explorerUrl: "https://stellar.expert/explorer/testnet",
 };
 
-const CONTRACT_ID = "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE";
+const CONTRACT_ID = "CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM";
 
 beforeEach(() => {
   getActiveNetworkMock.mockReturnValue(TESTNET);
