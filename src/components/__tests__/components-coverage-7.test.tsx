@@ -388,11 +388,17 @@ describe("TokenSelector", () => {
   });
 
   it("filters tokens by query", () => {
-    render(<TokenSelector value={null} onSelect={() => {}} />);
-    fireEvent.click(screen.getByRole("button"));
-    fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "aqua" } });
-    expect(screen.getByText("Aquarius")).toBeTruthy();
-    expect(screen.queryByText("Lumen")).toBeNull();
+    vi.useFakeTimers();
+    try {
+      render(<TokenSelector value={null} onSelect={() => {}} />);
+      fireEvent.click(screen.getByRole("button"));
+      fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "aqua" } });
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByText("Aquarius")).toBeTruthy();
+      expect(screen.queryByText("Lumen")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("excludes a token", () => {
@@ -402,21 +408,33 @@ describe("TokenSelector", () => {
   });
 
   it("shows no-match message", () => {
-    render(<TokenSelector value={null} onSelect={() => {}} />);
-    fireEvent.click(screen.getByRole("button"));
-    fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "zzz" } });
-    expect(screen.getByText("No matching assets")).toBeTruthy();
+    vi.useFakeTimers();
+    try {
+      render(<TokenSelector value={null} onSelect={() => {}} />);
+      fireEvent.click(screen.getByRole("button"));
+      fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "zzz" } });
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByText("No matching assets")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("offers add-custom for a valid custom pair", () => {
-    const onSelect = vi.fn();
-    render(<TokenSelector value={null} onSelect={onSelect} />);
-    fireEvent.click(screen.getByRole("button"));
-    fireEvent.change(screen.getByLabelText("Search tokens"), {
-      target: { value: `CUST:${VALID_ADDRESS}` },
-    });
-    fireEvent.click(screen.getByText("Add custom"));
-    expect(onSelect).toHaveBeenCalled();
+    vi.useFakeTimers();
+    try {
+      const onSelect = vi.fn();
+      render(<TokenSelector value={null} onSelect={onSelect} />);
+      fireEvent.click(screen.getByRole("button"));
+      fireEvent.change(screen.getByLabelText("Search tokens"), {
+        target: { value: `CUST:${VALID_ADDRESS}` },
+      });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.click(screen.getByText("Add custom"));
+      expect(onSelect).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
