@@ -20,6 +20,7 @@ const {
   buildCancelOrExecuteTxMock,
   checkRateLimitMock,
   getClientIdMock,
+  runHealthChecksMock,
 } = vi.hoisted(() => ({
   fetchAssetCatalogMock: vi.fn(),
   fetchCandlesMock: vi.fn(),
@@ -37,12 +38,17 @@ const {
   buildCancelOrExecuteTxMock: vi.fn(),
   checkRateLimitMock: vi.fn(),
   getClientIdMock: vi.fn(),
+  runHealthChecksMock: vi.fn(),
 }));
 
 vi.mock("@/lib/server/rate-limit", () => ({
   checkRateLimit: checkRateLimitMock,
   getClientId: getClientIdMock,
   resetRateLimitStore: vi.fn(),
+}));
+
+vi.mock("@/lib/server/health", () => ({
+  runHealthChecks: runHealthChecksMock,
 }));
 
 vi.mock("@/lib/server/logger", () => ({
@@ -134,6 +140,14 @@ beforeEach(() => {
     remaining: 99,
     resetAt: Date.now() + 60_000,
   });
+  runHealthChecksMock.mockResolvedValue({
+    status: "ok",
+    checks: {
+      horizon: { status: "ok", latencyMs: 12 },
+      soroban_rpc: { status: "ok", latencyMs: 8 },
+      limit_order_contract: { status: "ok", latencyMs: 210, detail: "version=3" },
+    },
+  });
 });
 
 // =========================================================================
@@ -147,6 +161,32 @@ describe("GET /api/health", () => {
     expect(body.status).toBe("ok");
     expect(body.service).toBe("tarshishdex");
     expect(body.headers).toBeUndefined();
+  });
+
+  it("includes per-dependency check results", async () => {
+    const res = await getHealth();
+    const body = await res.json();
+    expect(body.checks.horizon.status).toBe("ok");
+    expect(body.checks.soroban_rpc.status).toBe("ok");
+    expect(body.checks.limit_order_contract.status).toBe("ok");
+    expect(body.checks.limit_order_contract.detail).toBe("version=3");
+    expect(body.network).toBe("testnet");
+  });
+
+  it("reflects a failed check in the overall status", async () => {
+    runHealthChecksMock.mockResolvedValue({
+      status: "down",
+      checks: {
+        horizon: { status: "down", error: "fetch failed" },
+        soroban_rpc: { status: "ok", latencyMs: 8 },
+        limit_order_contract: { status: "not_configured" },
+      },
+    });
+    const res = await getHealth();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("down");
+    expect(body.checks.horizon.status).toBe("down");
   });
 
   it("sets no-store cache header", async () => {
