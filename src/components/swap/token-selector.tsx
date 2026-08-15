@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { KNOWN_TOKENS } from "@/lib/stellar/tokens";
 import { assetToString, parseAssetString } from "@/lib/stellar/asset";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 import type { StellarAsset } from "@/lib/stellar/types";
 
@@ -15,6 +16,7 @@ interface TokenSelectorProps {
 export function TokenSelector({ value, onSelect, exclude }: TokenSelectorProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function TokenSelector({ value, onSelect, exclude }: TokenSelectorProps) 
   const filtered = KNOWN_TOKENS.filter((t) => {
     const key = assetToString(t);
     if (key === excludeKey) return false;
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return true;
     return (
       t.code.toLowerCase().includes(q) ||
@@ -40,8 +42,8 @@ export function TokenSelector({ value, onSelect, exclude }: TokenSelectorProps) 
     );
   });
 
-  const customAsset = parseAssetString(query);
-  const canAddCustom = query.includes(":") && customAsset !== null;
+  const customAsset = parseAssetString(debouncedQuery);
+  const canAddCustom = debouncedQuery.includes(":") && customAsset !== null;
 
   return (
     <div ref={containerRef} className="relative">

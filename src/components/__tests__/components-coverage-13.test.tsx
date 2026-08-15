@@ -641,10 +641,16 @@ describe("TokenSelector", () => {
   });
 
   it("filters and shows no matching assets", () => {
-    render(<RealTokenSelector value={{ code: "XLM", isNative: true }} onSelect={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: /XLM/ }));
-    fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "zzz" } });
-    expect(screen.getByText("No matching assets")).toBeTruthy();
+    vi.useFakeTimers();
+    try {
+      render(<RealTokenSelector value={{ code: "XLM", isNative: true }} onSelect={vi.fn()} />);
+      fireEvent.click(screen.getByRole("button", { name: /XLM/ }));
+      fireEvent.change(screen.getByLabelText("Search tokens"), { target: { value: "zzz" } });
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByText("No matching assets")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
