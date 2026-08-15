@@ -56,7 +56,7 @@ describe("isValidEmail", () => {
   });
 
   it("rejects addresses with spaces or multiple @", () => {
-    expect(isValidEmail("user@exa mple.com")).toBe(false);
+    expect(isValidEmail("user@foo bar.com")).toBe(false);
     expect(isValidEmail("user@@example.com")).toBe(false);
     expect(isValidEmail("")).toBe(false);
   });
@@ -108,7 +108,7 @@ describe("isValidDomain", () => {
   });
 
   it("rejects domains with spaces or empty labels", () => {
-    expect(isValidDomain("exa mple.com")).toBe(false);
+    expect(isValidDomain("foo bar.com")).toBe(false);
     expect(isValidDomain("example..com")).toBe(false);
     expect(isValidDomain(".com")).toBe(false);
     expect(isValidDomain("")).toBe(false);
