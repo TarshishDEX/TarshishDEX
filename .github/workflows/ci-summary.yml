@@ -36,7 +36,7 @@ jobs:
 
       - name: Query all workflow conclusions
         id: aggregate
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const sha = context.payload.workflow_run.head_sha;
@@ -152,7 +152,7 @@ jobs:
               .write();
 
       - name: Set unified commit status
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const state = '${{ steps.aggregate.outputs.state }}';
