@@ -160,7 +160,7 @@ jobs:
 
       - name: Comment PR with schema contract report
         if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const schemaCount = '${{ steps.coverage_check.outputs.schema_count }}';

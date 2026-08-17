@@ -69,7 +69,7 @@ jobs:
 
       - name: Post preview URL comment
         if: steps.check.outputs.skip != 'true' && steps.deploy.outputs.preview_url != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const url = '${{ steps.deploy.outputs.preview_url }}';

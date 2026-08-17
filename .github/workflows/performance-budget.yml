@@ -182,7 +182,7 @@ jobs:
 
       - name: Comment PR with budget report
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const js = '${{ steps.js_bundle.outputs.total_js_kb || 'N/A' }}';
