@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { findBestRoute } from "@/lib/stellar/routing";
 import { swapQuoteParamsSchema } from "@/lib/api/schemas";
 import { logger } from "@/lib/server/logger";
-import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
+import { checkRateLimit, getClientId, STRICTER_QUOTE_RATE_LIMIT } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
 import type { StellarAsset } from "@/lib/stellar/types";
@@ -15,10 +15,9 @@ export const dynamic = "force-dynamic";
  */
 export const GET = apiHandler(async (request) => {
   const ip = getClientId(request);
-  const rateLimit = checkRateLimit(ip, {
-    maxRequests: 100,
-    windowMs: 60_000,
-  });
+  // Quotes are expensive (path-finding + multiple orderbooks) — apply a
+  // stricter limit than the default API rate limit.
+  const rateLimit = checkRateLimit(ip, STRICTER_QUOTE_RATE_LIMIT);
   if (!rateLimit.allowed) {
     return NextResponse.json(buildErrorResponse(ErrorCode.RATE_LIMITED, 429, "Too many requests"), {
       status: 429,

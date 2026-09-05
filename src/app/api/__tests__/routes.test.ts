@@ -45,6 +45,8 @@ vi.mock("@/lib/server/rate-limit", () => ({
   checkRateLimit: checkRateLimitMock,
   getClientId: getClientIdMock,
   resetRateLimitStore: vi.fn(),
+  DEFAULT_API_RATE_LIMIT: { maxRequests: 100, windowMs: 60_000 },
+  STRICTER_QUOTE_RATE_LIMIT: { maxRequests: 30, windowMs: 60_000 },
 }));
 
 vi.mock("@/lib/server/health", () => ({
@@ -115,6 +117,7 @@ import {
   DELETE as deleteOrders,
 } from "@/app/api/orders/route";
 import { GET as getPortfolio } from "@/app/api/portfolio/[address]/route";
+import { HorizonRateLimitError } from "@/lib/stellar/horizon-guard";
 import { GET as getQuote } from "@/app/api/swap/quote/route";
 import { GET as getTrades } from "@/app/api/trades/[address]/route";
 
@@ -262,9 +265,10 @@ describe("GET /api/assets", () => {
 // =========================================================================
 describe("GET /api/events", () => {
   it("returns an SSE stream with a connected event", async () => {
-    const res = await getEvents();
+    const res = await getEvents(new Request("http://localhost/api/events"));
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
 
     const reader = res.body?.getReader();
     expect(reader).toBeTruthy();
@@ -272,6 +276,46 @@ describe("GET /api/events", () => {
     const text = new TextDecoder().decode(first?.value);
     expect(text).toContain("event: connected");
     await reader?.cancel();
+  });
+
+  it("cancels cleanly when the client aborts the request", async () => {
+    const controller = new AbortController();
+    const res = await getEvents(
+      new Request("http://localhost/api/events", { signal: controller.signal })
+    );
+    const reader = res.body?.getReader();
+    await reader?.read();
+
+    // Abrupt disconnect: abort the request signal, then cancel the reader.
+    controller.abort();
+    await expect(reader?.cancel()).resolves.toBeUndefined();
+  });
+
+  it("gracefully closes the stream after the maximum duration", async () => {
+    vi.useFakeTimers();
+    try {
+      const res = await getEvents(new Request("http://localhost/api/events"));
+      const reader = res.body?.getReader();
+      expect(reader).toBeTruthy();
+      await reader?.read(); // triggers stream start()
+
+      // Advance 10 minutes — the max-duration timer should fire, emit a
+      // stream-end event, and close the stream. Heartbeats fired during the
+      // window are queued first, so drain until we reach the stream-end event.
+      await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+
+      let text = "";
+      let chunk = await reader?.read();
+      while (!chunk?.done && !text.includes("event: stream-end")) {
+        text += new TextDecoder().decode(chunk?.value);
+        chunk = await reader?.read();
+      }
+      expect(text).toContain("event: stream-end");
+
+      expect(chunk?.done).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -623,6 +667,18 @@ describe("GET /api/portfolio/:address", () => {
     const body = await res.json();
     expect(body.code).toBe("PORTFOLIO_FETCH_FAILED");
   });
+
+  it("returns 429 with Retry-After when Horizon rate-limits", async () => {
+    fetchPortfolioSummaryMock.mockRejectedValue(new HorizonRateLimitError(30));
+    const res = await getPortfolio(makeRequest(`http://localhost/api/portfolio/${VALID_ADDRESS}`), {
+      params: Promise.resolve({ address: VALID_ADDRESS }),
+    });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("30");
+    const body = await res.json();
+    expect(body.code).toBe("HORIZON_RATE_LIMITED");
+    expect(body.error).toContain("Horizon rate limit - retrying in 30 seconds");
+  });
 });
 
 // =========================================================================
@@ -699,6 +755,23 @@ describe("GET /api/swap/quote", () => {
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.code).toBe("NO_VIABLE_ROUTE");
+  });
+
+  it("applies a stricter rate limit than the default API limit", async () => {
+    findBestRouteMock.mockResolvedValue({
+      path: [{ code: "XLM", isNative: true }],
+      outputAmount: "98",
+      method: "direct",
+    });
+    await getQuote(
+      makeRequest(`http://localhost/api/swap/quote?input=XLM&output=USDC:${USDC_ISSUER}&amount=100`)
+    );
+    // Quote computation is expensive — it must be throttled harder than the
+    // default 100 req/min API limit.
+    expect(checkRateLimitMock).toHaveBeenCalledWith("1.2.3.4", {
+      maxRequests: 30,
+      windowMs: 60_000,
+    });
   });
 
   it("returns 502 when quoting fails", async () => {

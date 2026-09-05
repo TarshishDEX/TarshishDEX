@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkRateLimit, getClientId, resetRateLimitStore } from "@/lib/server/rate-limit";
+import {
+  checkRateLimit,
+  DEFAULT_API_RATE_LIMIT,
+  getClientId,
+  resetRateLimitStore,
+  STRICTER_QUOTE_RATE_LIMIT,
+} from "@/lib/server/rate-limit";
 
 describe("checkRateLimit", () => {
   beforeEach(() => {
@@ -81,6 +87,35 @@ describe("checkRateLimit", () => {
     const expectedMax = Date.now() + 31_000;
     expect(result.resetAt).toBeGreaterThanOrEqual(expectedMin);
     expect(result.resetAt).toBeLessThanOrEqual(expectedMax);
+  });
+});
+
+describe("rate limit presets", () => {
+  it("defines a stricter quote limit than the default API limit", () => {
+    expect(STRICTER_QUOTE_RATE_LIMIT.maxRequests).toBeLessThan(DEFAULT_API_RATE_LIMIT.maxRequests);
+    expect(STRICTER_QUOTE_RATE_LIMIT.windowMs).toBe(DEFAULT_API_RATE_LIMIT.windowMs);
+  });
+
+  it("enforces the stricter quote limit sooner", () => {
+    // Exhaust the stricter quote preset for a client…
+    for (let i = 0; i < STRICTER_QUOTE_RATE_LIMIT.maxRequests; i++) {
+      expect(checkRateLimit("quote-client", STRICTER_QUOTE_RATE_LIMIT).allowed).toBe(true);
+    }
+    // …the next quote request is blocked…
+    expect(checkRateLimit("quote-client", STRICTER_QUOTE_RATE_LIMIT).allowed).toBe(false);
+    // …while the same client still has headroom under the default API limit.
+    expect(checkRateLimit("quote-client", DEFAULT_API_RATE_LIMIT).allowed).toBe(true);
+  });
+
+  it("separates quote and default limit buckets via keyPrefix", () => {
+    // Exhaust the strict quote bucket — the default bucket is untouched.
+    for (let i = 0; i < STRICTER_QUOTE_RATE_LIMIT.maxRequests; i++) {
+      checkRateLimit("client-x", { ...STRICTER_QUOTE_RATE_LIMIT, keyPrefix: "quote" });
+    }
+    expect(
+      checkRateLimit("client-x", { ...STRICTER_QUOTE_RATE_LIMIT, keyPrefix: "quote" }).allowed
+    ).toBe(false);
+    expect(checkRateLimit("client-x", DEFAULT_API_RATE_LIMIT).allowed).toBe(true);
   });
 });
 

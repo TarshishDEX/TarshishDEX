@@ -278,9 +278,9 @@ describe("buildErrorResponse", () => {
 });
 
 describe("ErrorCode", () => {
-  it("contains all 19 codes (16 active + 3 reserved)", () => {
+  it("contains all 20 codes (17 active + 3 reserved)", () => {
     const keys = Object.keys(ErrorCode);
-    expect(keys.length).toBe(19);
+    expect(keys.length).toBe(20);
   });
 
   it("includes domain-specific codes for every API route category", () => {
@@ -296,6 +296,7 @@ describe("ErrorCode", () => {
     expect(ErrorCode.ORDERS_QUERY_FAILED).toBe("ORDERS_QUERY_FAILED");
     expect(ErrorCode.ORDERS_BUILD_FAILED).toBe("ORDERS_BUILD_FAILED");
     expect(ErrorCode.CONTRACT_NOT_DEPLOYED).toBe("CONTRACT_NOT_DEPLOYED");
+    expect(ErrorCode.HORIZON_RATE_LIMITED).toBe("HORIZON_RATE_LIMITED");
   });
 
   it("includes transport-level and reserved codes", () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isValidPublicKey, fetchXlmBalance, fetchPortfolioSummary } from "@/lib/stellar/account";
+import { HorizonRateLimitError } from "@/lib/stellar/horizon-guard";
 // ── Mock Horizon ───────────────────────────────────────────────────────
 const { mockAccountCall, mockOrderbookCall } = vi.hoisted(() => ({
   mockAccountCall: vi.fn(),
@@ -347,6 +348,55 @@ describe("fetchPortfolioSummary", () => {
     // Both nulls sort with ?? 0, so their relative order is stable
     expect(summary.balances[1]!.valueInXlm).toBeNull();
     expect(summary.balances[2]!.valueInXlm).toBeNull();
+  });
+
+  it("throws HorizonRateLimitError when Horizon rate-limits (429)", async () => {
+    vi.useFakeTimers();
+    try {
+      const rateLimitError = new Error("Rate limit exceeded") as Error & {
+        response: { status: number; headers: Record<string, string> };
+      };
+      rateLimitError.response = { status: 429, headers: { "retry-after": "7" } };
+      mockAccountCall.mockRejectedValue(rateLimitError);
+
+      const promise = fetchPortfolioSummary(
+        "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+      );
+      // Mark handled immediately so the rejection during timer advancement
+      // is never reported as unhandled.
+      promise.catch(() => {});
+      // Flush the exponential-backoff delays between retry attempts.
+      await vi.advanceTimersByTimeAsync(60_000);
+
+      await expect(promise).rejects.toBeInstanceOf(HorizonRateLimitError);
+      await expect(promise).rejects.toMatchObject({ retryAfterSeconds: 7 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries transient failures and recovers", async () => {
+    vi.useFakeTimers();
+    try {
+      const transient = new Error("Service unavailable") as Error & {
+        response: { status: number; headers: Record<string, string> };
+      };
+      transient.response = { status: 503, headers: {} };
+      mockAccountCall
+        .mockRejectedValueOnce(transient)
+        .mockResolvedValueOnce({ balances: [{ asset_type: "native", balance: "42.0000000" }] });
+
+      const promise = fetchPortfolioSummary(
+        "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+      );
+      await vi.advanceTimersByTimeAsync(60_000);
+
+      const summary = await promise;
+      expect(summary.totalValueXlm).toBe(42);
+      expect(mockAccountCall).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("returns correct assetCount", async () => {

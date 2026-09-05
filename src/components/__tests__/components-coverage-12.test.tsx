@@ -129,7 +129,7 @@ describe("rate-limit module", () => {
 describe("events route cleanup", () => {
   it("runs cleanup when the client disconnects", async () => {
     const { GET } = await import("@/app/api/events/route");
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/events"));
     const reader = (res.body as ReadableStream<Uint8Array>).getReader();
     await reader.read();
     await reader.cancel();

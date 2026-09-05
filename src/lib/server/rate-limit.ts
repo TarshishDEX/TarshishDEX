@@ -37,6 +37,16 @@ export interface RateLimitOptions {
   keyPrefix?: string;
 }
 
+/** Default per-IP API limit — shared with the edge middleware. */
+export const DEFAULT_API_RATE_LIMIT = { maxRequests: 100, windowMs: 60_000 } as const;
+
+/**
+ * Stricter limit for expensive quote endpoints. Computing a quote hits
+ * Horizon path-finding plus several orderbooks, so quote routes are
+ * throttled harder than the default API limit.
+ */
+export const STRICTER_QUOTE_RATE_LIMIT = { maxRequests: 30, windowMs: 60_000 } as const;
+
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;

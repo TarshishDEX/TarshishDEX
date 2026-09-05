@@ -26,6 +26,30 @@ describe("selectBestRoute", () => {
     expect(selectBestRoute([])).toBeNull();
   });
 
+  it("returns the single route when only one route is provided", () => {
+    const only = makeRoute({ outputAmount: "9.5", method: "direct" });
+    expect(selectBestRoute([only])).toBe(only);
+  });
+
+  it("does not mutate the input array", () => {
+    const direct = makeRoute({ outputAmount: "9.5", method: "direct" });
+    const multiHop = makeRoute({
+      outputAmount: "10",
+      method: "multi-hop",
+      path: [
+        { code: "XLM", isNative: true },
+        { code: "USDC", issuer: "GISS" },
+        { code: "USDT", issuer: "GIS2" },
+      ],
+    });
+    const input = [direct, multiHop];
+    const originalOrder = [direct, multiHop];
+
+    expect(selectBestRoute(input)).toBe(multiHop);
+    // The caller's array must be left untouched.
+    expect(input).toEqual(originalOrder);
+  });
+
   it("picks the route with the highest output", () => {
     const direct = makeRoute({ outputAmount: "9.5", method: "direct" });
     const multiHop = makeRoute({

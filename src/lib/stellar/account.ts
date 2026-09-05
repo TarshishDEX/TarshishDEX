@@ -1,5 +1,6 @@
 import { getHorizonServer } from "@/lib/stellar/horizon";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
+import { withHorizonResilience } from "@/lib/stellar/horizon-guard";
 import { toToken } from "@/lib/stellar/tokens";
 import type { Token } from "@/lib/stellar/types";
 
@@ -27,7 +28,13 @@ const XLM_TOKEN: Token = { code: "XLM", name: "Lumen", decimals: 7, isNative: tr
  */
 export async function fetchPortfolioSummary(address: string): Promise<PortfolioSummary> {
   const server = getHorizonServer();
-  const account = await server.accounts().accountId(address).call();
+  // Horizon is aggressively rate-limited (HTTP 429). Route the account fetch
+  // through the shared resilience guard: exponential-backoff retries,
+  // a typed rate-limit error for the UI, and a circuit breaker that opens
+  // after sustained 429s so we fail fast instead of piling on.
+  const account = await withHorizonResilience("portfolio:account", () =>
+    server.accounts().accountId(address).call()
+  );
   const rawBalances = account.balances.filter(
     // Liquidity pool share balances are not tradeable tokens — skip them
     (record) => record.asset_type !== "liquidity_pool_shares"
