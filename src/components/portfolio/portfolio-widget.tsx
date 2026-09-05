@@ -5,6 +5,7 @@ import { usePortfolioSummary, useTradeHistory } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import { useLiveAccountStream } from "@/components/providers/live-sync-hooks";
 import { isValidPublicKey } from "@/lib/stellar/account";
+import { HorizonRateLimitError } from "@/lib/stellar/horizon-guard";
 import { BalanceTable } from "@/components/portfolio/balance-table";
 import { TradeHistory } from "@/components/portfolio/trade-history";
 import { AllocationDonut } from "@/components/charts/allocation-donut";
@@ -26,8 +27,18 @@ export function PortfolioWidget() {
   const activeAddress = manualAddress || walletAddress || "";
 
   const valid = isValidPublicKey(address);
-  const { data: portfolio, isLoading, isError } = usePortfolioSummary(activeAddress);
+  const {
+    data: portfolio,
+    isLoading,
+    isError,
+    error: portfolioError,
+  } = usePortfolioSummary(activeAddress);
   const { data: history, isLoading: historyLoading } = useTradeHistory(activeAddress);
+
+  // Horizon rate limits are transient — tell the user we're backing off and
+  // will retry automatically instead of showing a generic failure.
+  const horizonRetryAfterSeconds =
+    portfolioError instanceof HorizonRateLimitError ? portfolioError.retryAfterSeconds : null;
 
   // Real-time sync: stream operations and auto-refresh balances + history.
   useLiveAccountStream(activeAddress);
@@ -129,7 +140,9 @@ export function PortfolioWidget() {
 
           {isError && (
             <p className="bg-danger-soft text-danger rounded-xl px-4 py-3 text-sm">
-              Could not load this account. Check the address and network, then try again.
+              {horizonRetryAfterSeconds !== null
+                ? `Horizon rate limit - retrying in ${horizonRetryAfterSeconds} seconds`
+                : "Could not load this account. Check the address and network, then try again."}
             </p>
           )}
 

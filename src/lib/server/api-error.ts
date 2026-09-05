@@ -44,6 +44,8 @@ export const ErrorCode = {
   PORTFOLIO_FETCH_FAILED: "PORTFOLIO_FETCH_FAILED",
   TRADES_FETCH_FAILED: "TRADES_FETCH_FAILED",
   INVALID_STELLAR_ADDRESS: "INVALID_STELLAR_ADDRESS",
+  /** Upstream Horizon returned 429 — client should retry after Retry-After. */
+  HORIZON_RATE_LIMITED: "HORIZON_RATE_LIMITED",
 
   // ── Swap ───────────────────────────────────────────────────────────
   SWAP_QUOTE_FAILED: "SWAP_QUOTE_FAILED",

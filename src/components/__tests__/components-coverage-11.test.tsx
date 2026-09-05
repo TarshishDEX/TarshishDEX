@@ -321,7 +321,7 @@ describe("events route", () => {
   it("streams a connected event then heartbeat chunks", async () => {
     vi.useFakeTimers();
     const { GET } = await import("@/app/api/events/route");
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/events"));
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
     const reader = (res.body as ReadableStream<Uint8Array>).getReader();
     const decoder = new TextDecoder();

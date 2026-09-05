@@ -184,7 +184,8 @@ export async function findBestRoute(
  */
 export function selectBestRoute(routes: SwapRoute[]): SwapRoute | null {
   if (routes.length === 0) return null;
-  const sorted = routes.sort((a, b) => {
+  // Copy before sorting — never mutate the caller's array.
+  const sorted = [...routes].sort((a, b) => {
     const diff = Number(b.outputAmount) - Number(a.outputAmount);
     if (Math.abs(diff) > 1e-12) return diff;
     return a.path.length - b.path.length;

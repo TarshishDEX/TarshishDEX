@@ -120,4 +120,54 @@ describe("useWalletStore", () => {
     // tested indirectly via component smoke tests)
     expect(typeof useWallet).toBe("function");
   });
+
+  it("persists the connected address and rehydrates it on a fresh session (round-trip)", async () => {
+    vi.mocked(connectWallet).mockResolvedValue("GABC123...");
+    await act(() => useWalletStore.getState().connect());
+
+    // The persist middleware writes only the selected slice of state to storage.
+    const raw = localStorage.getItem("tarshishdex-wallet");
+    expect(raw).not.toBeNull();
+    const persisted = JSON.parse(raw!) as { state: { address: string | null } };
+    expect(persisted.state.address).toBe("GABC123...");
+    // Derived runtime fields are intentionally stripped from persistence.
+    expect(persisted.state).not.toHaveProperty("status");
+
+    // Simulate a fresh page load: wipe in-memory state (setState re-persists
+    // the reset, so restore the ORIGINAL snapshot to storage first), then
+    // rehydrate from the persisted session data.
+    act(() => {
+      useWalletStore.setState({ address: null, status: "disconnected" });
+    });
+    expect(useWalletStore.getState().address).toBeNull();
+    localStorage.setItem("tarshishdex-wallet", raw!);
+
+    await act(async () => {
+      await useWalletStore.persist.rehydrate();
+    });
+
+    expect(useWalletStore.getState().address).toBe("GABC123...");
+    // status is derived at runtime and intentionally not persisted.
+    expect(useWalletStore.getState().status).toBe("disconnected");
+  });
+
+  it("persisted address survives an account switch and rehydrate", async () => {
+    act(() => {
+      useWalletStore.getState().setConnected("GACCOUNT123...", "Test SDF Network ; September 2015");
+    });
+
+    const raw = localStorage.getItem("tarshishdex-wallet");
+    expect(raw).not.toBeNull();
+    const persisted = JSON.parse(raw!) as { state: { address: string | null } };
+    expect(persisted.state.address).toBe("GACCOUNT123...");
+
+    act(() => {
+      useWalletStore.setState({ address: null, status: "disconnected" });
+    });
+    localStorage.setItem("tarshishdex-wallet", raw!);
+    await act(async () => {
+      await useWalletStore.persist.rehydrate();
+    });
+    expect(useWalletStore.getState().address).toBe("GACCOUNT123...");
+  });
 });

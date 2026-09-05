@@ -5,6 +5,7 @@ import { logger } from "@/lib/server/logger";
 import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
+import { HorizonRateLimitError } from "@/lib/stellar/horizon-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,25 @@ export const GET = apiHandler(
       logger.info("portfolio served", { address: validAddress });
       return NextResponse.json(summary);
     } catch (error) {
+      // Horizon rate limits are distinct from other failures: surface them as
+      // 429 with a Retry-After header so clients back off and retry.
+      if (error instanceof HorizonRateLimitError) {
+        logger.warn("portfolio fetch rate-limited by Horizon", {
+          address: validAddress,
+          retryAfterSeconds: error.retryAfterSeconds,
+        });
+        return NextResponse.json(
+          buildErrorResponse(
+            ErrorCode.HORIZON_RATE_LIMITED,
+            429,
+            `Horizon rate limit - retrying in ${error.retryAfterSeconds} seconds`
+          ),
+          {
+            status: 429,
+            headers: { "Retry-After": String(error.retryAfterSeconds) },
+          }
+        );
+      }
       logger.error("portfolio fetch failed", { address: validAddress, error: String(error) });
       return NextResponse.json(
         buildErrorResponse(ErrorCode.PORTFOLIO_FETCH_FAILED, 502, "Failed to fetch portfolio"),

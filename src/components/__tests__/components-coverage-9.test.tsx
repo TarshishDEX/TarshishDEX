@@ -324,7 +324,7 @@ describe("logger", () => {
 describe("events route", () => {
   it("GET returns a stream response", async () => {
     const { GET } = await import("@/app/api/events/route");
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/events"));
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
     const reader = res.body?.getReader();
