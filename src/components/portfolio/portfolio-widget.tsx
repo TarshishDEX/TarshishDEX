@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { usePortfolioSummary, useTradeHistory } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import { useLiveAccountStream } from "@/components/providers/live-sync-hooks";
@@ -33,7 +33,19 @@ export function PortfolioWidget() {
     isError,
     error: portfolioError,
   } = usePortfolioSummary(activeAddress);
-  const { data: history, isLoading: historyLoading } = useTradeHistory(activeAddress);
+  const {
+    data: historyPages,
+    isLoading: historyLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useTradeHistory(activeAddress);
+
+  // Flatten the infinite-query pages into a single entry list for the table.
+  const history = useMemo(
+    () => historyPages?.pages?.flatMap((page) => page.entries) ?? [],
+    [historyPages]
+  );
 
   // Horizon rate limits are transient — tell the user we're backing off and
   // will retry automatically instead of showing a generic failure.
@@ -159,7 +171,14 @@ export function PortfolioWidget() {
           </div>
 
           {/* Trade history */}
-          <TradeHistory entries={history ?? []} loading={historyLoading} showExplorer />
+          <TradeHistory
+            entries={history}
+            loading={historyLoading}
+            showExplorer
+            hasMore={hasNextPage}
+            loadingMore={isFetchingNextPage}
+            onLoadMore={() => fetchNextPage()}
+          />
         </div>
       )}
 

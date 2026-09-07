@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { explorerTxUrl } from "@/lib/stellar/config";
 import type { TradeHistoryEntry, TradeType } from "@/lib/stellar/history";
 
@@ -17,10 +18,19 @@ export function TradeHistory({
   entries,
   loading,
   showExplorer = false,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: {
   entries: TradeHistoryEntry[];
   loading?: boolean;
   showExplorer?: boolean;
+  /** Whether more records exist beyond the current page. */
+  hasMore?: boolean;
+  /** Whether the next page is currently being fetched. */
+  loadingMore?: boolean;
+  /** Called when the user requests the next page. */
+  onLoadMore?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | TradeType>("all");
@@ -112,6 +122,19 @@ export function TradeHistory({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination footer — Load More while records remain, exhausted state after. */}
+      {!loading && entries.length > 0 && filtered.length > 0 && (
+        <div className="border-border bg-surface/40 flex items-center justify-center border-t px-6 py-4">
+          {hasMore ? (
+            <Button variant="secondary" size="sm" onClick={onLoadMore} disabled={loadingMore}>
+              {loadingMore ? "Loading more…" : "Load More"}
+            </Button>
+          ) : (
+            <p className="text-foreground-faint text-xs">No more trades</p>
+          )}
         </div>
       )}
     </Card>

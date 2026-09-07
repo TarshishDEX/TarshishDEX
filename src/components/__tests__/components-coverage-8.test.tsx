@@ -424,7 +424,13 @@ describe("PortfolioWidget", () => {
       isLoading: false,
       isError: false,
     });
-    useTradeHistoryMock.mockReturnValue({ data: [], isLoading: false });
+    useTradeHistoryMock.mockReturnValue({
+      data: { pages: [{ entries: [], nextCursor: null }] },
+      isLoading: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
+      isFetchingNextPage: false,
+    });
   });
 
   it("shows the watch prompt without an address", () => {

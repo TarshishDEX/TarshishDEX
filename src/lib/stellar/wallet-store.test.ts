@@ -89,6 +89,34 @@ describe("useWalletStore", () => {
     expect(useWalletStore.getState().address).toBeNull();
   });
 
+  it("switches to a new account when connect is called while already connected", async () => {
+    vi.mocked(connectWallet)
+      .mockResolvedValueOnce("GACCOUNT-OLD...")
+      .mockResolvedValueOnce("GACCOUNT-NEW...");
+
+    await act(() => useWalletStore.getState().connect());
+    expect(useWalletStore.getState().address).toBe("GACCOUNT-OLD...");
+    expect(useWalletStore.getState().status).toBe("connected");
+
+    // Simulate the user switching accounts in the wallet picker.
+    await act(() => useWalletStore.getState().connect());
+
+    expect(useWalletStore.getState().address).toBe("GACCOUNT-NEW...");
+    expect(useWalletStore.getState().status).toBe("connected");
+  });
+
+  it("setConnected replaces the active account (kit account switch)", () => {
+    act(() => {
+      useWalletStore.getState().setConnected("GACCOUNT-A...", "Test SDF Network ; September 2015");
+    });
+    act(() => {
+      useWalletStore.getState().setConnected("GACCOUNT-B...", "Test SDF Network ; September 2015");
+    });
+
+    expect(useWalletStore.getState().address).toBe("GACCOUNT-B...");
+    expect(useWalletStore.getState().status).toBe("connected");
+  });
+
   it("setConnected updates address and passphrase", () => {
     act(() => {
       useWalletStore

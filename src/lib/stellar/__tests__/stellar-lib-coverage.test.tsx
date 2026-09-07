@@ -56,6 +56,7 @@ vi.mock("@/lib/stellar/account", () => ({
 
 vi.mock("@/lib/stellar/history", () => ({
   fetchTradeHistory: vi.fn(() => Promise.resolve([])),
+  fetchTradeHistoryPage: vi.fn(() => Promise.resolve({ entries: [], nextCursor: null })),
 }));
 
 vi.mock("@/lib/soroban/market-oracle", () => ({
@@ -175,10 +176,11 @@ describe("queries hooks", () => {
     });
   });
 
-  it("useTradeHistory fetches history", async () => {
+  it("useTradeHistory fetches history pages", async () => {
     const { result } = renderHook(() => useTradeHistory(VALID_ADDRESS), { wrapper: queryWrapper });
     await waitFor(() => {
-      expect(result.current.data).toEqual([]);
+      expect(result.current.data?.pages[0]?.entries).toEqual([]);
+      expect(result.current.data?.pages[0]?.nextCursor).toBeNull();
     });
   });
 
