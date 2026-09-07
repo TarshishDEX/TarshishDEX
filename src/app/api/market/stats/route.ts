@@ -32,9 +32,9 @@ export const GET = apiHandler(async (request) => {
 
   try {
     const tokens = await fetchTopAssets(limit);
-    const stats = await getMarketStatsForTokens(tokens);
-    logger.info("market stats served", { count: stats.length });
-    return NextResponse.json({ count: stats.length, stats });
+    const { stats, skipped } = await getMarketStatsForTokens(tokens);
+    logger.info("market stats served", { count: stats.length, skipped });
+    return NextResponse.json({ count: stats.length, skipped, stats });
   } catch (error) {
     logger.error("market stats failed", { error: String(error) });
     return NextResponse.json(

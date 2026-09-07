@@ -48,7 +48,7 @@ async function simulateDirectRoute(
 }
 
 /** Simulate a two-hop swap through a bridge asset. */
-async function simulateBridgeRoute(
+export async function simulateBridgeRoute(
   input: StellarAsset,
   bridge: StellarAsset,
   output: StellarAsset,
@@ -60,11 +60,20 @@ async function simulateBridgeRoute(
   try {
     const first = await fetchOrderbook(input, bridge, 100);
     const firstFill = simulateOrderbookFill(amountIn, first);
-    if (!firstFill || !firstFill.fullyFilled) {
+    // Bail out when the first hop yields no fill at all — a zero-output leg is
+    // indistinguishable from no liquidity and would only produce a useless
+    // "route" with a zero output (mirrors buildRoute's own guard).
+    if (!firstFill || firstFill.output === "0" || firstFill.output === "") {
       return { path: [input, bridge, output], fill: null, method: "multi-hop", midPrice: null };
     }
+
+    // A partially-filled first hop still produces bridge output worth routing
+    // through the second leg. Only bail out when the first hop yields nothing
+    // at all — gating the second hop on `fullyFilled` discarded valid partial
+    // fills on thin orderbooks.
     const second = await fetchOrderbook(bridge, output, 100);
     const secondFill = simulateOrderbookFill(firstFill.output, second);
+
     // Execution price is the combined output per input
     const combinedMid =
       first.midPrice !== null && second.midPrice !== null
@@ -72,9 +81,31 @@ async function simulateBridgeRoute(
             new BigNumber(first.midPrice.toString()).times(second.midPrice.toString()).toString()
           )
         : null;
+
+    if (!secondFill) {
+      return {
+        path: [input, bridge, output],
+        fill: null,
+        method: "multi-hop",
+        midPrice: combinedMid,
+      };
+    }
+
+    // The route only fully fills when BOTH legs fill completely; a partial
+    // first hop makes the whole route a partial fill. The combined execution
+    // price is the final output per unit of input, which keeps price-impact
+    // scoring consistent for partial fills.
+    const fullyFilled = firstFill.fullyFilled && secondFill.fullyFilled;
+    const combinedOutput = new BigNumber(secondFill.output);
+    const avgPrice = firstFill.fullyFilled
+      ? secondFill.avgPrice
+      : Number(amountIn) > 0
+        ? Number(combinedOutput.dividedBy(amountIn).toString())
+        : 0;
+
     return {
       path: [input, bridge, output],
-      fill: secondFill,
+      fill: { output: secondFill.output, avgPrice, fullyFilled },
       method: "multi-hop",
       midPrice: combinedMid,
     };

@@ -84,10 +84,40 @@ export async function fetchTopAssets(limit = 12): Promise<Token[]> {
   return response.records.map((r) => toToken(r.asset_code ?? "XLM", r.asset_issuer ?? undefined));
 }
 
-/** Fetch market stats for many tokens in parallel. */
-export async function getMarketStatsForTokens(tokens: Token[]): Promise<MarketStats[]> {
-  const stats = await Promise.allSettled(tokens.map((t) => getMarketStats(t)));
-  return stats
-    .filter((s): s is PromiseFulfilledResult<MarketStats> => s.status === "fulfilled")
-    .map((s) => s.value);
+/** Result of a batched market-stats fetch. */
+export interface MarketStatsBatch {
+  /** Stats for tokens that have usable market data. */
+  stats: MarketStats[];
+  /** Number of tokens skipped because they have no trade/orderbook data. */
+  skipped: number;
+}
+
+/**
+ * Fetch market stats for many tokens in parallel.
+ *
+ * Each token is queried independently: a single token without Horizon trade
+ * data must never fail the whole batch. Tokens that error or have no market
+ * data are counted in `skipped` and excluded from `stats`.
+ */
+export async function getMarketStatsForTokens(tokens: Token[]): Promise<MarketStatsBatch> {
+  const results = await Promise.allSettled(tokens.map((t) => getMarketStats(t)));
+  const stats: MarketStats[] = [];
+  let skipped = 0;
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      skipped += 1;
+      continue;
+    }
+    const marketStats = result.value;
+    // Native XLM is always priced at 1; issued tokens without an orderbook
+    // (priceInXlm === null) have no usable market data and are skipped.
+    if (!marketStats.token.isNative && marketStats.priceInXlm === null) {
+      skipped += 1;
+      continue;
+    }
+    stats.push(marketStats);
+  }
+
+  return { stats, skipped };
 }

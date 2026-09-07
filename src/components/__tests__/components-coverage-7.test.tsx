@@ -603,6 +603,13 @@ describe("PriceChartPanel", () => {
     expect(screen.getByText(/No price history available/)).toBeTruthy();
   });
 
+  it("shows an explained empty state when no trade data exists", () => {
+    usePriceHistoryMock.mockReturnValue({ data: [], isLoading: false, isError: false });
+    render(<PriceChartPanel />);
+    expect(screen.getByText("No trade data available for this pair")).toBeTruthy();
+    expect(screen.getByText(/Try a different resolution or trading pair/)).toBeTruthy();
+  });
+
   it("renders stats and charts with candles", () => {
     usePriceHistoryMock.mockReturnValue({ data: CANDLES, isLoading: false, isError: false });
     render(<PriceChartPanel />);

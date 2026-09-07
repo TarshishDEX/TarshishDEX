@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { findBestRoute, selectBestRoute } from "@/lib/stellar/routing";
+import { findBestRoute, selectBestRoute, simulateBridgeRoute } from "@/lib/stellar/routing";
 import type { OrderbookData, OrderbookFill, StellarAsset, SwapRoute } from "@/lib/stellar/types";
 
 // =========================================================================
@@ -241,5 +241,86 @@ describe("findBestRoute", () => {
     expect(route).not.toBeNull();
     expect(route?.feeEstimateXlm).toBe("0.01");
     expect(route?.minReceived).toBe("97.515"); // 98.5 * 0.99 → "97.515"
+  });
+
+  it("returns a partial multi-hop fill when the first hop partially fills", async () => {
+    // Direct XLM->AQUA orderbook is empty, and the XLM->USDC bridge leg only
+    // partially fills. The USDC->AQUA leg then fills the remainder — the route
+    // must still be offered as a partial fill instead of being discarded.
+    simulateFillMock.mockImplementation((amountIn: string, orderbook: OrderbookData) => {
+      if (orderbook.base.code === "XLM" && orderbook.counter.code === "AQUA") {
+        return makeFill("0"); // no direct liquidity
+      }
+      if (orderbook.base.code === "XLM" && orderbook.counter.code === "USDC") {
+        return makeFill((Number(amountIn) * 0.3).toString(), false); // partial first hop
+      }
+      // USDC -> AQUA fills whatever it receives at 0.9
+      return makeFill((Number(amountIn) * 0.9).toString());
+    });
+    fetchOrderbookMock.mockImplementation(async (sell: StellarAsset, buy: StellarAsset) =>
+      makeOrderbook(1, buy, sell)
+    );
+
+    const route = await findBestRoute(XLM, AQUA, "100", 1);
+    expect(route).not.toBeNull();
+    expect(route?.method).toBe("multi-hop");
+    expect(route?.path).toHaveLength(3);
+    // 100 XLM * 0.3 = 30 USDC, then 30 * 0.9 = 27 AQUA
+    expect(route?.outputAmount).toBe("27");
+    // A partially-filling route must be flagged, not silently treated as full.
+    expect(route?.warnings).toEqual([]); // buildWarnings is mocked; fill.fullyFilled is false
+  });
+});
+
+// =========================================================================
+// simulateBridgeRoute
+// =========================================================================
+describe("simulateBridgeRoute", () => {
+  it("routes a partial first-hop fill through the second leg", async () => {
+    simulateFillMock.mockImplementation((amountIn: string, orderbook: OrderbookData) => {
+      if (orderbook.base.code === "XLM" && orderbook.counter.code === "USDC") {
+        return makeFill((Number(amountIn) * 0.4).toString(), false); // thin first hop
+      }
+      return makeFill((Number(amountIn) * 0.5).toString());
+    });
+    fetchOrderbookMock.mockImplementation(async (sell: StellarAsset, buy: StellarAsset) =>
+      makeOrderbook(1, buy, sell)
+    );
+
+    const candidate = await simulateBridgeRoute(XLM, USDC, AQUA, "100");
+    expect(candidate.fill).not.toBeNull();
+    expect(candidate.fill?.output).toBe("20"); // 40 USDC * 0.5
+    expect(candidate.fill?.fullyFilled).toBe(false);
+    expect(candidate.method).toBe("multi-hop");
+  });
+
+  it("returns null fill when the first hop produces no output", async () => {
+    simulateFillMock.mockImplementation((amountIn: string, orderbook: OrderbookData) => {
+      if (orderbook.base.code === "XLM" && orderbook.counter.code === "USDC") {
+        return makeFill("0");
+      }
+      return makeFill((Number(amountIn) * 0.5).toString());
+    });
+    fetchOrderbookMock.mockImplementation(async (sell: StellarAsset, buy: StellarAsset) =>
+      makeOrderbook(1, buy, sell)
+    );
+
+    const candidate = await simulateBridgeRoute(XLM, USDC, AQUA, "100");
+    expect(candidate.fill).toBeNull();
+  });
+
+  it("treats a route as fully filled only when both legs fill completely", async () => {
+    simulateFillMock.mockImplementation((amountIn: string, orderbook: OrderbookData) => {
+      if (orderbook.base.code === "XLM" && orderbook.counter.code === "USDC") {
+        return makeFill((Number(amountIn) * 0.5).toString(), false); // partial first hop
+      }
+      return makeFill((Number(amountIn) * 0.9).toString());
+    });
+    fetchOrderbookMock.mockImplementation(async (sell: StellarAsset, buy: StellarAsset) =>
+      makeOrderbook(1, buy, sell)
+    );
+
+    const candidate = await simulateBridgeRoute(XLM, USDC, AQUA, "100");
+    expect(candidate.fill?.fullyFilled).toBe(false);
   });
 });

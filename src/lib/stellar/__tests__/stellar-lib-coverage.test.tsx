@@ -42,7 +42,7 @@ vi.mock("@/lib/stellar/prices", () => ({
   fetchTopAssets: vi.fn(() =>
     Promise.resolve([{ code: "XLM", name: "Lumen", decimals: 7, isNative: true }])
   ),
-  getMarketStatsForTokens: vi.fn(() => Promise.resolve([])),
+  getMarketStatsForTokens: vi.fn(() => Promise.resolve({ stats: [], skipped: 0 })),
   fetchCandles: vi.fn(() => Promise.resolve([])),
 }));
 

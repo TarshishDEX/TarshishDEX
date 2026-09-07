@@ -157,8 +157,9 @@ describe("executeSwap", () => {
     vi.clearAllMocks();
     const realAccount = new Account(VALID_ADDRESS, "1");
     // Expose balances for needsTrustline + the real Account methods for the builder.
+    // Include enough native XLM so the trustline-reserve pre-check passes.
     Object.defineProperty(realAccount, "balances", {
-      value: [{ asset_type: "native" }],
+      value: [{ asset_type: "native", balance: "100" }],
       configurable: true,
     });
     loadAccountMock.mockResolvedValue(realAccount as never);
@@ -195,9 +196,33 @@ describe("executeSwap", () => {
       path: [XLM, USDC],
       method: "direct",
     });
-    console.log("ERRMSG:", result.error);
     expect(result.phase).toBe("success");
     expect(loadAccountMock).toHaveBeenCalledWith(VALID_ADDRESS);
+  });
+
+  it("fails fast with a clear error when XLM is insufficient for the trustline reserve", async () => {
+    const realAccount = new Account(VALID_ADDRESS, "1");
+    Object.defineProperty(realAccount, "balances", {
+      value: [{ asset_type: "native", balance: "0.1" }],
+      configurable: true,
+    });
+    loadAccountMock.mockResolvedValue(realAccount as never);
+
+    const result = await executeSwap({
+      address: VALID_ADDRESS,
+      input: XLM,
+      output: USDC,
+      amountIn: "100",
+      minReceived: "98",
+      path: [XLM, USDC],
+      method: "direct",
+    });
+    expect(result.phase).toBe("failed");
+    expect(result.errorKind).toBe("insufficient-balance");
+    expect(result.error).toContain("Insufficient XLM for trustline reserve");
+    // Fails before building/signing/submitting — no wallet prompt, no Horizon submit.
+    expect(signTxMock).not.toHaveBeenCalled();
+    expect(submitTxMock).not.toHaveBeenCalled();
   });
 
   it("returns failed state with classified error on failure", async () => {
@@ -230,7 +255,6 @@ describe("executeSwap", () => {
       undefined,
       onSuccess
     );
-    console.log("ERRMSG:", result.error);
     expect(result.phase).toBe("success");
     expect(onSuccess).toHaveBeenCalledWith("tx-hash-1");
   });

@@ -213,23 +213,45 @@ describe("fetchTopAssets", () => {
 
 // ── getMarketStatsForTokens ─────────────────────────────────────────────
 describe("getMarketStatsForTokens", () => {
-  it("returns empty for no tokens", async () => {
+  it("returns empty stats and zero skipped for no tokens", async () => {
     const result = await getMarketStatsForTokens([]);
-    expect(result).toEqual([]);
+    expect(result).toEqual({ stats: [], skipped: 0 });
   });
 
   it("collects stats when XLM is first (no Horizon needed)", async () => {
     mockFetchOrderbook.mockRejectedValue(new Error("Down"));
     const result = await getMarketStatsForTokens([XLM, USDC]);
     // XLM always succeeds (price = 1, no Horizon call)
-    const xlmInResult = result.find((s) => s.token.code === "XLM");
+    const xlmInResult = result.stats.find((s) => s.token.code === "XLM");
     expect(xlmInResult).toBeDefined();
     expect(xlmInResult!.priceInXlm).toBe(1);
+    // USDC has no orderbook data — counted in skipped, not a batch failure
+    expect(result.skipped).toBe(1);
   });
 
   it("filters out rejected promises via allSettled", async () => {
     mockFetchOrderbook.mockRejectedValue(new Error("Down"));
     const result = await getMarketStatsForTokens([USDC]);
-    expect(Array.isArray(result)).toBe(true);
+    expect(Array.isArray(result.stats)).toBe(true);
+    expect(result.stats).toEqual([]);
+    expect(result.skipped).toBe(1);
+  });
+
+  it("skips tokens without an orderbook price instead of failing the batch", async () => {
+    // A token whose orderbook exists but has no liquidity (midPrice null)
+    // must be skipped while tokens with data still succeed.
+    mockFetchOrderbook.mockResolvedValue({
+      base: USDC,
+      counter: XLM,
+      bids: [],
+      asks: [],
+      bestBid: null,
+      bestAsk: null,
+      midPrice: null,
+      spreadPct: null,
+    });
+    const result = await getMarketStatsForTokens([USDC, XLM]);
+    expect(result.stats.map((s) => s.token.code)).toEqual(["XLM"]);
+    expect(result.skipped).toBe(1);
   });
 });
