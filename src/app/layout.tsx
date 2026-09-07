@@ -100,7 +100,10 @@ export default function RootLayout({
                 </main>
                 <Footer />
                 {/* Spacer so the fixed mobile bottom nav never covers footer content. */}
-                <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true" />
+                <div
+                  className="h-[calc(4.5rem+env(safe-area-inset-bottom))] md:hidden"
+                  aria-hidden="true"
+                />
                 <MobileBottomNav />
                 <ScrollToTop />
                 <ToastViewport />
