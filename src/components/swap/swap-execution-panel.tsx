@@ -10,6 +10,7 @@ import {
   type SwapErrorKind,
   type SwapExecutionPhase,
 } from "@/lib/stellar/swap-execution";
+import { recordSwapHistory, updateSwapHistoryEntry } from "@/lib/hooks/use-swap-history";
 import { signAndSubmitContractTx } from "@/lib/stellar/contract-submit";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import type { StellarAsset, SwapRoute } from "@/lib/stellar/types";
@@ -73,6 +74,16 @@ export function SwapExecutionPanel({
     setError(null);
     setHash(null);
     setOrderMarked(false);
+    // Record a pending entry up-front so the swap history panel shows the
+    // in-flight transaction, then flip it to success/failed once the result
+    // is known.
+    const historyId = recordSwapHistory({
+      inputAsset: input.code,
+      outputAsset: output.code,
+      inputAmount: amountIn,
+      outputAmount: quote.outputAmount,
+      status: "pending",
+    }).id;
     const result = await executeSwap(
       {
         address,
@@ -111,9 +122,15 @@ export function SwapExecutionPanel({
     if (result.phase === "success") {
       setHash(result.hash ?? null);
       setExplorerUrl(result.explorerUrl ?? null);
+      updateSwapHistoryEntry(historyId, {
+        status: "success",
+        txHash: result.hash ?? undefined,
+        explorerUrl: result.explorerUrl ?? undefined,
+      });
     } else {
       setErrorKind(result.errorKind ?? "unknown");
       setError(result.error ?? ERROR_MESSAGES.unknown);
+      updateSwapHistoryEntry(historyId, { status: "failed" });
     }
   }
 

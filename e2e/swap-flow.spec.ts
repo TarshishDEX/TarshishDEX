@@ -12,7 +12,7 @@ test.describe("Swap flow", () => {
   });
 
   test("renders swap widget with form controls", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Swap" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Swap", exact: true })).toBeVisible();
     await expect(page.getByLabel("Amount to pay")).toBeVisible();
     await expect(page.getByLabel("Amount to receive")).toBeVisible();
     await expect(page.getByText("Max slippage")).toBeVisible();

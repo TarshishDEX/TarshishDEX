@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { WalletProvider } from "@/components/providers/wallet-provider";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -98,6 +99,9 @@ export default function RootLayout({
                   <Suspense fallback={null}>{children}</Suspense>
                 </main>
                 <Footer />
+                {/* Spacer so the fixed mobile bottom nav never covers footer content. */}
+                <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden="true" />
+                <MobileBottomNav />
                 <ScrollToTop />
                 <ToastViewport />
               </ErrorBoundary>
