@@ -196,7 +196,10 @@
     "ZMFSHONUCEOASW",
     "GXYZ",
     "LUMENX",
-    "LumenX"
+    "LumenX",
+    "GOTHER",
+    "upserted",
+    "upserts"
   ],
   "ignorePaths": ["node_modules", ".next", "package-lock.json", "src/contracts/target", "coverage"]
 }
