@@ -21,10 +21,29 @@ export interface TradeHistoryEntry {
   ledger: number;
 }
 
-/** Fetch the most recent trade-relevant operations for an account. */
-export async function fetchTradeHistory(address: string, limit = 40): Promise<TradeHistoryEntry[]> {
+/** One page of trade history plus the cursor for the next page. */
+export interface TradeHistoryPage {
+  entries: TradeHistoryEntry[];
+  /** Horizon paging token to continue from, or null when exhausted. */
+  nextCursor: string | null;
+}
+
+/**
+ * Fetch a page of trade-relevant operations for an account.
+ *
+ * Pass the `nextCursor` from the previous page to advance; a `null`
+ * `nextCursor` means there are no more records. A page is considered
+ * exhausted when Horizon returns fewer records than the requested limit.
+ */
+export async function fetchTradeHistoryPage(
+  address: string,
+  limit = 40,
+  cursor?: string
+): Promise<TradeHistoryPage> {
   const server = getHorizonServer();
-  const response = await server.operations().forAccount(address).order("desc").limit(limit).call();
+  let request = server.operations().forAccount(address).order("desc").limit(limit);
+  if (cursor) request = request.cursor(cursor);
+  const response = await request.call();
 
   const entries: TradeHistoryEntry[] = [];
 
@@ -33,6 +52,16 @@ export async function fetchTradeHistory(address: string, limit = 40): Promise<Tr
     if (entry) entries.push(entry);
   }
 
+  const lastRecord = response.records[response.records.length - 1];
+  const nextCursor =
+    lastRecord && response.records.length >= limit ? lastRecord.paging_token : null;
+
+  return { entries, nextCursor };
+}
+
+/** Fetch the most recent trade-relevant operations for an account (single page). */
+export async function fetchTradeHistory(address: string, limit = 40): Promise<TradeHistoryEntry[]> {
+  const { entries } = await fetchTradeHistoryPage(address, limit);
   return entries;
 }
 

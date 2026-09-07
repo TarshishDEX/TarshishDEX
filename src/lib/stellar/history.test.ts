@@ -1,14 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { normalizeOperation, formatSwapSummary, fetchTradeHistory } from "@/lib/stellar/history";
+import {
+  normalizeOperation,
+  formatSwapSummary,
+  fetchTradeHistory,
+  fetchTradeHistoryPage,
+} from "@/lib/stellar/history";
 // ── Mock Horizon ───────────────────────────────────────────────────────
-const { mockOperationsCall } = vi.hoisted(() => ({
+const { mockOperationsCall, mockOperationsCallWithCursor } = vi.hoisted(() => ({
   mockOperationsCall: vi.fn(),
+  mockOperationsCallWithCursor: vi.fn(),
 }));
 
 vi.mock("@/lib/stellar/horizon", () => ({
   getHorizonServer: () => ({
     operations: () => ({
-      forAccount: () => ({ order: () => ({ limit: () => ({ call: mockOperationsCall }) }) }),
+      forAccount: () => ({
+        order: () => ({
+          limit: () => ({
+            call: mockOperationsCall,
+            cursor: (cursor: string) => ({ call: () => mockOperationsCallWithCursor(cursor) }),
+          }),
+        }),
+      }),
     }),
   }),
 }));
@@ -437,5 +450,77 @@ describe("fetchTradeHistory", () => {
       "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
     );
     expect(entries).toEqual([]);
+  });
+});
+
+describe("fetchTradeHistoryPage", () => {
+  function makeSwapRecord(id: string, pagingToken: string) {
+    return {
+      id,
+      paging_token: pagingToken,
+      source_account: "GSOURCE",
+      created_at: "2026-01-01T00:00:00Z",
+      ledger: 1000,
+      type: "path_payment_strict_send",
+      source_asset_type: "native",
+      source_amount: "100",
+      asset_type: "credit_alphanum4",
+      asset_code: "USDC",
+      asset_issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      amount: "95",
+      path: [],
+    };
+  }
+
+  it("returns a nextCursor when the page is full (records === limit)", async () => {
+    const records = Array.from({ length: 40 }, (_, i) => makeSwapRecord(`op-${i}`, `token-${i}`));
+    mockOperationsCall.mockResolvedValue({ records });
+
+    const page = await fetchTradeHistoryPage(
+      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      40
+    );
+    expect(page.entries).toHaveLength(40);
+    // The cursor advances from the last record's paging token.
+    expect(page.nextCursor).toBe("token-39");
+  });
+
+  it("returns a null nextCursor when the page is not full", async () => {
+    const records = Array.from({ length: 10 }, (_, i) => makeSwapRecord(`op-${i}`, `token-${i}`));
+    mockOperationsCall.mockResolvedValue({ records });
+
+    const page = await fetchTradeHistoryPage(
+      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      40
+    );
+    expect(page.entries).toHaveLength(10);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it("returns an empty page with null cursor for no records", async () => {
+    mockOperationsCall.mockResolvedValue({ records: [] });
+
+    const page = await fetchTradeHistoryPage(
+      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+    );
+    expect(page.entries).toEqual([]);
+    expect(page.nextCursor).toBeNull();
+  });
+
+  it("forwards the cursor to Horizon for page 2, 3, etc.", async () => {
+    // Second page: tokens continue after the first page's last token.
+    const records = Array.from({ length: 40 }, (_, i) =>
+      makeSwapRecord(`op-${i}`, `token-${i + 40}`)
+    );
+    mockOperationsCallWithCursor.mockResolvedValue({ records });
+
+    const page = await fetchTradeHistoryPage(
+      "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+      40,
+      "token-39"
+    );
+    expect(mockOperationsCallWithCursor).toHaveBeenCalledWith("token-39");
+    expect(page.entries).toHaveLength(40);
+    expect(page.nextCursor).toBe("token-79");
   });
 });

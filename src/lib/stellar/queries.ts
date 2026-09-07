@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { findBestRoute } from "@/lib/stellar/routing";
 import { fetchOrderbook } from "@/lib/stellar/orderbook";
 import { getMarketStatsForTokens, fetchTopAssets, fetchCandles } from "@/lib/stellar/prices";
 import { fetchPortfolioSummary, fetchXlmBalance, isValidPublicKey } from "@/lib/stellar/account";
-import { fetchTradeHistory } from "@/lib/stellar/history";
+import { fetchTradeHistoryPage } from "@/lib/stellar/history";
 import { readPriceObservation } from "@/lib/soroban/market-oracle";
 import type { StellarAsset, SwapRoute, Token } from "@/lib/stellar/types";
 
@@ -74,11 +74,18 @@ export function useXlmBalance(address: string) {
   });
 }
 
-/** Trade history for a Stellar address. */
+/**
+ * Cursor-paginated trade history for a Stellar address.
+ *
+ * Exposes `fetchNextPage`/`hasNextPage`/`isFetchingNextPage` so the UI can
+ * render a Load More button that advances the cursor page by page.
+ */
 export function useTradeHistory(address: string) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["trade-history", address],
-    queryFn: () => fetchTradeHistory(address),
+    queryFn: ({ pageParam }) => fetchTradeHistoryPage(address, 40, pageParam as string | undefined),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(address && isValidPublicKey(address)),
     staleTime: 20_000,
   });

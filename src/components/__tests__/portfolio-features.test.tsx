@@ -203,6 +203,32 @@ describe("TradeHistory", () => {
     });
     expect(screen.getByText("No entries match your filters.")).toBeInTheDocument();
   });
+
+  it("shows a Load More button while more records exist and loads the next page", () => {
+    const onLoadMore = vi.fn();
+    render(<TradeHistory entries={mockEntries} hasMore onLoadMore={onLoadMore} />);
+    const button = screen.getByRole("button", { name: "Load More" });
+    fireEvent.click(button);
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the exhausted state when there are no more records", () => {
+    render(<TradeHistory entries={mockEntries} hasMore={false} />);
+    expect(screen.getByText("No more trades")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load More" })).not.toBeInTheDocument();
+  });
+
+  it("disables Load More while the next page is loading", () => {
+    render(<TradeHistory entries={mockEntries} hasMore loadingMore onLoadMore={vi.fn()} />);
+    const button = screen.getByRole("button", { name: "Loading more…" });
+    expect(button).toBeDisabled();
+  });
+
+  it("hides the pagination footer for an empty history", () => {
+    render(<TradeHistory entries={[]} />);
+    expect(screen.queryByRole("button", { name: "Load More" })).not.toBeInTheDocument();
+    expect(screen.queryByText("No more trades")).not.toBeInTheDocument();
+  });
 });
 
 // =========================================================================

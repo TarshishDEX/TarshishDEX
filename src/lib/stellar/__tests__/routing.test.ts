@@ -119,6 +119,11 @@ describe("selectBestRoute", () => {
     expect(selectBestRoute([])).toBeNull();
   });
 
+  it("returns the only route for a single-element array", () => {
+    const only = makeRoute({ outputAmount: "98.5", path: [XLM, USDC] });
+    expect(selectBestRoute([only])).toBe(only);
+  });
+
   it("prefers the route with the highest output", () => {
     const worse = makeRoute({ outputAmount: "90", path: [XLM, USDC] });
     const better = makeRoute({ outputAmount: "99", path: [XLM, USDC] });
@@ -133,6 +138,31 @@ describe("selectBestRoute", () => {
       method: "multi-hop",
     });
     expect(selectBestRoute([multiHop, direct])).toBe(direct);
+  });
+
+  it("keeps the first candidate when output and hops are both equal", () => {
+    const first = makeRoute({ outputAmount: "98.5", path: [XLM, USDC] });
+    const second = makeRoute({ outputAmount: "98.5", path: [XLM, AQUA] });
+    expect(selectBestRoute([first, second])).toBe(first);
+    // Order-independence: the earlier candidate always wins a perfect tie.
+    expect(selectBestRoute([second, first])).toBe(second);
+  });
+
+  it("treats differently-formatted equal outputs as a tie", () => {
+    const plain = makeRoute({ outputAmount: "98.5", path: [XLM, USDC] });
+    const padded = makeRoute({
+      outputAmount: "98.50",
+      path: [XLM, AQUA, USDC],
+      method: "multi-hop",
+    });
+    // 98.5 and 98.50 are numerically equal → fewer hops wins.
+    expect(selectBestRoute([padded, plain])).toBe(plain);
+  });
+
+  it("does not throw on a zero-output route and still picks a positive one", () => {
+    const zero = makeRoute({ outputAmount: "0", path: [XLM, USDC] });
+    const positive = makeRoute({ outputAmount: "50", path: [XLM, USDC] });
+    expect(selectBestRoute([zero, positive])).toBe(positive);
   });
 });
 
