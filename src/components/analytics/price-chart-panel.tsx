@@ -7,6 +7,7 @@ import { CandlestickChart } from "@/components/charts/candlestick-chart";
 import { VolumeChart } from "@/components/charts/volume-chart";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyResults } from "@/components/ui/empty-results";
 import { cn } from "@/lib/utils";
 import type { Token } from "@/lib/stellar/types";
 
@@ -100,10 +101,17 @@ export function PriceChartPanel() {
       <div className="mt-4">
         {isLoading ? (
           <Skeleton className="h-[420px] w-full rounded-xl" />
-        ) : isError || !candles || candles.length === 0 ? (
+        ) : isError || !candles ? (
           <div className="border-border text-foreground-faint flex h-[420px] items-center justify-center rounded-xl border border-dashed text-sm">
             No price history available for this pair on the current network.
           </div>
+        ) : candles.length === 0 ? (
+          <EmptyResults
+            icon="📉"
+            title="No trade data available for this pair"
+            description="Try a different resolution or trading pair to see historical price data."
+            className="h-[420px] py-0"
+          />
         ) : (
           <CandlestickChart candles={candles} />
         )}

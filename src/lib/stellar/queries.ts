@@ -48,7 +48,8 @@ export function useMarketStats() {
     queryKey: ["market-stats"],
     queryFn: async () => {
       const tokens = await fetchTopAssets(10);
-      return getMarketStatsForTokens(tokens);
+      const { stats } = await getMarketStatsForTokens(tokens);
+      return stats;
     },
     staleTime: 30_000,
   });

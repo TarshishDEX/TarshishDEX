@@ -2,9 +2,16 @@
 
 import { useEffect } from "react";
 import { useWalletStore } from "@/lib/stellar/wallet-store";
-import { disconnectWallet, subscribeWalletEvents } from "@/lib/stellar/wallet-kit";
+import {
+  disconnectWallet,
+  isWalletAvailable,
+  subscribeWalletEvents,
+} from "@/lib/stellar/wallet-kit";
 import { getActiveNetwork } from "@/lib/stellar/config";
 import { toast } from "@/components/ui/toast";
+
+/** How often to re-check that the wallet extension is still installed/reachable. */
+const WALLET_AVAILABILITY_POLL_MS = 30_000;
 
 /**
  * Client-side wallet bridge: subscribes to kit lifecycle events and keeps the
@@ -52,6 +59,40 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
       unsubscribe?.();
+    };
+  }, []);
+
+  // If the extension is disabled/uninstalled while connected, the kit never
+  // emits a DISCONNECT event, so the store would stay "connected" forever.
+  // Poll for availability and auto-disconnect (with a toast) when the
+  // extension disappears.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let cancelled = false;
+
+    const checkAvailability = async () => {
+      if (cancelled) return;
+      const store = useWalletStore.getState();
+      // Only care about an established session — nothing to clean up otherwise.
+      if (store.status !== "connected" || !store.address) return;
+
+      const available = await isWalletAvailable();
+      if (cancelled) return;
+      if (!available) {
+        store.setDisconnected();
+        toast.error("Wallet extension no longer detected — disconnected.");
+      }
+    };
+
+    // Check once on mount so a stale persisted session is reconciled quickly,
+    // then poll every 30s to catch the extension being disabled later.
+    void checkAvailability();
+    const interval = setInterval(checkAvailability, WALLET_AVAILABILITY_POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

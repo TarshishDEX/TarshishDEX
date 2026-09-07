@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   needsTrustline,
+  hasTrustlineReserve,
+  TRUSTLINE_RESERVE_XLM,
   intermediatePath,
   classifySwapError,
   buildSwapOperations,
@@ -49,6 +51,38 @@ describe("needsTrustline", () => {
       },
     ];
     expect(needsTrustline(balances, USDC)).toBe(true);
+  });
+});
+
+describe("hasTrustlineReserve", () => {
+  it("returns true when no trustline is needed", () => {
+    expect(hasTrustlineReserve([], XLM)).toBe(true);
+    // A balance that already trusts USDC means no new reserve is needed.
+    expect(
+      hasTrustlineReserve(
+        [{ asset_type: "credit_alphanum4", asset_code: "USDC", asset_issuer: USDC.issuer! }],
+        USDC
+      )
+    ).toBe(true);
+  });
+
+  it("returns true when the native balance covers the reserve", () => {
+    expect(hasTrustlineReserve([{ asset_type: "native", balance: "0.5" }], USDC)).toBe(true);
+    expect(hasTrustlineReserve([{ asset_type: "native", balance: "100" }], USDC)).toBe(true);
+  });
+
+  it("returns false when the native balance is below the reserve", () => {
+    expect(hasTrustlineReserve([{ asset_type: "native", balance: "0.49" }], USDC)).toBe(false);
+    expect(hasTrustlineReserve([{ asset_type: "native", balance: "0" }], USDC)).toBe(false);
+  });
+
+  it("treats a missing native balance as zero", () => {
+    expect(hasTrustlineReserve([], USDC)).toBe(false);
+    expect(hasTrustlineReserve([{ asset_type: "credit_alphanum4" }], USDC)).toBe(false);
+  });
+
+  it("exposes the 0.5 XLM base reserve constant", () => {
+    expect(TRUSTLINE_RESERVE_XLM).toBe(0.5);
   });
 });
 

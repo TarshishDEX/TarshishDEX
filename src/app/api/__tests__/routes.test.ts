@@ -435,12 +435,32 @@ describe("GET /api/market/pools", () => {
 describe("GET /api/market/stats", () => {
   it("returns market stats", async () => {
     fetchTopAssetsMock.mockResolvedValue([{ code: "XLM", isNative: true }]);
-    getMarketStatsForTokensMock.mockResolvedValue([{ token: { code: "XLM" }, priceInXlm: 1 }]);
+    getMarketStatsForTokensMock.mockResolvedValue({
+      stats: [{ token: { code: "XLM" }, priceInXlm: 1 }],
+      skipped: 0,
+    });
     const res = await getStats(makeRequest("http://localhost/api/market/stats?limit=10"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.count).toBe(1);
+    expect(body.skipped).toBe(0);
     expect(fetchTopAssetsMock).toHaveBeenCalledWith(10);
+  });
+
+  it("reports skipped tokens without market data", async () => {
+    fetchTopAssetsMock.mockResolvedValue([
+      { code: "USDC", isNative: false },
+      { code: "AQUA", isNative: false },
+    ]);
+    getMarketStatsForTokensMock.mockResolvedValue({
+      stats: [{ token: { code: "USDC" }, priceInXlm: 0.5 }],
+      skipped: 1,
+    });
+    const res = await getStats(makeRequest("http://localhost/api/market/stats"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.skipped).toBe(1);
   });
 
   it("returns 502 when stats fetch fails", async () => {

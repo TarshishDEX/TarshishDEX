@@ -50,6 +50,28 @@ export function needsTrustline(
   );
 }
 
+/** Native XLM reserve required to open a trustline (Stellar base reserve). */
+export const TRUSTLINE_RESERVE_XLM = 0.5;
+
+/**
+ * Whether the account can fund the 0.5 XLM trustline reserve. Returns true
+ * when no trustline is needed, so callers can guard a change-trust op with a
+ * single check. A missing native balance entry counts as zero.
+ */
+export function hasTrustlineReserve(
+  balances: ReadonlyArray<{
+    asset_type?: string;
+    asset_code?: string;
+    asset_issuer?: string;
+    balance?: string;
+  }>,
+  output: StellarAsset
+): boolean {
+  if (!needsTrustline(balances, output)) return true;
+  const native = balances.find((b) => b.asset_type === "native");
+  return Number(native?.balance ?? 0) >= TRUSTLINE_RESERVE_XLM;
+}
+
 /** Intermediate hops for a path payment — excludes the input and output assets. */
 export function intermediatePath(path: StellarAsset[]): StellarAsset[] {
   return path.length > 2 ? path.slice(1, -1) : [];
@@ -108,6 +130,18 @@ export async function executeSwap(
     const account = await server.loadAccount(params.address);
 
     const needTrustline = needsTrustline(account.balances, params.output);
+
+    // Pre-execution check: creating a trustline locks 0.5 XLM as a base
+    // reserve. Fail fast with a clear message instead of surfacing Horizon's
+    // cryptic op_underfunded after signing.
+    if (needTrustline && !hasTrustlineReserve(account.balances, params.output)) {
+      report("failed");
+      return {
+        phase: "failed",
+        error: `Insufficient XLM for trustline reserve (${TRUSTLINE_RESERVE_XLM} XLM required)`,
+        errorKind: "insufficient-balance",
+      };
+    }
 
     report("building");
     const builder = new TransactionBuilder(account, {
