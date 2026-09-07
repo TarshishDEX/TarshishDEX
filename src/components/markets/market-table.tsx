@@ -6,9 +6,27 @@ import { useLiveMarketStream } from "@/components/providers/live-sync-hooks";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SortIndicator } from "@/components/ui/sort-indicator";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn, formatCompact, formatPrice } from "@/lib/utils";
 
 type SortKey = "price" | "change" | "volume";
+
+/** 1-2 sentence explanation for each market metric shown in the table. */
+const METRIC_DESCRIPTIONS: {
+  price: string;
+  change: string;
+  volume: string;
+  bidAsk: string;
+} = {
+  price:
+    "The latest market price of this asset quoted in XLM, derived from the native DEX orderbook.",
+  change:
+    "Percentage price change over the trailing 24 hours. Positive values mean the asset gained value against XLM.",
+  volume:
+    "Total trading volume of this asset against XLM over the last 24 hours — a measure of market activity and liquidity.",
+  bidAsk:
+    "The best bid (highest buy price) and best ask (lowest sell price) currently on the orderbook. The gap between them is the spread.",
+};
 
 export function MarketTable() {
   const { data: stats, isLoading, isError } = useMarketStats();
@@ -70,23 +88,31 @@ export function MarketTable() {
                 <th className="px-6 py-3 font-medium">Asset</th>
                 <SortableHeader
                   label="Price (XLM)"
+                  hint={METRIC_DESCRIPTIONS.price}
                   active={sortKey === "price"}
                   direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("price")}
                 />
                 <SortableHeader
                   label="24h Change"
+                  hint={METRIC_DESCRIPTIONS.change}
                   active={sortKey === "change"}
                   direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("change")}
                 />
                 <SortableHeader
                   label="24h Volume (XLM)"
+                  hint={METRIC_DESCRIPTIONS.volume}
                   active={sortKey === "volume"}
                   direction={asc ? "asc" : "desc"}
                   onClick={() => toggleSort("volume")}
                 />
-                <th className="px-6 py-3 text-right font-medium">Best Bid / Ask</th>
+                <th className="px-6 py-3 text-right font-medium">
+                  <span className="inline-flex items-center justify-end gap-1">
+                    Best Bid / Ask
+                    <MetricInfo label={METRIC_DESCRIPTIONS.bidAsk} />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -145,28 +171,59 @@ export function MarketTable() {
 
 function SortableHeader({
   label,
+  hint,
   active,
   direction,
   onClick,
 }: {
   label: string;
+  hint?: string;
   active: boolean;
   direction: "asc" | "desc";
   onClick: () => void;
 }) {
   return (
     <th className="px-6 py-3 font-medium">
-      <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "hover:text-foreground inline-flex items-center gap-1 tracking-wider uppercase transition-colors",
-          active && "text-primary"
-        )}
-      >
-        {label}
-        <SortIndicator active={active} direction={direction} />
-      </button>
+      <span className="inline-flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(
+            "hover:text-foreground inline-flex items-center gap-1 tracking-wider uppercase transition-colors",
+            active && "text-primary"
+          )}
+        >
+          {label}
+          <SortIndicator active={active} direction={direction} />
+        </button>
+        {hint && <MetricInfo label={hint} />}
+      </span>
     </th>
+  );
+}
+
+/** Info icon that reveals a metric explanation in a tooltip on hover/focus. */
+function MetricInfo({ label }: { label: string }) {
+  return (
+    <Tooltip content={label} side="bottom">
+      <span
+        role="img"
+        aria-label={label}
+        tabIndex={0}
+        className="text-foreground-faint hover:text-foreground cursor-help rounded-full transition-colors focus:outline-none"
+      >
+        <svg
+          className="h-3.5 w-3.5"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          aria-hidden="true"
+        >
+          <circle cx="10" cy="10" r="8" />
+          <path d="M10 9v5M10 6.2v.1" strokeLinecap="round" />
+        </svg>
+      </span>
+    </Tooltip>
   );
 }

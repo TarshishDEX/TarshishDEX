@@ -15,6 +15,9 @@ vi.mock("@/components/layout/header", () => ({
 vi.mock("@/components/layout/footer", () => ({
   Footer: () => <footer data-testid="footer">Footer</footer>,
 }));
+vi.mock("@/components/layout/mobile-bottom-nav", () => ({
+  MobileBottomNav: () => <nav data-testid="mobile-bottom-nav">Bottom nav</nav>,
+}));
 vi.mock("@/components/providers/query-provider", () => ({
   QueryProvider: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
@@ -54,6 +57,7 @@ describe("RootLayout", () => {
     );
     expect(screen.getByTestId("header")).toBeTruthy();
     expect(screen.getByTestId("footer")).toBeTruthy();
+    expect(screen.getByTestId("mobile-bottom-nav")).toBeTruthy();
     expect(screen.getByText("Page body")).toBeTruthy();
   });
 

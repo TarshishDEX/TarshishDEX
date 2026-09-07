@@ -7,9 +7,9 @@
  * Convert an array of objects to a CSV string.
  * Handles values containing commas and quotes by wrapping in double quotes.
  */
-export function objectsToCsv<T extends Record<string, unknown>>(
+export function objectsToCsv<T extends object>(
   rows: T[],
-  columns: (keyof T)[],
+  columns: string[],
   headers?: string[]
 ): string {
   const headerRow = (headers ?? columns.map(String)).join(",");
@@ -17,7 +17,7 @@ export function objectsToCsv<T extends Record<string, unknown>>(
   const dataRows = rows.map((row) =>
     columns
       .map((col) => {
-        const value = String(row[col] ?? "");
+        const value = String((row as Record<string, unknown>)[col] ?? "");
         // Escape values containing commas, quotes, or newlines
         if (value.includes(",") || value.includes('"') || value.includes("\n")) {
           return `"${value.replace(/"/g, '""')}"`;
@@ -49,9 +49,9 @@ export function downloadFile(content: string, filename: string, mimeType = "text
 /**
  * Export data as CSV and trigger download with a timestamped filename.
  */
-export function exportCsv<T extends Record<string, unknown>>(
+export function exportCsv<T extends object>(
   rows: T[],
-  columns: (keyof T)[],
+  columns: string[],
   name: string,
   headers?: string[]
 ): void {

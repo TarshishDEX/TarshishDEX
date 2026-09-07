@@ -5,6 +5,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 vi.mock("@/components/swap/swap-widget", () => ({
   SwapWidget: () => <div data-testid="swap-widget" />,
 }));
+vi.mock("@/components/swap/swap-history-panel", () => ({
+  SwapHistoryPanel: () => <div data-testid="swap-history-panel" />,
+}));
 vi.mock("@/components/swap/on-chain-preferences", () => ({
   OnChainPreferences: () => <div data-testid="on-chain-preferences" />,
 }));
@@ -88,9 +91,10 @@ describe("Home page", () => {
 });
 
 describe("Swap page", () => {
-  it("renders the swap widget and preferences", () => {
+  it("renders the swap widget, history, and preferences", () => {
     render(<SwapPage />);
     expect(screen.getByTestId("swap-widget")).toBeTruthy();
+    expect(screen.getByTestId("swap-history-panel")).toBeTruthy();
     expect(screen.getByTestId("on-chain-preferences")).toBeTruthy();
   });
 });

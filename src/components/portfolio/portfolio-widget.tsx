@@ -8,6 +8,8 @@ import { isValidPublicKey } from "@/lib/stellar/account";
 import { HorizonRateLimitError } from "@/lib/stellar/horizon-guard";
 import { BalanceTable } from "@/components/portfolio/balance-table";
 import { TradeHistory } from "@/components/portfolio/trade-history";
+import { PortfolioExport } from "@/components/portfolio/portfolio-export";
+import { PortfolioValueChart } from "@/components/portfolio/portfolio-value-chart";
 import { AllocationDonut } from "@/components/charts/allocation-donut";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
@@ -107,8 +109,9 @@ export function PortfolioWidget() {
 
       {activeAddress && (
         <div className="animate-fade-in-up space-y-6">
-          {/* Live badge */}
-          <div className="flex items-center justify-end">
+          {/* Live badge + export actions */}
+          <div className="flex items-center justify-end gap-3">
+            <PortfolioExport balances={portfolio?.balances ?? []} entries={history ?? []} />
             <Badge tone="success" dot>
               Live · streaming account operations
             </Badge>
@@ -156,6 +159,15 @@ export function PortfolioWidget() {
                 ? `Horizon rate limit - retrying in ${horizonRetryAfterSeconds} seconds`
                 : "Could not load this account. Check the address and network, then try again."}
             </p>
+          )}
+
+          {/* Portfolio value over time */}
+          {!isError && (
+            <PortfolioValueChart
+              address={activeAddress}
+              currentValueXlm={portfolio?.totalValueXlm ?? null}
+              loading={isLoading}
+            />
           )}
 
           {/* Allocation + Balances */}
