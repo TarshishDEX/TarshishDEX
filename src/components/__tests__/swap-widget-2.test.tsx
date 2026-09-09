@@ -20,6 +20,10 @@ vi.mock("@/lib/hooks/use-debounce", () => ({
   useDebounce: (v: unknown) => v,
 }));
 
+vi.mock("@/lib/hooks/use-token-balance", () => ({
+  useTokenBalance: vi.fn(() => ({ data: undefined })),
+}));
+
 vi.mock("@/lib/stellar/asset", () => ({
   isSameAsset: (a: unknown, b: unknown) =>
     Boolean(

@@ -5,7 +5,9 @@ import { useSwapQuote } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
+import { useTokenBalance } from "@/lib/hooks/use-token-balance";
 import { TokenSelector } from "@/components/swap/token-selector";
+import { PercentButtons } from "@/components/swap/percent-buttons";
 import { SwapExecutionPanel } from "@/components/swap/swap-execution-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,7 @@ export function SwapWidget() {
   const [slippagePct, setSlippagePct] = useState(1);
   const [customSlippage, setCustomSlippage] = useState(false);
   const [reviewing, setReviewing] = useState(false);
+  const { data: inputBalance } = useTokenBalance(address ?? "", inputAsset);
 
   const {
     data: quote,
@@ -54,6 +57,14 @@ export function SwapWidget() {
     setInputAsset(outputAsset);
     setOutputAsset(inputAsset);
     setAmountIn("");
+  }
+
+  /** Set the amount to a percentage of the input asset's balance (issue #41). */
+  function selectPercent(pct: number) {
+    if (!inputBalance || Number(inputBalance) <= 0) return;
+    const raw = (Number(inputBalance) * pct) / 100;
+    const value = raw.toFixed(7).replace(/\.?0+$/, "");
+    setAmountIn(value === "0" || value === "" ? "" : value);
   }
 
   // Keyboard shortcut: press "s" to focus the amount input
@@ -99,6 +110,12 @@ export function SwapWidget() {
           />
           <TokenSelector value={inputAsset} onSelect={setInputAsset} exclude={outputAsset} />
         </div>
+        {/* Quick-select a fraction of the input asset's balance (issue #41). */}
+        <PercentButtons
+          balance={inputBalance ?? undefined}
+          onSelect={selectPercent}
+          className="mt-3"
+        />
       </div>
 
       {/* Reverse */}

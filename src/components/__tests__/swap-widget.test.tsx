@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 // Mock the swap widget dependencies
 vi.mock("@/lib/stellar/queries", () => ({
@@ -7,7 +7,11 @@ vi.mock("@/lib/stellar/queries", () => ({
 }));
 
 vi.mock("@/lib/stellar/wallet-store", () => ({
-  useWallet: () => ({ address: null, connect: vi.fn() }),
+  useWallet: vi.fn(() => ({ address: null, connect: vi.fn() })),
+}));
+
+vi.mock("@/lib/hooks/use-token-balance", () => ({
+  useTokenBalance: vi.fn(() => ({ data: undefined })),
 }));
 
 vi.mock("@/lib/hooks/use-keyboard-shortcuts", () => ({
@@ -17,6 +21,9 @@ vi.mock("@/lib/hooks/use-keyboard-shortcuts", () => ({
 vi.mock("@/lib/hooks/use-debounce", () => ({
   useDebounce: (v: unknown) => v,
 }));
+
+import { useWallet } from "@/lib/stellar/wallet-store";
+import { useTokenBalance } from "@/lib/hooks/use-token-balance";
 
 describe("SwapWidget", () => {
   it("shows connect wallet when disconnected", async () => {
@@ -39,5 +46,26 @@ describe("SwapWidget", () => {
     expect(screen.getByText("Max slippage")).toBeInTheDocument();
     expect(screen.getByText("0.1%")).toBeInTheDocument();
     expect(screen.getByText("1%")).toBeInTheDocument();
+  });
+
+  it("renders percentage quick-select buttons for the input balance", async () => {
+    const { SwapWidget } = await import("@/components/swap/swap-widget");
+    render(<SwapWidget />);
+    expect(screen.getByRole("button", { name: "25%" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "50%" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "MAX" })).toBeInTheDocument();
+  });
+
+  it("sets the amount to a percentage of the input balance", async () => {
+    vi.mocked(useWallet).mockReturnValue({ address: "GALICE", connect: vi.fn() } as never);
+    vi.mocked(useTokenBalance).mockReturnValue({ data: "100" } as never);
+    const { SwapWidget } = await import("@/components/swap/swap-widget");
+    render(<SwapWidget />);
+
+    fireEvent.click(screen.getByRole("button", { name: "50%" }));
+    expect(screen.getByLabelText("Amount to pay")).toHaveValue("50");
+
+    fireEvent.click(screen.getByRole("button", { name: "MAX" }));
+    expect(screen.getByLabelText("Amount to pay")).toHaveValue("100");
   });
 });

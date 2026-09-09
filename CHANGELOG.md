@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 🧮 Swap Percentage Input (closes #41)
+
+- **Wired the existing `PercentButtons` component into the swap form** —
+  25/50/75/100% of the input asset's balance can now be selected with one
+  click (the component existed but was never used). Amounts are computed
+  from the live token balance via `useTokenBalance`, trimmed to 7
+  decimals, and gated on a positive balance.
+
 ### 🗃️ Horizon Query Caching (closes #81)
 
 - **Orderbook fetches are cached for 3s** — the routing engine evaluates
