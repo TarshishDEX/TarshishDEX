@@ -4,7 +4,20 @@ import { toSdkAsset } from "@/lib/stellar/asset";
 import { explorerTxUrl, getActiveNetwork } from "@/lib/stellar/config";
 import { signTransactionXdr } from "@/lib/stellar/wallet-kit";
 import { calculateFee, getFeeCollector, getFeeBps } from "@/lib/stellar/fee-collector";
+import { sleep } from "@/lib/utils/async";
 import type { StellarAsset } from "@/lib/stellar/types";
+
+/** Minimal surface of a Horizon server needed for transaction polling. */
+interface PollableServer {
+  transactions: () => {
+    transaction: (hash: string) => { call: () => Promise<unknown> };
+  };
+}
+
+/** How many times to poll Horizon for an ambiguously-submitted transaction. */
+export const AMBIGUOUS_TX_POLL_ATTEMPTS = 5;
+/** Delay between polls, in milliseconds. */
+export const AMBIGUOUS_TX_POLL_DELAY_MS = 1000;
 
 export type SwapExecutionPhase =
   "idle" | "checking" | "building" | "signing" | "submitting" | "success" | "failed";
@@ -112,6 +125,32 @@ export function buildSwapOperations(
 }
 
 /**
+ * Poll Horizon for a transaction until it appears or the attempt budget is
+ * exhausted. Returns the hash when found, `null` otherwise.
+ *
+ * Used after a submission that may or may not have reached the network
+ * (timeout / connection drop): declaring failure immediately would let a
+ * user retry a swap that actually succeeded, double-spending funds.
+ */
+export async function pollForTransaction(
+  server: PollableServer,
+  hash: string,
+  attempts = AMBIGUOUS_TX_POLL_ATTEMPTS,
+  delayMs = AMBIGUOUS_TX_POLL_DELAY_MS
+): Promise<string | null> {
+  for (let i = 0; i < attempts; i++) {
+    await sleep(delayMs);
+    try {
+      await server.transactions().transaction(hash).call();
+      return hash;
+    } catch {
+      // Not confirmed yet — keep polling until the budget runs out.
+    }
+  }
+  return null;
+}
+
+/**
  * Execute a swap end-to-end: load the source account, add a change-trust
  * operation when the destination asset is new, build + sign via the wallet,
  * then submit to Horizon. Reports progress through `onPhase`.
@@ -124,6 +163,8 @@ export async function executeSwap(
   const report = (phase: SwapExecutionPhase) => onPhase?.(phase);
   const network = getActiveNetwork();
   const server = getHorizonServer();
+  // Hoisted so the catch block can recompute the tx hash for recovery polling.
+  let parsed: ReturnType<typeof TransactionBuilder.fromXDR> | null = null;
 
   try {
     report("checking");
@@ -164,8 +205,19 @@ export async function executeSwap(
     });
 
     report("submitting");
-    const parsed = TransactionBuilder.fromXDR(signedXdr, network.passphrase);
+    parsed = TransactionBuilder.fromXDR(signedXdr, network.passphrase);
     const result = await server.submitTransaction(parsed);
+
+    if (result.successful === false) {
+      // The network received the transaction and rejected it (bad sequence,
+      // op_underfunded, …). This is a definite failure — do not report success.
+      report("failed");
+      return {
+        phase: "failed",
+        error: `Transaction rejected by the network (hash ${result.hash}).`,
+        errorKind: "invalid-transaction",
+      };
+    }
 
     report("success");
     if (onSuccess) {
@@ -181,6 +233,34 @@ export async function executeSwap(
       explorerUrl: explorerTxUrl(result.hash),
     };
   } catch (error) {
+    // A submission that threw a network/timeout error may still have been
+    // accepted by Horizon — the client just never saw the response. Poll for
+    // the transaction by its locally-computed hash before declaring failure,
+    // so users don't retry a swap that already succeeded (double spend).
+    if (classifySwapError(error) === "network" && parsed) {
+      try {
+        const hash = parsed.hash().toString("hex");
+        const confirmed = await pollForTransaction(server, hash);
+        if (confirmed) {
+          report("success");
+          if (onSuccess) {
+            try {
+              await onSuccess(confirmed);
+            } catch {
+              // Non-fatal: order marking failed but swap succeeded.
+            }
+          }
+          return {
+            phase: "success",
+            hash: confirmed,
+            explorerUrl: explorerTxUrl(confirmed),
+          };
+        }
+      } catch {
+        // Polling itself failed — fall through to the failure path.
+      }
+    }
+
     report("failed");
     const message = error instanceof Error ? error.message : "Transaction failed.";
     return {

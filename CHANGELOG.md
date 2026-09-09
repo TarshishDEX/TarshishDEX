@@ -69,6 +69,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 🔄 Swap Submission Robustness
+
+- **Ambiguous swap submissions are now resolved by polling** — if
+  `submitTransaction` throws a network/timeout error, `executeSwap`
+  recomputes the transaction hash locally and polls Horizon before
+  declaring failure, so a swap that actually landed is reported as
+  success instead of prompting a double-spending retry. Transactions
+  rejected on-chain (`successful: false`) are now reported as failures
+  instead of success. New `pollForTransaction` helper with unit tests.
+
 ### 🔒 Limit-Order Correctness
 
 - **Enforced order expiry on-chain** — `mark_executed` now rejects orders

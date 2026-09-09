@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   needsTrustline,
   hasTrustlineReserve,
@@ -6,6 +6,8 @@ import {
   intermediatePath,
   classifySwapError,
   buildSwapOperations,
+  pollForTransaction,
+  AMBIGUOUS_TX_POLL_ATTEMPTS,
 } from "@/lib/stellar/swap-execution";
 import type { StellarAsset } from "@/lib/stellar/types";
 
@@ -174,5 +176,46 @@ describe("buildSwapOperations", () => {
     const ops = buildSwapOperations(params);
     expect(ops.length).toBe(1);
     expect(ops[0]).toBeDefined();
+  });
+});
+
+describe("pollForTransaction", () => {
+  type CallMock = ReturnType<typeof vi.fn<() => Promise<unknown>>>;
+
+  function stubServer(call: CallMock) {
+    return {
+      transactions: () => ({ transaction: () => ({ call }) }),
+    };
+  }
+
+  it("returns the hash when the transaction is already confirmed", async () => {
+    const call = vi.fn<() => Promise<unknown>>().mockResolvedValue({ hash: "abc123" });
+    await expect(pollForTransaction(stubServer(call), "abc123", 3, 0)).resolves.toBe("abc123");
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the hash once the transaction appears on a later attempt", async () => {
+    const call = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error("not found"))
+      .mockResolvedValue({ hash: "abc123" });
+    await expect(pollForTransaction(stubServer(call), "abc123", 3, 0)).resolves.toBe("abc123");
+    expect(call).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns null when the transaction never appears within the budget", async () => {
+    const call = vi.fn<() => Promise<unknown>>().mockRejectedValue(new Error("not found"));
+    await expect(pollForTransaction(stubServer(call), "abc123", 3, 0)).resolves.toBeNull();
+    expect(call).toHaveBeenCalledTimes(3);
+  });
+
+  it("stops polling once the budget is exhausted", async () => {
+    const call = vi.fn<() => Promise<unknown>>().mockRejectedValue(new Error("not found"));
+    await expect(pollForTransaction(stubServer(call), "abc123", 2, 0)).resolves.toBeNull();
+    expect(call).toHaveBeenCalledTimes(2);
+  });
+
+  it("exposes a sane default poll budget", () => {
+    expect(AMBIGUOUS_TX_POLL_ATTEMPTS).toBeGreaterThan(0);
   });
 });
