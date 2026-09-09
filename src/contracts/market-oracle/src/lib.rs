@@ -160,6 +160,8 @@ pub enum DataKey {
     /// Write position index for the ring buffer.
     HistoryIndex(Symbol, Symbol),
     Pairs,
+    /// Emergency stop flag: when set, publishers cannot submit observations.
+    Paused,
 }
 
 #[contractevent]
@@ -202,6 +204,12 @@ pub struct PricePublished {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VersionSet {
     pub version: u32,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PauseToggled {
+    pub paused: bool,
 }
 
 #[contract]
@@ -297,6 +305,42 @@ impl MarketOracle {
     /// Ring buffer uses index-based wrapping (O(1) write) instead of
     /// Vec::remove(0) (O(n) shift). Pair tracking is a bounded, deduplicated
     /// Vec kept in persistent storage so the instance entry stays small.
+    /// Emergency pause: stop all price publication until unpaused. Admin only.
+    pub fn pause(env: Env) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &true);
+        env.storage().instance().extend_ttl(0, TTL_LEDGERS);
+        PauseToggled { paused: true }.publish(&env);
+        Ok(())
+    }
+
+    /// Resume price publication after an emergency pause. Admin only.
+    pub fn unpause(env: Env) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &false);
+        env.storage().instance().extend_ttl(0, TTL_LEDGERS);
+        PauseToggled { paused: false }.publish(&env);
+        Ok(())
+    }
+
+    /// Whether the feed is currently paused. Read-only, callable by anyone.
+    pub fn is_paused(env: Env) -> bool {
+        env.storage()
+            .instance()
+            .get(&DataKey::Paused)
+            .unwrap_or(false)
+    }
+
     pub fn publish(
         env: Env,
         publisher: Address,
@@ -304,6 +348,9 @@ impl MarketOracle {
         counter: Symbol,
         price: i128,
     ) -> Result<Observation, Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::DataFeedPaused);
+        }
         if price <= 0 {
             return Err(Error::InvalidPrice);
         }
@@ -558,6 +605,55 @@ mod test {
         let client = MarketOracleClient::new(&env, &contract_id);
         client.initialize(&admin);
         assert!(client.try_transfer_admin(&new_admin).is_ok());
+    }
+
+    #[test]
+    fn paused_feed_rejects_publish_until_unpaused() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        assert!(!client.is_paused());
+        client.pause();
+        assert!(client.is_paused());
+
+        // Even an authorized publisher is blocked while paused.
+        assert_eq!(
+            client.try_publish(
+                &publisher,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+            ),
+            Err(Ok(Error::DataFeedPaused))
+        );
+
+        // Unpause restores publication.
+        client.unpause();
+        assert!(!client.is_paused());
+        assert!(client
+            .try_publish(
+                &publisher,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn pause_uninitialized_contract_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        assert_eq!(client.try_pause(), Err(Ok(Error::NotInitialized)));
+        assert_eq!(client.try_unpause(), Err(Ok(Error::NotInitialized)));
     }
 
     #[test]

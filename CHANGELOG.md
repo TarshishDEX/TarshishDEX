@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🛑 Market-Oracle Emergency Pause (issue #66)
+
+- **Added admin-only `pause`/`unpause`/`is_paused` to the market-oracle** —
+  when paused, `publish` rejects with `DataFeedPaused`, so a compromised
+  publisher or detected feed anomaly can be stopped in one transaction.
+  State is emitted via a new `PauseToggled` event for off-chain monitoring.
+  New tests: `paused_feed_rejects_publish_until_unpaused`,
+  `pause_uninitialized_contract_rejected`.
+
 ### 🧹 Contract Error Surface
 
 - **Trimmed the limit-order error enum from 100 to 12 variants** — only
