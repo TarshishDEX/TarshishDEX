@@ -29,6 +29,8 @@ const MAX_HISTORY: u32 = 16;
 const STALE_THRESHOLD: u32 = 720;
 /// Maximum unique pairs before requiring paginated_observations usage.
 const MAX_TRACKED_PAIRS: u32 = 100;
+/// Maximum observations accepted per `publish_batch` call (gas bound).
+const MAX_BATCH_SIZE: u32 = 20;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -133,6 +135,7 @@ pub enum Error {
     SignatureNonceReused = 98,
     SignatureTimestampExpired = 99,
     SignatureDomainMismatch = 100,
+    BatchTooLarge = 101,
 }
 
 #[contracttype]
@@ -348,12 +351,6 @@ impl MarketOracle {
         counter: Symbol,
         price: i128,
     ) -> Result<Observation, Error> {
-        if Self::is_paused(env.clone()) {
-            return Err(Error::DataFeedPaused);
-        }
-        if price <= 0 {
-            return Err(Error::InvalidPrice);
-        }
         publisher.require_auth();
 
         // Single persistent read for publisher auth.
@@ -364,6 +361,29 @@ impl MarketOracle {
             .unwrap_or(false);
         if !allowed {
             return Err(Error::NotAuthorized);
+        }
+
+        Self::publish_impl(&env, &publisher, base, counter, price)
+    }
+
+    /// Shared publication logic used by `publish` and `publish_batch`.
+    ///
+    /// Callers must perform publisher authorization before calling this.
+    /// It is a plain internal function rather than a `#[contractimpl]` method
+    /// so `publish_batch` can reuse it without a same-contract sub-invocation
+    /// (which would trip Soroban's auth-frame conflict for the same caller).
+    fn publish_impl(
+        env: &Env,
+        publisher: &Address,
+        base: Symbol,
+        counter: Symbol,
+        price: i128,
+    ) -> Result<Observation, Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::DataFeedPaused);
+        }
+        if price <= 0 {
+            return Err(Error::InvalidPrice);
         }
 
         let ledger = env.ledger().sequence();
@@ -387,7 +407,7 @@ impl MarketOracle {
             .storage()
             .persistent()
             .get(&hist_key)
-            .unwrap_or_else(|| Vec::new(&env));
+            .unwrap_or_else(|| Vec::new(env));
         let write_idx: u32 = env.storage().persistent().get(&idx_key).unwrap_or(0);
 
         if history.len() < MAX_HISTORY {
@@ -414,7 +434,7 @@ impl MarketOracle {
             .storage()
             .persistent()
             .get(&DataKey::Pairs)
-            .unwrap_or_else(|| Vec::new(&env));
+            .unwrap_or_else(|| Vec::new(env));
         if pairs.len() >= MAX_TRACKED_PAIRS {
             return Err(Error::TooManyPairs);
         }
@@ -429,11 +449,56 @@ impl MarketOracle {
         PricePublished {
             base,
             counter,
-            publisher,
+            publisher: publisher.clone(),
             observation: observation.clone(),
         }
-        .publish(&env);
+        .publish(env);
         Ok(observation)
+    }
+
+    /// Publish several observations in one call to save on per-call fees.
+    ///
+    /// Auth is checked once for the whole batch; every entry then goes
+    /// through the same validation as `publish` (pause, positive price,
+    /// pair cap, ring-buffer history). A `PricePublished` event is emitted
+    /// per entry so off-chain consumers stay fully auditable. The batch is
+    /// validated up front (size + prices) so a malformed batch is rejected
+    /// before any storage write.
+    pub fn publish_batch(
+        env: Env,
+        publisher: Address,
+        observations: Vec<(Symbol, Symbol, i128)>,
+    ) -> Result<u32, Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::DataFeedPaused);
+        }
+        if observations.len() > MAX_BATCH_SIZE {
+            return Err(Error::BatchTooLarge);
+        }
+        publisher.require_auth();
+        let allowed: bool = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Publisher(publisher.clone()))
+            .unwrap_or(false);
+        if !allowed {
+            return Err(Error::NotAuthorized);
+        }
+        // Validate the whole batch before writing anything.
+        for (base, counter, price) in observations.iter() {
+            if price <= 0 {
+                return Err(Error::InvalidPrice);
+            }
+            if base == counter {
+                return Err(Error::InvalidPair);
+            }
+        }
+        let mut published: u32 = 0;
+        for (base, counter, price) in observations.iter() {
+            Self::publish_impl(&env, &publisher, base, counter, price)?;
+            published = published.saturating_add(1);
+        }
+        Ok(published)
     }
 
     /// Read the latest observation for a pair (rejects stale data).
@@ -744,6 +809,133 @@ mod test {
                 &10_000_000
             ),
             Err(Ok(Error::NotAuthorized))
+        );
+    }
+
+    #[test]
+    fn publish_batch_publishes_all_entries() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        let batch = Vec::from_array(
+            &env,
+            [
+                (symbol_short!("XLM"), symbol_short!("USDC"), 10_000_000i128),
+                (symbol_short!("BTC"), symbol_short!("USDC"), 50_000_000i128),
+                (symbol_short!("ETH"), symbol_short!("USDC"), 25_000_000i128),
+            ],
+        );
+        assert_eq!(client.publish_batch(&publisher, &batch), 3);
+
+        let xlm = client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC"));
+        assert_eq!(xlm.unwrap().price, 10_000_000);
+        let eth = client.get_observation(&symbol_short!("ETH"), &symbol_short!("USDC"));
+        assert_eq!(eth.unwrap().price, 25_000_000);
+        assert_eq!(client.all_observations().len(), 3);
+    }
+
+    #[test]
+    fn publish_batch_rejects_unauthorized_publisher() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let stranger = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let batch = Vec::from_array(
+            &env,
+            [(symbol_short!("XLM"), symbol_short!("USDC"), 10_000_000i128)],
+        );
+        assert_eq!(
+            client.try_publish_batch(&stranger, &batch),
+            Err(Ok(Error::NotAuthorized))
+        );
+    }
+
+    #[test]
+    fn publish_batch_rejects_oversized_batch() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        // MAX_BATCH_SIZE + 1 unique pairs — far below MAX_TRACKED_PAIRS.
+        let mut batch = Vec::new(&env);
+        for i in 0..(MAX_BATCH_SIZE + 1) {
+            batch.push_back((
+                Symbol::new(&env, &format!("A{i:02}")),
+                symbol_short!("USDC"),
+                10_000_000i128,
+            ));
+        }
+        assert_eq!(
+            client.try_publish_batch(&publisher, &batch),
+            Err(Ok(Error::BatchTooLarge))
+        );
+    }
+
+    #[test]
+    fn publish_batch_validates_before_writing() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+
+        // First entry is valid but the second has a non-positive price —
+        // the whole batch must be rejected with nothing written.
+        let batch = Vec::from_array(
+            &env,
+            [
+                (symbol_short!("XLM"), symbol_short!("USDC"), 10_000_000i128),
+                (symbol_short!("BTC"), symbol_short!("USDC"), 0i128),
+            ],
+        );
+        assert_eq!(
+            client.try_publish_batch(&publisher, &batch),
+            Err(Ok(Error::InvalidPrice))
+        );
+        assert_eq!(
+            client.get_observation(&symbol_short!("XLM"), &symbol_short!("USDC")),
+            None
+        );
+        assert_eq!(client.all_observations().len(), 0);
+    }
+
+    #[test]
+    fn publish_batch_obeys_pause() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let publisher = Address::generate(&env);
+        let contract_id = env.register(MarketOracle, ());
+        let client = MarketOracleClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_publisher(&publisher, &true);
+        client.pause();
+
+        let batch = Vec::from_array(
+            &env,
+            [(symbol_short!("XLM"), symbol_short!("USDC"), 10_000_000i128)],
+        );
+        assert_eq!(
+            client.try_publish_batch(&publisher, &batch),
+            Err(Ok(Error::DataFeedPaused))
         );
     }
 

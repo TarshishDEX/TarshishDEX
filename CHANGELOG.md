@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 📦 Market-Oracle Batch Publish (issue #71)
+
+- **Added `publish_batch` to the market-oracle** — an authorized publisher
+  can now submit up to 20 observations in a single call instead of paying
+  per-pair fees and round-trips. The batch is validated up front (size,
+  positive prices, distinct pair) before any storage write, emits a
+  `PricePublished` event per entry, and reuses the same `publish` logic
+  via a shared internal `publish_impl` (avoiding same-contract
+  sub-invocation auth conflicts). New tests: batch success, unauthorized
+  publisher, oversized batch, validate-before-write, and pause gating.
+
 ### 🛑 Market-Oracle Emergency Pause (issue #66)
 
 - **Added admin-only `pause`/`unpause`/`is_paused` to the market-oracle** —
