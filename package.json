@@ -6,7 +6,7 @@
   "description": "TarshishDEX — a decentralized trading interface built on Stellar's native DEX and Soroban smart contracts.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

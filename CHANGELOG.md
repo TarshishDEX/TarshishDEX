@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🐞 Vercel deploy fix (September 2026)
+
+- **Production build now uses Webpack instead of Turbopack** — `next build`
+  became `next build --webpack` after Vercel deploys failed with `ENOENT:
+  .next/next-server.js.nft.json` during post-build file tracing. Next 16.x
+  Turbopack builds omit the nft manifest expected by the standalone output
+  path (and can drop packages from `.next/standalone/node_modules`), which
+  broke both Vercel and Docker standalone builds; Webpack output is correct.
+
 ### 📖 Documentation refresh (September 2026)
 
 - **README badges and scoreboard updated to verified numbers** — 2,321 Vitest
