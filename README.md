@@ -6,7 +6,7 @@
 
 **Trade Stellar's native DEX — intelligently.**
 
-A professional decentralized trading platform built *exclusively* on **Stellar's native DEX** and **Soroban smart contracts** — intelligent order routing, pre-execution simulation, on-chain limit orders, portfolio analytics, and a read-only developer API, all at near-zero cost.
+The professional decentralized trading terminal built *exclusively* on **Stellar's native DEX** and **Soroban smart contracts**. Intelligent order routing, pre-execution simulation, on-chain limit orders, portfolio analytics, and a read-only developer API — all at near-zero cost.
 
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
@@ -24,7 +24,8 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![Audited](https://img.shields.io/badge/security-audited%20Aug%202026-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
-![Next.js 16.3](https://img.shields.io/badge/Next.js-16.3-000000?logo=next.js&logoColor=white)
+![Next.js 16.3.4](https://img.shields.io/badge/Next.js-16.3.4-000000?logo=next.js&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-4%20strict%20flags-3178C6?logo=typescript&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
 [![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
@@ -33,6 +34,69 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 [**Live Demo**](https://tarshishdex.vercel.app) · [**Deployment**](#deployment) · [**API Docs**](#developer-api) · [**Pitch Video**](https://www.loom.com/share/7443ced5440e4f129107ffe84bad1430)
 
 </div>
+
+---
+
+<details>
+<summary><b>📑 Table of Contents</b></summary>
+
+- [The Pitch in 60 Seconds](#the-pitch-in-60-seconds)
+- [What is TarshishDEX?](#what-is-tarshishdex)
+- [Highlights](#highlights)
+- [Gas & Fees — verified ultra-low](#gas--fees--verified-ultra-low)
+- [Quality Scoreboard](#quality-scoreboard)
+- [Formal Audit — August 2026](#formal-audit--august-2026)
+- [Screenshots](#screenshots)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Architecture](#architecture)
+- [Security](#security)
+- [Developer API](#developer-api)
+- [Environment Variables](#environment-variables)
+- [Docker](#docker)
+- [Soroban Smart Contracts](#soroban-smart-contracts)
+- [Wallet Usage](#wallet-usage)
+- [Contract Interaction](#contract-interaction)
+- [Roadmap](#roadmap)
+- [Deployment](#deployment)
+- [Pitch Video](#pitch-video)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [License](#license)
+- [Credits](#credits)
+
+</details>
+
+---
+
+## 🎯 The Pitch in 60 Seconds
+
+**The problem.** Trading on Stellar is powerful but raw. Orderbooks are fragmented, quotes are opaque, and most tooling settles for a single best-effort route — or pushes you toward bridges and wrapped assets on other chains, with all the fees, custody risk, and latency that come with them.
+
+**The solution.** TarshishDEX is a professional terminal that sits **directly on Stellar's native orderbook** and **Soroban smart contracts**. For every trade it evaluates direct, multi-hop, and Horizon path-finding routes **concurrently**, picks the winner, simulates the exact outcome *before you sign*, and executes with full price transparency. No bridges. No wrapped assets. No middlemen. Just the raw speed, liquidity, and near-zero cost of the Stellar network.
+
+**The proof.**
+
+| Metric | Value |
+| --- | --- |
+| ⛽ Read fee | ~0.00001 XLM (100 stroops) |
+| ⛽ Write fees | 0.003–0.019 XLM (dominated by refundable state rent) |
+| 🧪 Unit tests | **2,321 passing** (134 files) — 98.74% statement coverage |
+| 🖥 E2E tests | **57 Playwright tests** across 5 suites |
+| 🦀 Contract tests | **134 Rust tests** — 99.57% line coverage, 28 error codes |
+| 📊 Gas benchmarks | **37 enforced** in CI with a hard regression gate |
+| 🛡 Security | **0 critical npm vulnerabilities**, formal audit Aug 2026 |
+| 🔗 Contracts | **All 3 Soroban contracts live on Stellar Testnet** |
+| ⚙️ CI/CD | **30 GitHub Actions workflows** |
+
+**Who it's for:**
+
+- **Traders** — direct orderbook execution with simulation-first safety, on-chain limit orders, and live market data.
+- **Portfolio managers** — multi-account portfolios, trade history, allocation and analytics dashboards.
+- **Builders** — a read-only REST + SSE [developer API](#developer-api) for anything built on Stellar's native DEX.
+
+> **Try it now → [tarshishdex.vercel.app](https://tarshishdex.vercel.app)** — no sign-up; connect any Stellar wallet (Freighter or any StellarWalletsKit wallet).
 
 ---
 
@@ -99,7 +163,7 @@ Fees are dominated by **refundable state rent** from TTL extension, not CPU or I
 | PWA | SVG icons, network-first service worker |
 | Build | Next.js standalone, non-root Docker |
 
-### 🔒 Formal Audit — August 2026
+## 🔒 Formal Audit — August 2026
 
 A comprehensive security and quality audit was conducted across all layers:
 
@@ -157,7 +221,7 @@ Captured against the live deploy (`tarshishdex.vercel.app`) with Playwright — 
 
 | Layer | Technology |
 | --- | --- |
-| Framework | Next.js 16.3 (App Router), React 19, TypeScript (4 strict flags) |
+| Framework | Next.js 16.3.4 (App Router), React 19.2, TypeScript (4 strict flags) |
 | Styling | Tailwind CSS v4 (custom dark DeFi design system) |
 | Blockchain | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
 | Smart contracts | Soroban SDK v27 (Rust, `#![no_std]`, `wasm32v1-none`) |
@@ -294,7 +358,7 @@ Pure logic (routing, simulation, swap execution, assets, prices, account, histor
 
 ## 📡 Developer API
 
-TarshishDEX exposes a **read-only REST + SSE API** for developers building on Stellar's native DEX. All endpoints are server-side and honour the configured network.
+TarshishDEX exposes a **read-only REST + SSE API** for developers building on Stellar's native DEX. All endpoints are server-side and honour the configured network. Full reference in [`docs/API.md`](docs/API.md).
 
 | Method | Endpoint | Description |
 | --- | --- | --- |

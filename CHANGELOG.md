@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **`docs/API.md` gained the `/api/events` SSE endpoint** documentation;
   `docs/ARCHITECTURE.md` and `docs/COVERAGE_PROGRESS.md` refreshed with
   current workflow counts, WASM sizes, and coverage figures.
+- **README rewritten as a sharper, pitch-first document** — new 60-second
+  pitch (problem → solution → proof → who it's for), collapsible table of
+  contents, badge set updated to pinned versions (Next.js 16.3.4, React
+  19.2), and all 14 screenshots re-captured against the live deploy
+  (`tarshishdex.vercel.app`) with the Playwright capture scripts. Every
+  existing section and verified figure retained.
 
 ### 🚀 Contracts redeployed to Testnet (September 2026)
 
