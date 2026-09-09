@@ -69,6 +69,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 📖 Stellar Services JSDoc (closes #57)
+
+- **Audited the Stellar services layer for JSDoc coverage** — 22 of 24
+  exported functions were already documented; the two gaps
+  (`normalizeOperation`, `formatSwapSummary` in `history.ts`) now have
+  docs describing purpose, return semantics, and typing rationale.
+
 ### 🧮 Swap Percentage Input (closes #41)
 
 - **Wired the existing `PercentButtons` component into the swap form** —

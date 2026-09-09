@@ -65,6 +65,14 @@ export async function fetchTradeHistory(address: string, limit = 40): Promise<Tr
   return entries;
 }
 
+/**
+ * Normalize a raw Horizon operation record into a display-oriented
+ * `TradeHistoryEntry`. Handles payments, path payments, and managed offers;
+ * returns `null` for operation types that are not trade-relevant.
+ *
+ * The Horizon record is deliberately typed as `any` — the operation payload
+ * shape varies widely by type and is not worth modelling exhaustively.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeOperation(op: any): TradeHistoryEntry | null {
   const base = {
@@ -128,6 +136,11 @@ export function normalizeOperation(op: any): TradeHistoryEntry | null {
   }
 }
 
+/**
+ * Build a compact "{amount} {code} → {amount} {code}" summary of a swap
+ * operation for list rows and notifications. Unknown asset types fall back
+ * to `XLM` for native or `?` when the code is missing.
+ */
 export function formatSwapSummary(op: {
   source_amount?: string;
   source_asset_code?: string;
