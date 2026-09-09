@@ -84,17 +84,41 @@ export function resetRateLimitStore(): void {
   store.clear();
 }
 
+import { shortHash } from "@/lib/utils/hash";
+
 /**
  * Extract a stable client identifier from request headers.
- * Falls back to IP when x-forwarded-for is unavailable (e.g. dev).
+ *
+ * `x-forwarded-for` is entirely client-controlled — an attacker can send
+ * any value, so its FIRST entry (the previous behaviour) is trivially
+ * spoofable and lets anyone rotate identifiers to bypass rate limits.
+ *
+ * The identifier is built from the most trustworthy source available:
+ * 1. `x-real-ip` — set/overwritten by the hosting proxy (Vercel, nginx)
+ *    with the true client IP; client-supplied values do not survive it.
+ * 2. The RIGHTMOST entry of `x-forwarded-for` — the one appended by the
+ *    proxy closest to the server (Vercel appends the real client IP to
+ *    the end of any client-supplied list), so left-side spoofing cannot
+ *    change the identifier.
+ * 3. A stable hash of user-agent + accept-language so limits still bind
+ *    *something* per client when no proxy headers exist (local dev).
  */
 export function getClientId(request: Request): string {
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    // x-forwarded-for may contain multiple IPs; use the first (client).
-    return forwarded.split(",")[0]!.trim();
+    const entries = forwarded
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    const proxied = entries[entries.length - 1];
+    if (proxied) return proxied;
   }
-  // Fallback: use x-real-ip or a hash of user-agent + accept-language
-  const realIp = request.headers.get("x-real-ip");
-  return realIp ?? "unknown";
+
+  const ua = request.headers.get("user-agent") ?? "";
+  const lang = request.headers.get("accept-language") ?? "";
+  if (!ua && !lang) return "unknown";
+  return shortHash(`${ua}|${lang}`);
 }

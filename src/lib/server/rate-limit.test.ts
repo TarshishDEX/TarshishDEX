@@ -120,18 +120,44 @@ describe("rate limit presets", () => {
 });
 
 describe("getClientId", () => {
-  it("extracts first IP from x-forwarded-for", () => {
+  it("uses the rightmost entry of x-forwarded-for (proxy-appended, not client-spoofable)", () => {
     const req = new Request("https://example.com/api/test", {
       headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" },
     });
-    expect(getClientId(req)).toBe("1.2.3.4");
+    expect(getClientId(req)).toBe("5.6.7.8");
   });
 
-  it("falls back to x-real-ip", () => {
+  it("ignores attacker-prefixed x-forwarded-for entries", () => {
+    // A client appending fake addresses to the LEFT of the real one must
+    // not change the identifier.
     const req = new Request("https://example.com/api/test", {
-      headers: { "x-real-ip": "9.9.9.9" },
+      headers: { "x-forwarded-for": "203.0.113.7, 198.51.100.9, 5.6.7.8" },
+    });
+    expect(getClientId(req)).toBe("5.6.7.8");
+  });
+
+  it("prefers x-real-ip (platform-set) over x-forwarded-for", () => {
+    const req = new Request("https://example.com/api/test", {
+      headers: {
+        "x-real-ip": "9.9.9.9",
+        "x-forwarded-for": "1.2.3.4",
+      },
     });
     expect(getClientId(req)).toBe("9.9.9.9");
+  });
+
+  it("returns a stable hash when only UA headers exist", () => {
+    const req = new Request("https://example.com/api/test", {
+      headers: { "user-agent": "test-agent/1.0" },
+    });
+    const first = getClientId(req);
+    const second = getClientId(
+      new Request("https://example.com/api/test", {
+        headers: { "user-agent": "test-agent/1.0" },
+      })
+    );
+    expect(first).toMatch(/^[0-9a-f]{8}$/);
+    expect(second).toBe(first);
   });
 
   it("returns unknown when no identifying headers", () => {

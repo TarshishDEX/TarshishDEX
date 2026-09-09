@@ -69,6 +69,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 🛡️ Rate-Limit Spoofing Fix
+
+- **`getClientId` no longer trusts the first `x-forwarded-for` entry** —
+  that header is client-controlled, so anyone could rotate fake addresses
+  to bypass the 100 req/60s limit. The identifier now comes from
+  `x-real-ip` (platform-set), then the rightmost `x-forwarded-for` entry
+  (proxy-appended), then a stable UA hash; header-less requests still
+  resolve to `unknown`. Tests cover spoofed prefixes and stability.
+
 ### 🧪 SSE Cleanup Regression Tests (closes #20)
 
 - **Added regression tests for the `/api/events` SSE route** — the
