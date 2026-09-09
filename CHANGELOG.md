@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### 🧹 Contract Error Surface
 
+- **Trimmed the trading-preferences error enum from 100 to 6 variants** —
+  only returned errors remain (`NotInitialized`, `AlreadyInitialized`,
+  `InvalidSlippage`, `PreferenceNotFound`, `InvalidRoutingMode`,
+  `TooManyAssets`). `NotAuthorized` was declared but never returned (auth
+  failures panic via `require_auth`), so it was dropped too. The three
+  contracts now expose 28 error codes total (13+9+6), down from 300, and
+  the README badge, quality scoreboard, and audit tables were updated to
+  match.
+
+### 🧹 Contract Error Surface
+
 - **Trimmed the market-oracle error enum from 100 to 9 variants** — only
   errors actually returned remain (`NotInitialized`, `AlreadyInitialized`,
   `InvalidPrice`, `NotAuthorized`, `StaleObservation`, `TooManyPairs`,

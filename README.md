@@ -16,7 +16,7 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 ![Coverage](https://img.shields.io/badge/coverage-99.77%25%20statements-2ea44f)
 ![Contract coverage](https://img.shields.io/badge/contract%20coverage-99.5%25%20lines-2ea44f)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-31%20workflows-0ea5e9)
-![Contracts](https://img.shields.io/badge/error%20codes-300-7B1FA2)
+![Contracts](https://img.shields.io/badge/error%20codes-28-7B1FA2)
 ![Soroban](https://img.shields.io/badge/Soroban-3%20contracts%20live-7B1FA2)
 ![Rust](https://img.shields.io/badge/Rust-1.82%2B-b7410e?logo=rust&logoColor=white)
 ![Gas optimized](https://img.shields.io/badge/gas%20optimized-ultra--low%20fees-2ea44f)
@@ -50,7 +50,7 @@ Unlike a basic token swap, TarshishDEX is a professional terminal:
 - 💸 **Ultra-low fees** — reads cost ~0.00001 XLM; writes cost 0.003–0.019 XLM (dominated by refundable state rent, not compute).
 - 🏦 **Developer API** — read-only REST + SSE endpoints for builders on Stellar's native DEX.
 
-**All three Soroban smart contracts are live on Stellar Testnet** — trading preferences, market oracle, and limit-order registry — with 121 Rust tests, 300 error codes, and gas benchmarks enforced in CI.
+**All three Soroban smart contracts are live on Stellar Testnet** — trading preferences, market oracle, and limit-order registry — with 133 Rust tests, 28 error codes, and gas benchmarks enforced in CI.
 
 ## ✨ Highlights
 
@@ -91,7 +91,7 @@ Fees are dominated by **refundable state rent** from TTL extension, not CPU or I
 | Coverage | **99.77% statements** (96.6% branches, 99.72% functions, 99.96% lines) |
 | Rust contracts | **121 tests passing** — fmt ✅, clippy 0 warnings |
 | Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
-| Contract errors | **300 error codes** across 3 Soroban contracts |
+| Contract errors | **28 error codes** across 3 Soroban contracts (only what each contract actually returns) |
 | E2E (Playwright) | **171 tests** across 5 suites |
 | npm vulns | **0 critical** |
 | CI workflows | **31** (verification + maintenance) |
@@ -112,9 +112,9 @@ A comprehensive security and quality audit was conducted across all layers:
 | **E2E (Playwright)** | ✅ 171 tests, 5 suites (swap, portfolio, orders, navigation, analytics) |
 | **Rust fmt** | ✅ All contracts formatted |
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
-| **Rust tests** | ✅ 121 tests, 0 failures |
+| **Rust tests** | ✅ 133 tests, 0 failures |
 | **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
-| **Contract errors** | ✅ 300 error codes (100+100+100 per contract) |
+| **Contract errors** | ✅ 28 error codes (13+9+6 per contract — only returned errors) |
 | **Gas benchmarks** | ✅ 37 benchmarks, hard regression gate in CI |
 | **Dependencies** | ✅ 0 critical npm vulns |
 | **CI/CD** | ✅ 31 workflows, security + quality gates |
