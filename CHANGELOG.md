@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🧹 Contract Error Surface
+
+- **Trimmed the limit-order error enum from 100 to 12 variants** — only
+  errors that are actually returned remain (`NotInitialized`,
+  `AlreadyInitialized`, `InvalidPrice`, `InvalidAmount`, `OrderNotFound`,
+  `NotAuthorized`, `TooManyOrders`, `Expired`, `SameAssetPair`,
+  `ArithmeticOverflow`, `InvalidSideType`, `InvalidExpiryLedger`). The
+  other 88 variants referenced features the contract does not implement
+  (matching engines, relayer bonds, claims, settlements…) and only padded
+  the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
+  on numeric error codes, so the renumbering is safe.
+
 ### 🔒 Limit-Order Correctness
 
 - **Enforced order expiry on-chain** — `mark_executed` now rejects orders
