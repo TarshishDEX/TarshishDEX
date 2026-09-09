@@ -393,9 +393,9 @@ TarshishDEX connects through **Freighter** (and any other wallet in the StellarW
 All three contracts are **live on Stellar Testnet** (see [Deployment](#deployment) below). Set the contract IDs in `.env.local`:
 
 ```bash
-NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM
-NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V
-NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM
+NEXT_PUBLIC_TRADING_PREFERENCES_CONTRACT_ID=CDEXBPA5LPASJR5B2Z4EBKJ74GHT66LDPL5XXBZ4ATHL4XJKI6HQVCAM
+NEXT_PUBLIC_MARKET_ORACLE_CONTRACT_ID=CBL2NE3OKPHOZTABVODI6PX4RCMEOKIC7WOO4TUYPUW43HUG7GCSC5N5
+NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=CDPHVZHRTBYVOXOV2TUXSSGGZUK2A6IUGFKA7ACKACMORJDKFGYQMACM
 ```
 
 - **Swap page → On-chain preferences** — reads the connected account's stored slippage/routing from the `trading-preferences` contract and writes updates via the wallet (`set_preferences`), showing the transaction hash on success.
@@ -406,20 +406,20 @@ NEXT_PUBLIC_LIMIT_ORDER_CONTRACT_ID=CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVP
 ```bash
 # Read an account's preferences
 stellar contract invoke \
-  --id CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM \
+  --id CDEXBPA5LPASJR5B2Z4EBKJ74GHT66LDPL5XXBZ4ATHL4XJKI6HQVCAM \
   --network testnet --source-account alice -- \
   get_preferences --account G...
 
 # Write preferences (authorized via require_auth)
 stellar contract invoke \
-  --id CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM \
+  --id CDEXBPA5LPASJR5B2Z4EBKJ74GHT66LDPL5XXBZ4ATHL4XJKI6HQVCAM \
   --network testnet --source-account alice --send=yes -- \
   set_preferences --account G... \
   --prefs '{"max_slippage_bps": 250, "routing_mode": "auto", "allowed_assets": []}'
 
 # Publish a price observation (authorized publisher)
 stellar contract invoke \
-  --id CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V \
+  --id CBL2NE3OKPHOZTABVODI6PX4RCMEOKIC7WOO4TUYPUW43HUG7GCSC5N5 \
   --network testnet --source-account alice --send=yes -- \
   publish --publisher G... --base USDC --counter XLM --price 10000000
 ```
@@ -441,13 +441,13 @@ stellar contract invoke \
 
 ### Soroban contracts — live on Stellar Testnet
 
-All three contracts are deployed, initialized, and exercised on Stellar Testnet (August 2026):
+All three contracts are deployed, initialized, and exercised on Stellar Testnet (first deployed August 2026; redeployed September 2026 with the pause, batch-publish, and full asset-identity support):
 
 | Contract | Address | Network |
 | --- | --- | --- |
-| `trading-preferences` | `CBCFZA7IONESTWX3YEP76UAPNQD3UQ6NU4INECNDXP2YVXUOR2H33JKM` | Testnet |
-| `market-oracle` | `CBWISHEEE7W2WFXUPYX3R4HFOM54RYM3PQUXYCCTMZ5VNEOIKOZSUS7V` | Testnet |
-| `limit-order` | `CATBY2SG26N6E7P34BEL4SWWQVI5LDQT7W26O3TS4HVPL2FZ6LIWPJNM` | Testnet |
+| `trading-preferences` | `CDEXBPA5LPASJR5B2Z4EBKJ74GHT66LDPL5XXBZ4ATHL4XJKI6HQVCAM` | Testnet |
+| `market-oracle` | `CBL2NE3OKPHOZTABVODI6PX4RCMEOKIC7WOO4TUYPUW43HUG7GCSC5N5` | Testnet |
+| `limit-order` | `CDPHVZHRTBYVOXOV2TUXSSGGZUK2A6IUGFKA7ACKACMORJDKFGYQMACM` | Testnet |
 
 Deployer account, verified contract-call transaction hashes, and explorer links are all in [`docs/deployment.md`](docs/deployment.md). To redeploy, run the deploy script (or the `Deploy` CI workflow — see the same doc for the full runbook):
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🚀 Contracts redeployed to Testnet (September 2026)
+
+- **All three contracts redeployed with the latest code** — pause/unpause
+  (market-oracle, limit-order), `publish_batch`, on-chain expiry enforcement,
+  and full asset identity are now live on Stellar Testnet. The deployed WASM
+  hashes match the current builds byte-for-byte.
+  New contract IDs:
+  `CDEXBPA5…` (trading-preferences), `CBL2NE3…` (market-oracle),
+  `CDPHVZHR…` (limit-order) — see `docs/deployment.md` for the full
+  addresses, deployer account, and verified transaction hashes.
+- **Fixed the `Deploy` CI workflow** — the stellar-cli install step invoked
+  the binary before `GITHUB_PATH` took effect (same-step PATH), failing with
+  `stellar: command not found`; it now calls `/tmp/stellar` by full path.
+
 ### 🔑 Unambiguous Asset Identity
 
 - **Limit-order pairs now carry code + issuer on-chain** — the contract's
