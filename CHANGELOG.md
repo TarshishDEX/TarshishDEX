@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🧹 Contract Error Surface
+
+- **Trimmed the market-oracle error enum from 100 to 9 variants** — only
+  errors actually returned remain (`NotInitialized`, `AlreadyInitialized`,
+  `InvalidPrice`, `NotAuthorized`, `StaleObservation`, `TooManyPairs`,
+  `InvalidPair`, `DataFeedPaused`, `BatchTooLarge`). The other 91 were
+  speculative (aggregation consensus, publisher slashing, feed lifecycle…)
+  and only padded the audit surface. No TS code depends on numeric codes.
+
 ### 📦 Market-Oracle Batch Publish (issue #71)
 
 - **Added `publish_batch` to the market-oracle** — an authorized publisher
