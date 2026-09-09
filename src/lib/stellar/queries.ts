@@ -31,6 +31,10 @@ export function useSwapQuote(
     enabled: Boolean(
       input && output && amountIn && Number(amountIn) > 0 && input.code !== output.code
     ),
+    // Quotes are price-sensitive but expensive (path-finding + orderbooks);
+    // reuse a fresh quote for a short window instead of refetching on every
+    // keystroke or remount.
+    staleTime: 5_000,
   });
 }
 
@@ -39,6 +43,9 @@ export function useOrderbook(selling: StellarAsset, buying: StellarAsset) {
   return useQuery({
     queryKey: ["orderbook", selling.code, selling.issuer ?? "", buying.code, buying.issuer ?? ""],
     queryFn: () => fetchOrderbook(selling, buying, 20),
+    // Live views are kept fresh by the SSE stream invalidation; this stale
+    // time prevents needless Horizon refetches on mount/pair-switch churn.
+    staleTime: 15_000,
   });
 }
 

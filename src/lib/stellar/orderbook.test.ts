@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchOrderbook } from "@/lib/stellar/orderbook";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { fetchOrderbook, clearOrderbookCache } from "@/lib/stellar/orderbook";
 
 // Mock Horizon server
 const mockOrderbookCall = vi.fn();
@@ -32,6 +32,11 @@ function mockResponse(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearOrderbookCache();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("fetchOrderbook", () => {
@@ -127,5 +132,54 @@ describe("fetchOrderbook", () => {
     expect(result.bestAsk).toBeNull();
     expect(result.midPrice).toBeNull();
     expect(result.spreadPct).toBeNull();
+  });
+});
+
+describe("fetchOrderbook caching", () => {
+  it("dedupes concurrent calls for the same pair (single Horizon request)", async () => {
+    mockOrderbookCall.mockResolvedValue(mockResponse([], []));
+
+    const [a, b] = await Promise.all([fetchOrderbook(XLM, USDC), fetchOrderbook(XLM, USDC)]);
+    expect(a).toEqual(b);
+    expect(mockOrderbookCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("serves a cached snapshot for repeated calls within the TTL", async () => {
+    mockOrderbookCall.mockResolvedValue(mockResponse([], []));
+
+    await fetchOrderbook(XLM, USDC);
+    await fetchOrderbook(XLM, USDC);
+    await fetchOrderbook(XLM, USDC);
+    expect(mockOrderbookCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("refetches once the TTL expires", async () => {
+    vi.useFakeTimers();
+    mockOrderbookCall.mockResolvedValue(mockResponse([], []));
+
+    await fetchOrderbook(XLM, USDC);
+    vi.advanceTimersByTime(3_100); // past ORDERBOOK_CACHE_TTL_MS (3000)
+    await fetchOrderbook(XLM, USDC);
+    expect(mockOrderbookCall).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not cache failures — the next call retries", async () => {
+    mockOrderbookCall.mockRejectedValueOnce(new Error("Horizon 500"));
+    mockOrderbookCall.mockResolvedValueOnce(mockResponse([], []));
+
+    await expect(fetchOrderbook(XLM, USDC)).rejects.toThrow("Horizon 500");
+    const result = await fetchOrderbook(XLM, USDC);
+    expect(result.bids).toHaveLength(0);
+    expect(mockOrderbookCall).toHaveBeenCalledTimes(2);
+  });
+
+  it("caches different pairs separately", async () => {
+    mockOrderbookCall.mockResolvedValue(mockResponse([], []));
+
+    const BTC = { code: "BTC", issuer: "GA5Z..." };
+    await fetchOrderbook(XLM, USDC);
+    await fetchOrderbook(XLM, BTC);
+    await fetchOrderbook(XLM, USDC);
+    expect(mockOrderbookCall).toHaveBeenCalledTimes(2);
   });
 });

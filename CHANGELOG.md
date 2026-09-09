@@ -69,6 +69,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 🗃️ Horizon Query Caching (closes #81)
+
+- **Orderbook fetches are cached for 3s** — the routing engine evaluates
+  direct, bridge and path-finding legs in parallel and repeatedly queries
+  the same pairs, so a shared in-memory TTL cache (keyed by pair + limit,
+  caching the promise to dedupe concurrent calls) cuts Horizon load
+  substantially per quote. Failures are never cached. `useOrderbook` and
+  `useSwapQuote` also gained `staleTime` so remounts/pair-switch churn
+  don't refetch stale-able data needlessly.
+
 ### ⚡ Chart Lazy-Loading (closes #80)
 
 - **Heavy chart libraries are now code-split** — `lightweight-charts`
