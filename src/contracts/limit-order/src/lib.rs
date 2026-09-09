@@ -257,7 +257,7 @@ impl LimitOrder {
             return Err(Error::InvalidAmount);
         }
         if side != symbol_short!("buy") && side != symbol_short!("sell") {
-            return Err(Error::InvalidAmount);
+            return Err(Error::InvalidSideType);
         }
         if base == counter {
             return Err(Error::SameAssetPair);
@@ -1029,7 +1029,7 @@ mod test {
                 &0,
                 &symbol_short!("bid"),
             ),
-            Err(Ok(Error::InvalidAmount))
+            Err(Ok(Error::InvalidSideType))
         );
     }
 
