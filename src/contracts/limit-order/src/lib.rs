@@ -376,6 +376,12 @@ impl LimitOrder {
             .get(&key)
             .ok_or(Error::OrderNotFound)?;
 
+        // Enforce expiry on-chain: an order whose expiry ledger has passed
+        // can never be marked executed, even by its owner or a relayer.
+        if order.expiry_ledger != 0 && env.ledger().sequence() > order.expiry_ledger {
+            return Err(Error::Expired);
+        }
+
         // Allow order owner OR registered relayer.
         let is_owner = order.owner == caller;
         let is_relayer: bool = env
@@ -558,9 +564,7 @@ impl LimitOrder {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
-
+    use super::*;    use soroban_sdk::{symbol_short, testutils::Address as _, testutils::Ledger as _, Address, Env};
     #[test]
     fn place_and_get_order() {
         let env = Env::default();
@@ -1036,6 +1040,71 @@ mod test {
             client.try_mark_executed(&user, &999, &symbol_short!("tx")),
             Err(Ok(Error::OrderNotFound))
         );
+    }
+
+    #[test]
+    fn expired_order_cannot_be_marked_executed() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let relayer = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        client.set_relayer(&relayer, &true);
+
+        let expiry = env.ledger().sequence() + 1000;
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &expiry,
+            &symbol_short!("sell"),
+        );
+
+        // Jump past the expiry ledger — neither owner nor relayer may execute.
+        env.ledger().set_sequence_number(expiry + 1);
+        assert_eq!(
+            client.try_mark_executed(&user, &id, &symbol_short!("tx_owner")),
+            Err(Ok(Error::Expired))
+        );
+        assert_eq!(
+            client.try_mark_executed(&relayer, &id, &symbol_short!("tx_relay")),
+            Err(Ok(Error::Expired))
+        );
+
+        // The order record survives; the frontend can still read it.
+        assert!(client.get_order(&id).is_some());
+    }
+
+    #[test]
+    fn cancel_allowed_after_expiry() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        let expiry = env.ledger().sequence() + 500;
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &expiry,
+            &symbol_short!("sell"),
+        );
+
+        // Expired orders must still be cancellable so owners can clean up.
+        env.ledger().set_sequence_number(expiry + 1);
+        assert!(client.try_cancel_order(&user, &id).is_ok());
+        assert!(client.get_order(&id).is_none());
     }
 
     #[test]

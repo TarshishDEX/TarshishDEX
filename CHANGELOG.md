@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🔒 Limit-Order Correctness
+
+- **Enforced order expiry on-chain** — `mark_executed` now rejects orders
+  whose `expiry_ledger` has passed with `Error::Expired`, closing the gap
+  where expiry was stored and returned but never actually enforced. Owners
+  can still cancel expired orders to clean up their index. New tests:
+  `expired_order_cannot_be_marked_executed`, `cancel_allowed_after_expiry`.
+
 ### ⛽ Soroban Gas & Storage Optimization
 
 - **Verified ultra-low gas** — benchmarked every contract function against a
