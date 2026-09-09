@@ -388,8 +388,8 @@ const ORDERS = [
   {
     id: 1,
     owner: VALID_ADDRESS,
-    base: "XLM",
-    counter: "USDC",
+    base: { code: "XLM", issuer: null },
+    counter: { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" },
     price: 2,
     amount: 100,
     expiryLedger: 0,
@@ -399,8 +399,8 @@ const ORDERS = [
   {
     id: 2,
     owner: VALID_ADDRESS,
-    base: "USDC",
-    counter: "XLM",
+    base: { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" },
+    counter: { code: "XLM", issuer: null },
     price: 0.5,
     amount: 50,
     expiryLedger: 0,

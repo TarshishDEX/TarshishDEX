@@ -38,10 +38,40 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "symbol": "XLM"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "XLM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
-                  "symbol": "USDC"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "USDC"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
                   "i128": "10000000"

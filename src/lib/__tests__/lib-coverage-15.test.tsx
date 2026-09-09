@@ -114,7 +114,17 @@ describe("limit-order client catch branches", () => {
   });
 
   it("returns null when building a place-order tx fails", async () => {
-    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1, 10, 0, "buy")).toBeNull();
+    expect(
+      await buildPlaceOrderTx(
+        VALID_ADDRESS,
+        { code: "XLM", issuer: null },
+        { code: "USDC", issuer: null },
+        1,
+        10,
+        0,
+        "buy"
+      )
+    ).toBeNull();
   });
 
   it("returns null when building a cancel tx fails", async () => {

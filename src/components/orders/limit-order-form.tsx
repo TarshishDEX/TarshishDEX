@@ -57,8 +57,13 @@ export function LimitOrderForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userAddress: address,
-          base: base?.code,
-          counter: counter?.code,
+          // Full asset identity: code + issuer (null = native). This is what
+          // keeps same-coded assets from different issuers as distinct pairs.
+          base: { code: base!.code, issuer: base!.isNative ? null : (base!.issuer ?? null) },
+          counter: {
+            code: counter!.code,
+            issuer: counter!.isNative ? null : (counter!.issuer ?? null),
+          },
           price: Math.floor(Number(price) * 1e7),
           amount: Math.floor(Number(amount) * 1e7),
           expiryLedger: expiryLedgers,

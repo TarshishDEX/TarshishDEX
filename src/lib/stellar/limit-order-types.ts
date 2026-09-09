@@ -1,11 +1,17 @@
 import type { StellarAsset } from "@/lib/stellar/types";
 
+/** On-chain asset identity: a code plus an optional issuer (null = native). */
+export interface OnChainAsset {
+  code: string;
+  issuer: string | null;
+}
+
 /** Mirror of the on-chain Order struct. */
 export interface LimitOrder {
   id: number;
   owner: string;
-  base: string;
-  counter: string;
+  base: OnChainAsset;
+  counter: OnChainAsset;
   /** Price: amount of counter per 1 base (7-decimal fixed point). */
   price: number;
   /** Amount of base to trade (7-decimal fixed point). */

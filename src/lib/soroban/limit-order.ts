@@ -1,10 +1,41 @@
 import { contract, nativeToScVal, scValToNative, xdr, Address } from "@stellar/stellar-sdk";
 import { getActiveNetwork } from "@/lib/stellar/config";
 import { getLimitOrderContractId, getSorobanRpcServer } from "@/lib/soroban/config";
-import type { LimitOrder } from "@/lib/stellar/limit-order-types";
+import type { LimitOrder, OnChainAsset } from "@/lib/stellar/limit-order-types";
 
 /** Null source account for read-only simulations. */
 const NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+
+/**
+ * Decode an on-chain Asset ScVal (a symbol-keyed map, per the contract's
+ * `Asset` struct) into an OnChainAsset. Also tolerates the legacy plain-
+ * symbol form (no issuer) so stale RPC results never crash the decoder.
+ */
+function decodeAsset(native: unknown): OnChainAsset {
+  if (typeof native === "string") {
+    return { code: native, issuer: null };
+  }
+  const n = (native ?? {}) as { code?: unknown; issuer?: unknown };
+  return { code: String(n.code ?? ""), issuer: n.issuer == null ? null : String(n.issuer) };
+}
+
+/**
+ * Encode an OnChainAsset into the contract's `Asset` struct. The contract
+ * derives its identity from code + issuer, so the issuer (or None for the
+ * native asset) must be carried in the call args.
+ */
+function assetToScVal(asset: OnChainAsset): xdr.ScVal {
+  return xdr.ScVal.scvMap([
+    new xdr.ScMapEntry({
+      key: xdr.ScVal.scvSymbol("code"),
+      val: xdr.ScVal.scvSymbol(asset.code),
+    }),
+    new xdr.ScMapEntry({
+      key: xdr.ScVal.scvSymbol("issuer"),
+      val: asset.issuer ? Address.fromString(asset.issuer).toScVal() : xdr.ScVal.scvVoid(),
+    }),
+  ]);
+}
 
 /** Decode an on-chain Order ScVal into a typed LimitOrder. */
 function orderFromScVal(scv: xdr.ScVal): LimitOrder {
@@ -14,8 +45,8 @@ function orderFromScVal(scv: xdr.ScVal): LimitOrder {
   return {
     id: Number(native.id ?? 0),
     owner: String(native.owner ?? ""),
-    base: String(native.base ?? ""),
-    counter: String(native.counter ?? ""),
+    base: decodeAsset(native.base),
+    counter: decodeAsset(native.counter),
     price: Number(price),
     amount: Number(amount),
     expiryLedger: Number(native.expiry_ledger ?? 0),
@@ -101,8 +132,8 @@ export async function queryOrderCount(): Promise<number> {
  */
 export async function buildPlaceOrderTx(
   userAddress: string,
-  base: string,
-  counter: string,
+  base: OnChainAsset,
+  counter: OnChainAsset,
   price: number,
   amount: number,
   expiryLedger: number,
@@ -118,8 +149,8 @@ export async function buildPlaceOrderTx(
       method: "place_order",
       args: [
         Address.fromString(userAddress).toScVal(),
-        nativeToScVal(base, { type: "symbol" }),
-        nativeToScVal(counter, { type: "symbol" }),
+        assetToScVal(base),
+        assetToScVal(counter),
         nativeToScVal(Math.floor(price), { type: "i128" }),
         nativeToScVal(Math.floor(amount), { type: "i128" }),
         nativeToScVal(expiryLedger, { type: "u32" }),

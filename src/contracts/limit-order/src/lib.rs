@@ -41,6 +41,17 @@ pub enum Error {
     InvalidExpiryLedger = 12,
     ContractPaused = 13,
 }
+/// A Stellar asset referenced by an order: a code plus an optional issuer.
+/// `issuer: None` denotes the native asset (XLM). Including the issuer is
+/// what makes the pair identity unambiguous — two assets with the same code
+/// but different issuers are distinct assets on Stellar.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Asset {
+    pub code: Symbol,
+    pub issuer: Option<Address>,
+}
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Order {
@@ -49,9 +60,9 @@ pub struct Order {
     /// Account that placed the order.
     pub owner: Address,
     /// Asset to sell.
-    pub base: Symbol,
+    pub base: Asset,
     /// Asset to buy.
-    pub counter: Symbol,
+    pub counter: Asset,
     /// Price: amount of counter per 1 base (7-decimal fixed point).
     pub price: i128,
     /// Amount of base to sell (7-decimal fixed point).
@@ -91,8 +102,8 @@ pub struct OrderPlaced {
     #[topic]
     pub id: u64,
     pub side: Symbol,
-    pub base: Symbol,
-    pub counter: Symbol,
+    pub base: Asset,
+    pub counter: Asset,
     pub price: i128,
     pub amount: i128,
 }
@@ -161,8 +172,8 @@ impl LimitOrder {
     pub fn place_order(
         env: Env,
         owner: Address,
-        base: Symbol,
-        counter: Symbol,
+        base: Asset,
+        counter: Asset,
         price: i128,
         amount: i128,
         expiry_ledger: u32,
@@ -182,6 +193,8 @@ impl LimitOrder {
         if side != symbol_short!("buy") && side != symbol_short!("sell") {
             return Err(Error::InvalidSideType);
         }
+        // Asset identity includes the issuer: equal codes from different
+        // issuers are different assets and must not be treated as one pair.
         if base == counter {
             return Err(Error::SameAssetPair);
         }
@@ -543,6 +556,14 @@ mod test {
     use soroban_sdk::{
         symbol_short, testutils::Address as _, testutils::Ledger as _, Address, Env,
     };
+
+    /// Build an Asset for tests: code + optional issuer (None = native).
+    fn asset(env: &Env, code: &str, issuer: Option<Address>) -> Asset {
+        Asset {
+            code: Symbol::new(env, code),
+            issuer,
+        }
+    }
     #[test]
     fn place_and_get_order() {
         let env = Env::default();
@@ -555,8 +576,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &12_500_000,
             &100_000_000, // 10 XLM
             &0,
@@ -566,7 +587,7 @@ mod test {
 
         let order = client.get_order(&1).unwrap();
         assert_eq!(order.owner, user);
-        assert_eq!(order.base, symbol_short!("XLM"));
+        assert_eq!(order.base, asset(&env, "XLM", None));
         assert_eq!(order.price, 12_500_000);
     }
 
@@ -582,8 +603,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &50_000_000,
             &0,
@@ -606,8 +627,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &50_000_000,
             &0,
@@ -632,8 +653,8 @@ mod test {
         for _ in 0..3 {
             client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -663,8 +684,8 @@ mod test {
         assert_eq!(client.get_order_count(), 0);
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -687,8 +708,8 @@ mod test {
 
         let id1 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -696,8 +717,8 @@ mod test {
         );
         let id2 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &11_000_000,
             &500_000,
             &0,
@@ -729,8 +750,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("XLM"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "XLM", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -738,6 +759,62 @@ mod test {
             ),
             Err(Ok(Error::SameAssetPair))
         );
+    }
+
+    #[test]
+    fn same_code_different_issuer_is_a_distinct_pair() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let issuer_a = Address::generate(&env);
+        let issuer_b = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        // Same code, different issuers — accepted as a distinct pair, and the
+        // issuer round-trips through storage.
+        let id = client.place_order(
+            &user,
+            &asset(&env, "USDC", Some(issuer_a.clone())),
+            &asset(&env, "USDC", Some(issuer_b.clone())),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+        let order = client.get_order(&id).unwrap();
+        assert_eq!(order.base.code, symbol_short!("USDC"));
+        assert_eq!(order.base.issuer, Some(issuer_a.clone()));
+        assert_eq!(order.counter.issuer, Some(issuer_b));
+
+        // Same code AND same issuer — rejected as the same asset.
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &asset(&env, "USDC", Some(issuer_a.clone())),
+                &asset(&env, "USDC", Some(issuer_a.clone())),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::SameAssetPair))
+        );
+
+        // Native XLM and an issued token also called XLM are distinct assets.
+        assert!(client
+            .try_place_order(
+                &user,
+                &asset(&env, "XLM", None),
+                &asset(&env, "XLM", Some(issuer_a.clone())),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            )
+            .is_ok());
     }
 
     #[test]
@@ -758,8 +835,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &now,
@@ -773,8 +850,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &past,
@@ -787,8 +864,8 @@ mod test {
         let future = now + 1000;
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &future,
@@ -810,8 +887,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -854,8 +931,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -884,8 +961,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &huge,
                 &2,
                 &0,
@@ -908,8 +985,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &0,
                 &1_000_000,
                 &0,
@@ -947,8 +1024,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &0,
                 &0,
@@ -971,8 +1048,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &-5,
                 &0,
@@ -995,8 +1072,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1020,8 +1097,8 @@ mod test {
         for _ in 0..25 {
             client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1033,8 +1110,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1092,8 +1169,8 @@ mod test {
         let expiry = env.ledger().sequence() + 1000;
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &expiry,
@@ -1128,8 +1205,8 @@ mod test {
         let expiry = env.ledger().sequence() + 500;
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &expiry,
@@ -1164,8 +1241,8 @@ mod test {
         client.initialize(&admin);
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1179,8 +1256,8 @@ mod test {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1205,8 +1282,8 @@ mod test {
         assert!(client
             .try_place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1285,8 +1362,8 @@ mod test {
 
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1305,6 +1382,13 @@ mod test {
 mod gas_benchmarks {
     use super::*;
     use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+    /// Build an Asset for tests: code + optional issuer (None = native).
+    fn asset(env: &Env, code: &str, issuer: Option<Address>) -> Asset {
+        Asset {
+            code: Symbol::new(env, code),
+            issuer,
+        }
+    }
 
     fn setup() -> (Env, Address, LimitOrderClient<'static>) {
         let env = Env::default();
@@ -1339,8 +1423,8 @@ mod gas_benchmarks {
         let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1357,8 +1441,8 @@ mod gas_benchmarks {
         let user = Address::generate(&env);
         client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1368,8 +1452,8 @@ mod gas_benchmarks {
         let before = env.cost_estimate().budget().cpu_instruction_cost();
         let _ = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &11_000_000,
             &500_000,
             &0,
@@ -1386,8 +1470,8 @@ mod gas_benchmarks {
         let user = Address::generate(&env);
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1407,8 +1491,8 @@ mod gas_benchmarks {
         let user = Address::generate(&env);
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1428,8 +1512,8 @@ mod gas_benchmarks {
         let user = Address::generate(&env);
         let id = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1450,8 +1534,8 @@ mod gas_benchmarks {
         for _ in 0..3 {
             client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1473,8 +1557,8 @@ mod gas_benchmarks {
         for _ in 0..3 {
             client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1495,8 +1579,8 @@ mod gas_benchmarks {
         let user = Address::generate(&env);
         client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1564,8 +1648,8 @@ mod gas_benchmarks {
 
         let id1 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &10_000_000,
             &1_000_000,
             &0,
@@ -1575,8 +1659,8 @@ mod gas_benchmarks {
 
         let id2 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &11_000_000,
             &500_000,
             &0,
@@ -1622,6 +1706,13 @@ mod gas_benchmarks {
 mod fuzz {
     use super::*;
     use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
+    /// Build an Asset for tests: code + optional issuer (None = native).
+    fn asset(env: &Env, code: &str, issuer: Option<Address>) -> Asset {
+        Asset {
+            code: Symbol::new(env, code),
+            issuer,
+        }
+    }
 
     fn setup() -> (Env, Address, LimitOrderClient<'static>) {
         let env = Env::default();
@@ -1642,8 +1733,8 @@ mod fuzz {
         for i in 0..10 {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1671,8 +1762,8 @@ mod fuzz {
         for i in 0..5 {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1702,8 +1793,8 @@ mod fuzz {
         for _ in 0..20 {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &10_000_000,
                 &1_000_000,
                 &0,
@@ -1725,8 +1816,8 @@ mod fuzz {
         for i in 0..10 {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1747,8 +1838,8 @@ mod fuzz {
         for i in 0..MAX_ORDERS_PER_USER {
             client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1760,8 +1851,8 @@ mod fuzz {
         assert_eq!(
             client.try_place_order(
                 &user,
-                &symbol_short!("BTC"),
-                &symbol_short!("USDC"),
+                &asset(&env, "BTC", None),
+                &asset(&env, "USDC", None),
                 &50_000_000,
                 &1_000_000,
                 &0,
@@ -1785,8 +1876,8 @@ mod fuzz {
             };
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &(1_000_000 + i as i128 * 7),
                 &0,
@@ -1808,8 +1899,8 @@ mod fuzz {
         // Smallest valid values
         let id1 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &1,
             &1,
             &0,
@@ -1821,8 +1912,8 @@ mod fuzz {
         // Large but non-overflowing values (i128)
         let id2 = client.place_order(
             &user,
-            &symbol_short!("XLM"),
-            &symbol_short!("USDC"),
+            &asset(&env, "XLM", None),
+            &asset(&env, "USDC", None),
             &9_000_000_000_000_000_000,
             &9_000_000_000,
             &0,
@@ -1845,8 +1936,8 @@ mod fuzz {
         {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &expiry,
@@ -1870,8 +1961,8 @@ mod fuzz {
             // Place every iteration
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &(i * 3), // varied expiry
@@ -1909,8 +2000,8 @@ mod fuzz {
         for i in 0..7u32 {
             let id = client.place_order(
                 &user,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1948,8 +2039,8 @@ mod fuzz {
         for i in 0..4u32 {
             client.place_order(
                 &user_a,
-                &symbol_short!("XLM"),
-                &symbol_short!("USDC"),
+                &asset(&env, "XLM", None),
+                &asset(&env, "USDC", None),
                 &(10_000_000 + i as i128),
                 &1_000_000,
                 &0,
@@ -1959,8 +2050,8 @@ mod fuzz {
         for i in 0..2u32 {
             client.place_order(
                 &user_b,
-                &symbol_short!("BTC"),
-                &symbol_short!("USDC"),
+                &asset(&env, "BTC", None),
+                &asset(&env, "USDC", None),
                 &(50_000_000 + i as i128),
                 &1_000_000,
                 &0,

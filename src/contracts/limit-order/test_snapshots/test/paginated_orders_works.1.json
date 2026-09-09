@@ -38,47 +38,40 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "symbol": "XLM"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "XLM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
-                  "symbol": "USDC"
-                },
-                {
-                  "i128": "10000000"
-                },
-                {
-                  "i128": "1000000"
-                },
-                {
-                  "u32": 0
-                },
-                {
-                  "symbol": "sell"
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
-              "function_name": "place_order",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                },
-                {
-                  "symbol": "XLM"
-                },
-                {
-                  "symbol": "USDC"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "USDC"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
                   "i128": "10000000"
@@ -112,10 +105,107 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
-                  "symbol": "XLM"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "XLM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
-                  "symbol": "USDC"
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "USDC"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
+                },
+                {
+                  "i128": "10000000"
+                },
+                {
+                  "i128": "1000000"
+                },
+                {
+                  "u32": 0
+                },
+                {
+                  "symbol": "sell"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
+              "function_name": "place_order",
+              "args": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                },
+                {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "XLM"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
+                },
+                {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "code"
+                      },
+                      "val": {
+                        "symbol": "USDC"
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "issuer"
+                      },
+                      "val": "void"
+                    }
+                  ]
                 },
                 {
                   "i128": "10000000"
@@ -262,7 +352,22 @@
                       "symbol": "base"
                     },
                     "val": {
-                      "symbol": "XLM"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "XLM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {
@@ -270,7 +375,22 @@
                       "symbol": "counter"
                     },
                     "val": {
-                      "symbol": "USDC"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "USDC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {
@@ -362,7 +482,22 @@
                       "symbol": "base"
                     },
                     "val": {
-                      "symbol": "XLM"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "XLM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {
@@ -370,7 +505,22 @@
                       "symbol": "counter"
                     },
                     "val": {
-                      "symbol": "USDC"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "USDC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {
@@ -462,7 +612,22 @@
                       "symbol": "base"
                     },
                     "val": {
-                      "symbol": "XLM"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "XLM"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {
@@ -470,7 +635,22 @@
                       "symbol": "counter"
                     },
                     "val": {
-                      "symbol": "USDC"
+                      "map": [
+                        {
+                          "key": {
+                            "symbol": "code"
+                          },
+                          "val": {
+                            "symbol": "USDC"
+                          }
+                        },
+                        {
+                          "key": {
+                            "symbol": "issuer"
+                          },
+                          "val": "void"
+                        }
+                      ]
                     }
                   },
                   {

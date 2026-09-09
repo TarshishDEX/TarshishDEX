@@ -19,6 +19,9 @@ import { observationFromScVal, readPriceObservation } from "@/lib/soroban/market
 import { xdr, scValToNative, Address, nativeToScVal } from "@stellar/stellar-sdk";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+const USDC_ISSUER = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";
+const XLM_ASSET = { code: "XLM", issuer: null };
+const USDC_ASSET = { code: "USDC", issuer: USDC_ISSUER };
 
 // =========================================================================
 // Mocks
@@ -427,13 +430,13 @@ describe("limit-order client", () => {
     expect(await queryOrder(1)).toBeNull();
   });
 
-  it("queryOrder decodes an order", async () => {
+  it("queryOrder decodes an order with full asset identity", async () => {
     mockLimitContractId.mockReturnValue("CABC");
     const orderScv = nativeToScVal({
       id: 1,
       owner: VALID_ADDRESS,
-      base: "XLM",
-      counter: "USDC",
+      base: { code: "XLM", issuer: null },
+      counter: { code: "USDC", issuer: USDC_ISSUER },
       price: 12500000,
       amount: 1000000,
       expiry_ledger: 0,
@@ -445,7 +448,8 @@ describe("limit-order client", () => {
     const order = await queryOrder(1);
     expect(order).not.toBeNull();
     expect(order?.id).toBe(1);
-    expect(order?.base).toBe("XLM");
+    expect(order?.base).toEqual({ code: "XLM", issuer: null });
+    expect(order?.counter).toEqual({ code: "USDC", issuer: USDC_ISSUER });
     expect(order?.side).toBe("sell");
   });
 
@@ -465,8 +469,8 @@ describe("limit-order client", () => {
     const orderScv = nativeToScVal({
       id: 7,
       owner: VALID_ADDRESS,
-      base: "XLM",
-      counter: "USDC",
+      base: { code: "XLM", issuer: null },
+      counter: { code: "USDC", issuer: USDC_ISSUER },
       price: 1,
       amount: 1,
       expiry_ledger: 0,
@@ -502,13 +506,15 @@ describe("limit-order client", () => {
 
   it("buildPlaceOrderTx returns null when unconfigured", async () => {
     mockLimitContractId.mockReturnValue(null);
-    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1, 1, 0, "buy")).toBeNull();
+    expect(
+      await buildPlaceOrderTx(VALID_ADDRESS, XLM_ASSET, USDC_ASSET, 1, 1, 0, "buy")
+    ).toBeNull();
   });
 
   it("buildPlaceOrderTx returns XDR", async () => {
     mockLimitContractId.mockReturnValue("CABC");
     buildMock.mockResolvedValue(makeTx());
-    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1.5, 2.5, 0, "buy")).toBe(
+    expect(await buildPlaceOrderTx(VALID_ADDRESS, XLM_ASSET, USDC_ASSET, 1.5, 2.5, 0, "buy")).toBe(
       "tx-xdr"
     );
   });
@@ -516,7 +522,9 @@ describe("limit-order client", () => {
   it("buildPlaceOrderTx returns null on error", async () => {
     mockLimitContractId.mockReturnValue("CABC");
     buildMock.mockRejectedValue(new Error("boom"));
-    expect(await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1, 1, 0, "buy")).toBeNull();
+    expect(
+      await buildPlaceOrderTx(VALID_ADDRESS, XLM_ASSET, USDC_ASSET, 1, 1, 0, "buy")
+    ).toBeNull();
   });
 
   it("buildCancelOrExecuteTx uses cancel_order without txHash", async () => {
@@ -618,7 +626,7 @@ describe("parseResultXdr arrow bodies", () => {
   });
 
   it("runs the place_order parser", async () => {
-    await buildPlaceOrderTx(VALID_ADDRESS, "XLM", "USDC", 1, 1, 0, "buy");
+    await buildPlaceOrderTx(VALID_ADDRESS, XLM_ASSET, USDC_ASSET, 1, 1, 0, "buy");
     expect(capturedParse).toBeDefined();
     expect(capturedParse!(xdr.ScVal.scvSymbol("hello"))).toBe("hello");
   });
@@ -665,8 +673,8 @@ describe("limit-order order defaults", () => {
     expect(order).not.toBeNull();
     expect(order?.id).toBe(0);
     expect(order?.owner).toBe("");
-    expect(order?.base).toBe("");
-    expect(order?.counter).toBe("");
+    expect(order?.base).toEqual({ code: "", issuer: null });
+    expect(order?.counter).toEqual({ code: "", issuer: null });
     expect(order?.price).toBe(0);
     expect(order?.amount).toBe(0);
     expect(order?.expiryLedger).toBe(0);

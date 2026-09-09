@@ -171,8 +171,8 @@ export function LimitOrderTable() {
                       <Badge tone={side.tone}>{side.label}</Badge>
                     </td>
                     <td className="px-6 py-3.5">
-                      <span className="font-semibold">{order.base}</span>
-                      <span className="text-foreground-faint"> / {order.counter}</span>
+                      <span className="font-semibold">{order.base.code}</span>
+                      <span className="text-foreground-faint"> / {order.counter.code}</span>
                     </td>
                     <td className="px-6 py-3.5 text-right font-mono tabular-nums">
                       {formatNumber(order.price)}
@@ -185,8 +185,8 @@ export function LimitOrderTable() {
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       <OraclePriceCell
-                        base={order.base}
-                        counter={order.counter}
+                        base={order.base.code}
+                        counter={order.counter.code}
                         targetPrice={order.price}
                         side={order.side}
                       />

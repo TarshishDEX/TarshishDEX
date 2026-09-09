@@ -521,8 +521,8 @@ describe("POST /api/orders", () => {
         method: "POST",
         body: JSON.stringify({
           userAddress: VALID_ADDRESS,
-          base: "XLM",
-          counter: "USDC",
+          base: { code: "XLM", issuer: null },
+          counter: { code: "USDC", issuer: USDC_ISSUER },
           price: 1.5,
           amount: 100,
           expiryLedger: 0,
@@ -555,8 +555,8 @@ describe("POST /api/orders", () => {
         method: "POST",
         body: JSON.stringify({
           userAddress: VALID_ADDRESS,
-          base: "XLM",
-          counter: "USDC",
+          base: { code: "XLM", issuer: null },
+          counter: { code: "USDC", issuer: USDC_ISSUER },
           price: 1,
           amount: 1,
           side: "sell",
@@ -575,8 +575,8 @@ describe("POST /api/orders", () => {
         method: "POST",
         body: JSON.stringify({
           userAddress: VALID_ADDRESS,
-          base: "XLM",
-          counter: "USDC",
+          base: { code: "XLM", issuer: null },
+          counter: { code: "USDC", issuer: USDC_ISSUER },
           price: 1,
           amount: 1,
           side: "buy",
@@ -884,8 +884,8 @@ describe("rate limiting", () => {
         method: "POST",
         body: JSON.stringify({
           userAddress: VALID_ADDRESS,
-          base: "XLM",
-          counter: "USDC",
+          base: { code: "XLM", issuer: null },
+          counter: { code: "USDC", issuer: USDC_ISSUER },
           price: 1,
           amount: 1,
           expiryLedger: 0,

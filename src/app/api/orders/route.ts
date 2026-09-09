@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { parseAddress } from "@/lib/api/params";
 import { queryUserOrders, queryOrderCount } from "@/lib/soroban/limit-order";
+import type { OnChainAsset } from "@/lib/stellar/limit-order-types";
 import { checkRateLimit, getClientId } from "@/lib/server/rate-limit";
 import { apiHandler } from "@/lib/server/api-handler";
 import { buildErrorResponse, ErrorCode } from "@/lib/server/api-error";
@@ -65,6 +66,18 @@ export const GET = apiHandler(async (request) => {
 });
 
 /**
+ * Validate an asset identity from the request body.
+ * Asset identity is code + issuer: the issuer must round-trip through the
+ * contract so pairs with the same code but different issuers stay distinct.
+ */
+function toOnChainAsset(value: unknown): OnChainAsset | null {
+  if (!value || typeof value !== "object") return null;
+  const a = value as Record<string, unknown>;
+  if (typeof a.code !== "string" || a.code.length === 0) return null;
+  return { code: a.code, issuer: a.issuer == null ? null : String(a.issuer) };
+}
+
+/**
  * POST /api/orders
  * Build a place_order Soroban transaction and return the XDR for wallet signing.
  */
@@ -74,14 +87,16 @@ export const POST = apiHandler(async (request) => {
 
   try {
     const body = await request.json();
-    const { userAddress, base, counter, price, amount, expiryLedger, side } = body;
+    const { userAddress, price, amount, expiryLedger, side } = body;
+    const base = toOnChainAsset(body.base);
+    const counter = toOnChainAsset(body.counter);
 
     if (!userAddress || !base || !counter || !price || !amount || !side) {
       return NextResponse.json(
         buildErrorResponse(
           ErrorCode.VALIDATION_ERROR,
           400,
-          "Missing required fields: userAddress, base, counter, price, amount, side"
+          "Missing required fields: userAddress, base {code, issuer?}, counter {code, issuer?}, price, amount, side"
         ),
         { status: 400 }
       );

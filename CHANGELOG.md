@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🔑 Unambiguous Asset Identity
+
+- **Limit-order pairs now carry code + issuer on-chain** — the contract's
+  `base`/`counter` fields changed from plain symbols to an `Asset` struct
+  (`code` + optional `issuer`). Two assets with the same code but different
+  issuers are distinct assets on Stellar, so pairs like `USDC (issuer A) /
+  USDC (issuer B)` are now placed correctly instead of being conflated —
+  and the `SameAssetPair` check compares full identity. The API route,
+  Soroban client, order form and table were updated end-to-end to pass and
+  render the full identity (`issuer: null` = native XLM).
+  Tests: `same_code_different_issuer_is_a_distinct_pair`.
+
 ### 🛑 Limit-Order Emergency Pause
 
 - **Added admin-only `pause`/`unpause`/`is_paused` to the limit-order
