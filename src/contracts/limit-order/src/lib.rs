@@ -39,6 +39,7 @@ pub enum Error {
     ArithmeticOverflow = 10,
     InvalidSideType = 11,
     InvalidExpiryLedger = 12,
+    ContractPaused = 13,
 }
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -78,6 +79,8 @@ pub enum DataKey {
     Relayer(Address),
     /// Count of registered relayers.
     RelayerCount,
+    /// Emergency stop flag: when set, order mutations are rejected.
+    Paused,
 }
 
 #[contractevent]
@@ -126,6 +129,12 @@ pub struct VersionSet {
     pub version: u32,
 }
 
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PauseToggled {
+    pub paused: bool,
+}
+
 #[contract]
 pub struct LimitOrder;
 
@@ -159,6 +168,9 @@ impl LimitOrder {
         expiry_ledger: u32,
         side: Symbol,
     ) -> Result<u64, Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::ContractPaused);
+        }
         owner.require_auth();
 
         if price <= 0 {
@@ -260,6 +272,9 @@ impl LimitOrder {
     /// Cancel an order. Only the order owner may cancel.
     /// Also cleans the order ID from OrderList and UserOrders indexes.
     pub fn cancel_order(env: Env, owner: Address, id: u64) -> Result<(), Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::ContractPaused);
+        }
         owner.require_auth();
         let key = DataKey::Order(id);
         let order: Order = env
@@ -284,6 +299,9 @@ impl LimitOrder {
     /// Auth: either the order owner OR a registered relayer may execute.
     /// This allows bots/relayers to settle orders without owner signatures.
     pub fn mark_executed(env: Env, caller: Address, id: u64, tx_hash: Symbol) -> Result<(), Error> {
+        if Self::is_paused(env.clone()) {
+            return Err(Error::ContractPaused);
+        }
         caller.require_auth();
         let key = DataKey::Order(id);
         let order: Order = env
@@ -476,11 +494,55 @@ impl LimitOrder {
     pub fn get_version(env: Env) -> u32 {
         env.storage().instance().get(&DataKey::Version).unwrap_or(0)
     }
+
+    /// Emergency pause: stop all order mutations until unpaused. Admin only.
+    ///
+    /// Reads (`get_order`, `paginated_orders`, …) stay available so users
+    /// can still inspect their orders while the book is frozen; relayer and
+    /// admin management also remain open so relayers can be revoked and the
+    /// contract recovered during an incident.
+    pub fn pause(env: Env) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &true);
+        env.storage().instance().extend_ttl(0, TTL_LEDGERS);
+        PauseToggled { paused: true }.publish(&env);
+        Ok(())
+    }
+
+    /// Resume order mutations after an emergency pause. Admin only.
+    pub fn unpause(env: Env) -> Result<(), Error> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(Error::NotInitialized)?;
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &false);
+        env.storage().instance().extend_ttl(0, TTL_LEDGERS);
+        PauseToggled { paused: false }.publish(&env);
+        Ok(())
+    }
+
+    /// Whether order mutations are currently paused. Read-only.
+    pub fn is_paused(env: Env) -> bool {
+        env.storage()
+            .instance()
+            .get(&DataKey::Paused)
+            .unwrap_or(false)
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;    use soroban_sdk::{symbol_short, testutils::Address as _, testutils::Ledger as _, Address, Env};
+    use super::*;
+    use soroban_sdk::{
+        symbol_short, testutils::Address as _, testutils::Ledger as _, Address, Env,
+    };
     #[test]
     fn place_and_get_order() {
         let env = Env::default();
@@ -1079,7 +1141,6 @@ mod test {
         assert!(client.try_cancel_order(&user, &id).is_ok());
         assert!(client.get_order(&id).is_none());
     }
-
     #[test]
     fn get_user_orders_empty_for_fresh_user() {
         let env = Env::default();
@@ -1089,8 +1150,79 @@ mod test {
         let contract_id = env.register(LimitOrder, ());
         let client = LimitOrderClient::new(&env, &contract_id);
         client.initialize(&admin);
-
         assert_eq!(client.get_user_orders(&user).len(), 0);
+    }
+
+    #[test]
+    fn paused_contract_rejects_order_mutations() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &0,
+            &symbol_short!("sell"),
+        );
+
+        client.pause();
+        assert!(client.is_paused());
+
+        // All write paths are blocked while paused.
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("buy"),
+            ),
+            Err(Ok(Error::ContractPaused))
+        );
+        assert_eq!(
+            client.try_cancel_order(&user, &id),
+            Err(Ok(Error::ContractPaused))
+        );
+        assert_eq!(
+            client.try_mark_executed(&user, &id, &symbol_short!("tx")),
+            Err(Ok(Error::ContractPaused))
+        );
+
+        // Reads stay available so users can inspect their orders.
+        assert!(client.get_order(&id).is_some());
+
+        client.unpause();
+        assert!(!client.is_paused());
+        assert!(client
+            .try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &0,
+                &symbol_short!("sell"),
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn pause_uninitialized_contract_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        assert_eq!(client.try_pause(), Err(Ok(Error::NotInitialized)));
+        assert_eq!(client.try_unpause(), Err(Ok(Error::NotInitialized)));
     }
 
     #[test]

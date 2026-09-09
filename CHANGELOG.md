@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 🛑 Limit-Order Emergency Pause
+
+- **Added admin-only `pause`/`unpause`/`is_paused` to the limit-order
+  contract** — while paused, `place_order`, `cancel_order` and
+  `mark_executed` reject with `ContractPaused`. Reads stay available, and
+  relayer/admin management remain open so relayers can be revoked during
+  an incident. A `PauseToggled` event is emitted on each transition.
+  Tests: `paused_contract_rejects_order_mutations`,
+  `pause_uninitialized_contract_rejected`.
+
 ### 🧹 Contract Error Surface
 
 - **Trimmed the market-oracle error enum from 100 to 9 variants** — only
