@@ -69,6 +69,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 🧪 SSE Cleanup Regression Tests (closes #20)
+
+- **Added regression tests for the `/api/events` SSE route** — the
+  cleanup logic from #20 (abort listener, max-duration close, idempotent
+  timer teardown) now has test coverage proving no timers survive an
+  abrupt disconnect, a stream cancel, or the 10-minute max duration.
+
 ### 📊 Markets Page Pair Selection (closes #18)
 
 - **Orderbook depth now follows the selected market** — clicking a row in
