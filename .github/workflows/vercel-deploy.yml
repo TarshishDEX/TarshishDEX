@@ -38,8 +38,13 @@ jobs:
     # Vercel's native Git integration already deploys production on every
     # push; this job is a fallback that only runs when a VERCEL_TOKEN secret
     # is configured (otherwise `vercel pull` fails on a missing --token).
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    # The `secrets` context is not allowed in `if` conditions, so the secrets
+    # are exposed through job-level `env` and the deploy step is gated on it.
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,10 +62,7 @@ jobs:
       # vars); `vercel build` runs the framework build with the env above, and
       # `deploy --prebuilt --prod` ships it to production.
       - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        if: ${{ env.VERCEL_TOKEN != '' }}
         run: |
           npx vercel@58 pull --yes --environment=production --token="$VERCEL_TOKEN" \
             --scope="$VERCEL_ORG_ID" --project="$VERCEL_PROJECT_ID"

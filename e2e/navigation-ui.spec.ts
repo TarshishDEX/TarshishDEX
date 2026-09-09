@@ -81,7 +81,8 @@ test.describe("Markets page", () => {
   test("shows market table and orderbook panels", async ({ page }) => {
     await page.goto("/markets");
     await expect(page.getByText("Top Markets")).toBeVisible();
-    await expect(page.getByText("Orderbook Depth")).toBeVisible();
+    // Role-based: getByText would also match the page subtitle's "orderbook depth" copy.
+    await expect(page.getByRole("heading", { name: "Orderbook Depth" })).toBeVisible();
   });
 
   test("sorting header buttons are interactive when market data is present", async ({ page }) => {

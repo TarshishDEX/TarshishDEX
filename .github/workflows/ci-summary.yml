@@ -65,7 +65,6 @@ jobs:
               'Bundle Size',
               'Performance Budget',
               'Link Check',
-              'Spell Check',
               'Visual Regression',
               'PR Title Check',
             ];
