@@ -262,6 +262,11 @@ impl LimitOrder {
         if base == counter {
             return Err(Error::SameAssetPair);
         }
+        // Reject an expiry in the past or at the current ledger: such an
+        // order could never execute (see the expiry check in mark_executed).
+        if expiry_ledger != 0 && expiry_ledger <= env.ledger().sequence() {
+            return Err(Error::InvalidExpiryLedger);
+        }
 
         // Overflow guard: price * amount must fit in i128.
         // Soroban traps on WASM overflow, but explicit checks are defensive.
@@ -760,6 +765,63 @@ mod test {
             ),
             Err(Ok(Error::SameAssetPair))
         );
+    }
+
+    #[test]
+    fn rejects_past_expiry_ledger() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
+        let contract_id = env.register(LimitOrder, ());
+        let client = LimitOrderClient::new(&env, &contract_id);
+        client.initialize(&admin);
+
+        // Pin a realistic non-zero ledger so expiry 0 keeps meaning "no expiry".
+        env.ledger().set_sequence_number(1000);
+
+        // Expiry at the current ledger is already too late.
+        let now = env.ledger().sequence();
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &now,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::InvalidExpiryLedger))
+        );
+
+        // Expiry in the past is rejected too.
+        let past = now.saturating_sub(10);
+        assert_eq!(
+            client.try_place_order(
+                &user,
+                &symbol_short!("XLM"),
+                &symbol_short!("USDC"),
+                &10_000_000,
+                &1_000_000,
+                &past,
+                &symbol_short!("sell"),
+            ),
+            Err(Ok(Error::InvalidExpiryLedger))
+        );
+
+        // Future expiry is accepted and stored unchanged.
+        let future = now + 1000;
+        let id = client.place_order(
+            &user,
+            &symbol_short!("XLM"),
+            &symbol_short!("USDC"),
+            &10_000_000,
+            &1_000_000,
+            &future,
+            &symbol_short!("sell"),
+        );
+        assert_eq!(client.get_order(&id).unwrap().expiry_ledger, future);
     }
 
     #[test]

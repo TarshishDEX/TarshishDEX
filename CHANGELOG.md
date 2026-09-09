@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   where expiry was stored and returned but never actually enforced. Owners
   can still cancel expired orders to clean up their index. New tests:
   `expired_order_cannot_be_marked_executed`, `cancel_allowed_after_expiry`.
+- **Reject past expiries at order placement** — `place_order` now returns
+  `InvalidExpiryLedger` when `expiry_ledger` is in the past (or the current
+  ledger), so users can no longer create orders that can never execute.
+  Covered by `rejects_past_expiry_ledger` (at-now, past, and future cases).
 
 ### ⛽ Soroban Gas & Storage Optimization
 
