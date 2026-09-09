@@ -61,14 +61,36 @@ export function needsTrustline(
     (b) =>
       b.asset_type !== "native" && b.asset_code === output.code && b.asset_issuer === output.issuer
   );
-}
-
-/** Native XLM reserve required to open a trustline (Stellar base reserve). */
+} /** Native XLM reserve required to open a trustline (Stellar base reserve). */
 export const TRUSTLINE_RESERVE_XLM = 0.5;
 
+/** Stroops per XLM — 1 XLM = 10^7 stroops. */
+const STROOPS_PER_XLM = 10_000_000; /**
+ * Fetch the network's current base reserve (the XLM required to open a
+ * trustline) from Horizon's latest ledger. Falls back to the hardcoded
+ * default when the lookup fails so swap checks still work during outages.
+ *
+ * `fetchLatestLedger` is injected so callers own the (loosely-typed)
+ * Horizon call-builder cast and the helper stays trivially unit-testable.
+ */
+export async function getBaseReserveXlm(
+  fetchLatestLedger: () => Promise<{ base_reserve_in_stroops?: number }>,
+  fallbackXlm = TRUSTLINE_RESERVE_XLM
+): Promise<number> {
+  try {
+    const ledger = await fetchLatestLedger();
+    if (typeof ledger.base_reserve_in_stroops === "number" && ledger.base_reserve_in_stroops > 0) {
+      return ledger.base_reserve_in_stroops / STROOPS_PER_XLM;
+    }
+  } catch {
+    // Horizon unavailable — fall through to the fallback.
+  }
+  return fallbackXlm;
+}
+
 /**
- * Whether the account can fund the 0.5 XLM trustline reserve. Returns true
- * when no trustline is needed, so callers can guard a change-trust op with a
+ * Whether the account can fund the XLM trustline reserve. Returns true when
+ * no trustline is needed, so callers can guard a change-trust op with a
  * single check. A missing native balance entry counts as zero.
  */
 export function hasTrustlineReserve(
@@ -78,11 +100,12 @@ export function hasTrustlineReserve(
     asset_issuer?: string;
     balance?: string;
   }>,
-  output: StellarAsset
+  output: StellarAsset,
+  reserveXlm = TRUSTLINE_RESERVE_XLM
 ): boolean {
   if (!needsTrustline(balances, output)) return true;
   const native = balances.find((b) => b.asset_type === "native");
-  return Number(native?.balance ?? 0) >= TRUSTLINE_RESERVE_XLM;
+  return Number(native?.balance ?? 0) >= reserveXlm;
 }
 
 /** Intermediate hops for a path payment — excludes the input and output assets. */
@@ -172,14 +195,26 @@ export async function executeSwap(
 
     const needTrustline = needsTrustline(account.balances, params.output);
 
-    // Pre-execution check: creating a trustline locks 0.5 XLM as a base
-    // reserve. Fail fast with a clear message instead of surfacing Horizon's
-    // cryptic op_underfunded after signing.
-    if (needTrustline && !hasTrustlineReserve(account.balances, params.output)) {
+    // Pre-execution check: creating a trustline locks the network's current
+    // base reserve (nominally 0.5 XLM, but read from Horizon so a protocol
+    // change can't silently break the check). Fail fast with a clear message
+    // instead of surfacing Horizon's cryptic op_underfunded after signing.
+    // Horizon's ledger("latest") call builder is loosely typed in the SDK;
+    // the /ledgers/:id endpoint resolves to a single ledger record, so cast
+    // once here and keep the helper type-clean.
+    const reserveXlm = needTrustline
+      ? await getBaseReserveXlm(
+          () =>
+            server.ledgers().ledger("latest").call() as Promise<{
+              base_reserve_in_stroops?: number;
+            }>
+        )
+      : TRUSTLINE_RESERVE_XLM;
+    if (needTrustline && !hasTrustlineReserve(account.balances, params.output, reserveXlm)) {
       report("failed");
       return {
         phase: "failed",
-        error: `Insufficient XLM for trustline reserve (${TRUSTLINE_RESERVE_XLM} XLM required)`,
+        error: `Insufficient XLM for trustline reserve (${reserveXlm} XLM required)`,
         errorKind: "insufficient-balance",
       };
     }

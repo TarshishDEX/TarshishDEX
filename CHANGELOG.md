@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### ⚖️ Dynamic Trustline Reserve
+
+- **The swap trustline-reserve check now reads the network's base reserve
+  from Horizon** instead of trusting the hardcoded 0.5 XLM constant — a
+  protocol parameter change can no longer silently break the
+  pre-submission check. Falls back to 0.5 XLM when Horizon is
+  unreachable. New `getBaseReserveXlm` helper with unit tests.
+
 ### 🛡️ Rate-Limit Spoofing Fix
 
 - **`getClientId` no longer trusts the first `x-forwarded-for` entry** —

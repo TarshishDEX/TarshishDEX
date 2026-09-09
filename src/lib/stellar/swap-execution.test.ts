@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   needsTrustline,
   hasTrustlineReserve,
+  getBaseReserveXlm,
   TRUSTLINE_RESERVE_XLM,
   intermediatePath,
   classifySwapError,
@@ -85,6 +86,30 @@ describe("hasTrustlineReserve", () => {
 
   it("exposes the 0.5 XLM base reserve constant", () => {
     expect(TRUSTLINE_RESERVE_XLM).toBe(0.5);
+  });
+
+  it("accepts a custom reserve amount (e.g. fetched from Horizon)", () => {
+    const balances = [{ asset_type: "native", balance: "0.75" }];
+    expect(hasTrustlineReserve(balances, USDC, 1)).toBe(false);
+    expect(hasTrustlineReserve(balances, USDC, 0.5)).toBe(true);
+  });
+});
+
+describe("getBaseReserveXlm", () => {
+  it("converts the ledger's base reserve in stroops to XLM", async () => {
+    const fetchLatestLedger = vi.fn().mockResolvedValue({ base_reserve_in_stroops: 5_000_000 });
+    await expect(getBaseReserveXlm(fetchLatestLedger)).resolves.toBe(0.5);
+    expect(fetchLatestLedger).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the default when Horizon is unavailable", async () => {
+    const fetchLatestLedger = vi.fn().mockRejectedValue(new Error("connection refused"));
+    await expect(getBaseReserveXlm(fetchLatestLedger)).resolves.toBe(TRUSTLINE_RESERVE_XLM);
+  });
+
+  it("falls back when the ledger omits the reserve field", async () => {
+    const fetchLatestLedger = vi.fn().mockResolvedValue({});
+    await expect(getBaseReserveXlm(fetchLatestLedger)).resolves.toBe(TRUSTLINE_RESERVE_XLM);
   });
 });
 
