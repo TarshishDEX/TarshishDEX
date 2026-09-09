@@ -45,6 +45,10 @@ vi.mock("@/lib/stellar/wallet-store", () => ({
   useWalletStore: { getState: () => walletState },
 }));
 
+vi.mock("@/lib/hooks/use-token-balance", () => ({
+  useTokenBalance: vi.fn(() => ({ data: undefined })),
+}));
+
 vi.mock("@/lib/stellar/queries", () => ({
   useXlmBalance: useXlmBalanceMock,
   useOraclePrice: useOraclePriceMock,

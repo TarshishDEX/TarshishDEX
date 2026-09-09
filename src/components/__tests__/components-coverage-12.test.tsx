@@ -107,11 +107,11 @@ describe("rate-limit module", () => {
     expect(true).toBe(true);
   });
 
-  it("extracts the first IP from x-forwarded-for", () => {
+  it("uses the rightmost entry of x-forwarded-for (proxy-appended, not client-spoofable)", () => {
     const req = new Request("http://localhost", {
       headers: { "x-forwarded-for": "203.0.113.5, 10.0.0.1" },
     });
-    expect(getClientId(req)).toBe("203.0.113.5");
+    expect(getClientId(req)).toBe("10.0.0.1");
   });
 
   it("falls back to x-real-ip then unknown", () => {

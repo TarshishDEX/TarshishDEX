@@ -112,6 +112,10 @@ vi.mock("lightweight-charts", () => {
   };
 });
 
+vi.mock("@/lib/hooks/use-token-balance", () => ({
+  useTokenBalance: vi.fn(() => ({ data: undefined })),
+}));
+
 vi.mock("@/lib/stellar/queries", () => ({
   useXlmBalance: () => ({ data: "100" }),
   useOraclePrice: useOraclePriceMock,

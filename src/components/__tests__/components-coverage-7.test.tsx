@@ -610,14 +610,15 @@ describe("PriceChartPanel", () => {
     expect(screen.getByText(/Try a different resolution or trading pair/)).toBeTruthy();
   });
 
-  it("renders stats and charts with candles", () => {
+  it("renders stats and charts with candles", async () => {
     usePriceHistoryMock.mockReturnValue({ data: CANDLES, isLoading: false, isError: false });
     render(<PriceChartPanel />);
     expect(screen.getByText("+150.00%")).toBeTruthy();
     expect(screen.getByText("Period High")).toBeTruthy();
     expect(screen.getByText("3.000000")).toBeTruthy();
-    expect(screen.getByTestId("candlestick")).toBeTruthy();
-    expect(screen.getByTestId("volume-chart")).toBeTruthy();
+    // Charts are code-split (next/dynamic) — await their async mount.
+    expect(await screen.findByTestId("candlestick")).toBeTruthy();
+    expect(await screen.findByTestId("volume-chart")).toBeTruthy();
   });
 
   it("switches timeframe buttons", () => {
