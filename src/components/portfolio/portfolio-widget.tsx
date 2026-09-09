@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePortfolioSummary, useTradeHistory } from "@/lib/stellar/queries";
 import { useWallet } from "@/lib/stellar/wallet-store";
 import { useLiveAccountStream } from "@/components/providers/live-sync-hooks";
@@ -10,8 +11,16 @@ import { BalanceTable } from "@/components/portfolio/balance-table";
 import { TradeHistory } from "@/components/portfolio/trade-history";
 import { PortfolioExport } from "@/components/portfolio/portfolio-export";
 import { PortfolioValueChart } from "@/components/portfolio/portfolio-value-chart";
-import { AllocationDonut } from "@/components/charts/allocation-donut";
 import { StatCard } from "@/components/ui/stat-card";
+
+// recharts is heavy; load the donut only when the portfolio actually renders.
+const AllocationDonut = dynamic(
+  () => import("@/components/charts/allocation-donut").then((m) => m.AllocationDonut),
+  {
+    ssr: false,
+    loading: () => <div className="h-40" aria-hidden="true" />,
+  }
+);
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -1,15 +1,32 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePriceHistory } from "@/lib/stellar/queries";
 import { KNOWN_TOKENS } from "@/lib/stellar/tokens";
-import { CandlestickChart } from "@/components/charts/candlestick-chart";
-import { VolumeChart } from "@/components/charts/volume-chart";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyResults } from "@/components/ui/empty-results";
 import { cn } from "@/lib/utils";
 import type { Token } from "@/lib/stellar/types";
+
+// lightweight-charts is the heaviest dependency in the app; split it out of
+// the analytics page's initial bundle and load it only when the panel mounts.
+const CandlestickChart = dynamic(
+  () => import("@/components/charts/candlestick-chart").then((m) => m.CandlestickChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-72 w-full" />,
+  }
+);
+
+const VolumeChart = dynamic(
+  () => import("@/components/charts/volume-chart").then((m) => m.VolumeChart),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-40 w-full" />,
+  }
+);
 
 const XLM: Token = { code: "XLM", name: "Lumen", decimals: 7, isNative: true };
 

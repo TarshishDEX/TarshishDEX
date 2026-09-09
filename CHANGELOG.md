@@ -69,6 +69,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### ⚡ Chart Lazy-Loading (closes #80)
+
+- **Heavy chart libraries are now code-split** — `lightweight-charts`
+  (candlestick + volume) and `recharts` (allocation donut) load only when
+  their panels actually mount, shrinking the analytics and portfolio
+  pages' initial JS. Skeleton placeholders cover the loading gap.
+
 ### ⚖️ Dynamic Trustline Reserve
 
 - **The swap trustline-reserve check now reads the network's base reserve
