@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the WASM and the audit surface. `src/lib/soroban/*.ts` does not depend
   on numeric error codes, so the renumbering is safe.
 
+### 📊 Markets Page Pair Selection (closes #18)
+
+- **Orderbook depth now follows the selected market** — clicking a row in
+  the Top Markets table loads that pair's depth chart instead of the
+  hardcoded XLM/USDC book. The markets page holds the selected pair in
+  state, and rows are keyboard-accessible (Enter/Space) with focus
+  styling. New MarketTable tests cover click and keyboard selection.
+
 ### 🔄 Swap Submission Robustness
 
 - **Ambiguous swap submissions are now resolved by polling** — if

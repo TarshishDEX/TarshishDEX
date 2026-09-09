@@ -8,6 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SortIndicator } from "@/components/ui/sort-indicator";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn, formatCompact, formatPrice } from "@/lib/utils";
+import type { StellarAsset } from "@/lib/stellar/types";
+
+/** A selectable trading pair: the quoted asset against XLM. */
+export interface MarketPair {
+  base: StellarAsset;
+  counter: StellarAsset;
+}
 
 type SortKey = "price" | "change" | "volume";
 
@@ -28,7 +35,12 @@ const METRIC_DESCRIPTIONS: {
     "The best bid (highest buy price) and best ask (lowest sell price) currently on the orderbook. The gap between them is the spread.",
 };
 
-export function MarketTable() {
+export function MarketTable({
+  onSelectPair,
+}: {
+  /** Called when the user clicks a market row, e.g. to load its orderbook. */
+  onSelectPair?: (pair: MarketPair) => void;
+}) {
   const { data: stats, isLoading, isError } = useMarketStats();
   useLiveMarketStream();
   const [sortKey, setSortKey] = useState<SortKey>("volume");
@@ -121,7 +133,33 @@ export function MarketTable() {
                 return (
                   <tr
                     key={row.token.code}
-                    className="border-border/50 hover:bg-surface border-b transition-colors last:border-0"
+                    tabIndex={onSelectPair ? 0 : undefined}
+                    role={onSelectPair ? "button" : undefined}
+                    aria-label={onSelectPair ? `Show depth for ${row.token.code}/XLM` : undefined}
+                    onClick={() =>
+                      onSelectPair?.({
+                        base: { code: "XLM", isNative: true },
+                        counter: {
+                          code: row.token.code,
+                          issuer: row.token.issuer,
+                        },
+                      })
+                    }
+                    onKeyDown={(e) => {
+                      if (!onSelectPair) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelectPair({
+                          base: { code: "XLM", isNative: true },
+                          counter: { code: row.token.code, issuer: row.token.issuer },
+                        });
+                      }
+                    }}
+                    className={cn(
+                      "border-border/50 border-b transition-colors last:border-0",
+                      onSelectPair &&
+                        "hover:bg-surface focus-visible:bg-surface cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset"
+                    )}
                   >
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-3">
