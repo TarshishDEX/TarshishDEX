@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -16,11 +16,7 @@ const { loadAccountMock, submitTxMock, signTxMock } = vi.hoisted(() => ({
 
 // Use the real @stellar/stellar-sdk for transaction building; the signer mock
 // returns the built XDR unchanged so fromXDR() can parse it.
-let lastBuiltXdr = "";
-signTxMock.mockImplementation((xdr: string) => {
-  lastBuiltXdr = xdr;
-  return Promise.resolve(xdr);
-});
+signTxMock.mockImplementation((xdr: string) => Promise.resolve(xdr));
 
 vi.mock("@/lib/stellar/horizon", () => ({
   getHorizonServer: () => ({

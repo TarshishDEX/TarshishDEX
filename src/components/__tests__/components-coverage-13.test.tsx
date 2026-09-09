@@ -35,7 +35,6 @@ const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"
 // =========================================================================
 
 const {
-  resizeCallbackMock,
   streamAccountMock,
   streamTradesMock,
   fetchCatalogMock,
@@ -48,7 +47,6 @@ const {
   walletConnectMock,
   walletDisconnectMock,
 } = vi.hoisted(() => ({
-  resizeCallbackMock: vi.fn(),
   streamAccountMock: vi.fn(),
   streamTradesMock: vi.fn(),
   fetchCatalogMock: vi.fn(),

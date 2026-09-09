@@ -106,7 +106,7 @@ beforeEach(() => {
     call: vi.fn().mockResolvedValue({ records: [] }),
   });
   fetchOrderbookMock.mockResolvedValue(makeOrderbook(1));
-  simulateFillMock.mockImplementation((amountIn: string, _orderbook: OrderbookData) =>
+  simulateFillMock.mockImplementation((amountIn: string) =>
     makeFill((Number(amountIn) * 0.985).toString())
   );
 });

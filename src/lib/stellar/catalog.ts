@@ -38,21 +38,6 @@ function sumBalances(balances: AssetBalances): number {
   );
 }
 
-function mapAssetRecord(r: Horizon.ServerApi.AssetRecord): AssetCatalogEntry {
-  const accounts = sumAccounts(r.accounts);
-  return {
-    token: toToken(r.asset_code, r.asset_issuer),
-    supply: sumBalances(r.balances),
-    accounts,
-    trustlines: accounts + r.num_claimable_balances + r.num_liquidity_pools,
-    flags: {
-      authRequired: r.flags.auth_required,
-      authRevocable: r.flags.auth_revocable,
-      authImmutable: r.flags.auth_immutable,
-    },
-  };
-}
-
 /**
  * Fetch one page of the asset catalog, optionally filtered by code/issuer.
  * Returns the mapped entries plus a cursor for the next page, or null when

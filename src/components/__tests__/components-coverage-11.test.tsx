@@ -13,8 +13,6 @@ import { useSessionStorage } from "@/lib/hooks/use-session-storage";
 import { useRenderCount } from "@/lib/hooks/use-render-count";
 import { useTokenBalance } from "@/lib/hooks/use-token-balance";
 import { toast } from "@/components/ui/toast";
-import { useWallet } from "@/lib/stellar/wallet-store";
-import { useWalletStore } from "@/lib/stellar/wallet-store";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 

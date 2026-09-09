@@ -16,7 +16,7 @@ import {
   buildCancelOrExecuteTx,
 } from "@/lib/soroban/limit-order";
 import { observationFromScVal, readPriceObservation } from "@/lib/soroban/market-oracle";
-import { xdr, scValToNative, Address, nativeToScVal } from "@stellar/stellar-sdk";
+import { xdr, scValToNative, nativeToScVal } from "@stellar/stellar-sdk";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 const USDC_ISSUER = "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN";

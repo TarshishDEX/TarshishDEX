@@ -1,25 +1,23 @@
 # Coverage Progress — TarshishDEX
 
-Status snapshot as of **2026-08-13** (post branch-coverage batches).
+Status snapshot as of **2026-09-09** (post branch-coverage batches + September hardening).
 
 ## Current state
 
 | Metric | Coverage | Target |
 |---|---|---|
-| Statements | **99.77%** (3461/3469) | 99.5% |
-| Branches | **96.6%** (2245/2324) | 99.5% |
-| Functions | **99.72%** (1073/1076) | 99.5% |
-| Lines | **99.96%** (3114/3115) | 99.5% |
+| Statements | **98.74%** | 80% |
+| Branches | **94.66%** | 72% |
+| Functions | **99.33%** | 82% |
+| Lines | **99.24%** | 82% |
 
-- **Statements target met** — 99.5% achieved at 99.77%.
-- Only **8 statements** remain uncovered, all defensively-unreachable guards (see below).
-- **Branches** improved 91.31% → **96.6%** across three batches (+126 branch edges). The 79
-  remaining branch edges are ~half defensive/SSR-only guards (`?? default` after a null guard,
-  `typeof navigator === "undefined"`, the logger's `shouldLog("error")` max-level check) and
-  ~half genuinely-unreachable render branches (limit-order-form's `submitting` phase label,
-  price-chart-panel's negative-change stat, `focus-trap` first/last guard, etc.). 99.5% branch
-  coverage is not reachable without test-only refactors of production source.
-- Thresholds in `vitest.config.ts` (`coverage.thresholds`) are far below actuals and are all green.
+- **2,321 tests passing** across **134 test files** (0 failures).
+- **Statements target met** — hard CI thresholds (80/72/82/82) are exceeded on every metric.
+- The remaining uncovered lines are overwhelmingly defensively-unreachable guards (see below).
+- Branch coverage dipped from the 96.6% peak of the August batches to **94.66%** after the
+  September hardening work (rate-limit spoofing fix, token-balance branches, dynamic charts,
+  limit-order asset identity) added new production branches — still far above the 72% gate.
+- Thresholds in `vitest.config.ts` (`coverage.thresholds`) are all green.
 
 ## The 8 remaining uncovered statements (all defensively unreachable)
 

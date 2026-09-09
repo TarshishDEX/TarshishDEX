@@ -26,7 +26,7 @@ the live deploy and referenced from the README. PNG, 1280×800 (desktop) /
 | 11  | `transaction-result.png`             | Second real on-chain tx (publish → PricePublished)                   |
 | 12  | `mobile-responsive.png`              | Swap page at 390×844 viewport — layout intact                        |
 | 13  | `ci-pipeline.png`                    | GitHub Actions run showing the `quality` + `contracts` jobs passing  |
-| 14  | `test-output.png`                    | Coverage report — 2,083 tests passing (119 files)                    |
+| 14  | `test-output.png`                    | Coverage report — 2,321 tests passing (134 files)                    |
 
 ## Automated capture
 

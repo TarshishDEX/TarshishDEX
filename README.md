@@ -11,11 +11,11 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 [![CI](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci.yml)
 [![Fortress Gates](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/ci-summary.yml)
 [![CodeQL](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml/badge.svg)](https://github.com/TarshishDEX/TarshishDEX/actions/workflows/codeql.yml)
-![Tests](https://img.shields.io/badge/tests-2083%20passing-2ea44f)
-![E2E](https://img.shields.io/badge/E2E-171%20Playwright%20tests-2ea44f)
-![Coverage](https://img.shields.io/badge/coverage-99.77%25%20statements-2ea44f)
-![Contract coverage](https://img.shields.io/badge/contract%20coverage-99.5%25%20lines-2ea44f)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-31%20workflows-0ea5e9)
+![Tests](https://img.shields.io/badge/tests-2321%20passing-2ea44f)
+![E2E](https://img.shields.io/badge/E2E-57%20Playwright%20tests-2ea44f)
+![Coverage](https://img.shields.io/badge/coverage-98.74%25%20statements-2ea44f)
+![Contract coverage](https://img.shields.io/badge/contract%20coverage-99.57%25%20lines-2ea44f)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-30%20workflows-0ea5e9)
 ![Contracts](https://img.shields.io/badge/error%20codes-28-7B1FA2)
 ![Soroban](https://img.shields.io/badge/Soroban-3%20contracts%20live-7B1FA2)
 ![Rust](https://img.shields.io/badge/Rust-1.82%2B-b7410e?logo=rust&logoColor=white)
@@ -24,7 +24,7 @@ A professional decentralized trading platform built *exclusively* on **Stellar's
 ![npm vulns](https://img.shields.io/badge/critical%20vulns-0-2ea44f)
 ![Audited](https://img.shields.io/badge/security-audited%20Aug%202026-2ea44f)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
-![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)
+![Next.js 16.3](https://img.shields.io/badge/Next.js-16.3-000000?logo=next.js&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-4%20strict%20flags-3178C6?logo=typescript&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-7B1FA2?logo=stellar&logoColor=white)
 [![Live demo](https://img.shields.io/badge/live_demo-tarshishdex.vercel.app-0ea5e9)](https://tarshishdex.vercel.app)
@@ -50,7 +50,7 @@ Unlike a basic token swap, TarshishDEX is a professional terminal:
 - 💸 **Ultra-low fees** — reads cost ~0.00001 XLM; writes cost 0.003–0.019 XLM (dominated by refundable state rent, not compute).
 - 🏦 **Developer API** — read-only REST + SSE endpoints for builders on Stellar's native DEX.
 
-**All three Soroban smart contracts are live on Stellar Testnet** — trading preferences, market oracle, and limit-order registry — with 133 Rust tests, 28 error codes, and gas benchmarks enforced in CI.
+**All three Soroban smart contracts are live on Stellar Testnet** — trading preferences, market oracle, and limit-order registry — with 134 Rust tests, 28 error codes, and gas benchmarks enforced in CI.
 
 ## ✨ Highlights
 
@@ -87,14 +87,14 @@ Fees are dominated by **refundable state rent** from TTL extension, not CPU or I
 |------|--------|
 | TypeScript | **4 strict flags** — 0 errors |
 | ESLint | 0 errors, 0 warnings |
-| Tests | **2,083 passing** (119 test files) |
-| Coverage | **99.77% statements** (96.6% branches, 99.72% functions, 99.96% lines) |
-| Rust contracts | **121 tests passing** — fmt ✅, clippy 0 warnings |
-| Contract coverage | **99.5% lines** (cargo-llvm-cov, 95% CI gate) |
+| Tests | **2,321 passing** (134 test files) |
+| Coverage | **98.74% statements** (94.66% branches, 99.33% functions, 99.24% lines) |
+| Rust contracts | **134 tests passing** — fmt ✅, clippy 0 warnings |
+| Contract coverage | **99.57% lines** (cargo-llvm-cov, 95% CI gate) |
 | Contract errors | **28 error codes** across 3 Soroban contracts (only what each contract actually returns) |
-| E2E (Playwright) | **171 tests** across 5 suites |
+| E2E (Playwright) | **57 tests** across 5 suites |
 | npm vulns | **0 critical** |
-| CI workflows | **31** (verification + maintenance) |
+| CI workflows | **30** (verification + maintenance) |
 | CSP headers | Applied in middleware — no `unsafe-eval` |
 | PWA | SVG icons, network-first service worker |
 | Build | Next.js standalone, non-root Docker |
@@ -107,22 +107,22 @@ A comprehensive security and quality audit was conducted across all layers:
 |-------|--------|
 | **TypeScript** | ✅ 0 errors — 4 strict flags |
 | **ESLint** | ✅ 0 errors, 0 warnings |
-| **Vitest** | ✅ 2,083 tests, 119 files, 0 failures |
-| **Coverage** | ✅ 99.77% statements (96.6% branches, 99.72% functions, 99.96% lines), thresholds: 80/72/82/82 |
-| **E2E (Playwright)** | ✅ 171 tests, 5 suites (swap, portfolio, orders, navigation, analytics) |
+| **Vitest** | ✅ 2,321 tests, 134 files, 0 failures |
+| **Coverage** | ✅ 98.74% statements (94.66% branches, 99.33% functions, 99.24% lines), thresholds: 80/72/82/82 |
+| **E2E (Playwright)** | ✅ 57 tests, 5 suites (swap, portfolio, orders, navigation, smoke) |
 | **Rust fmt** | ✅ All contracts formatted |
 | **Rust clippy** | ✅ 0 warnings across 3 crates |
-| **Rust tests** | ✅ 133 tests, 0 failures |
-| **Contract coverage** | ✅ 99.51% lines via cargo-llvm-cov (CI gate: 95%) |
+| **Rust tests** | ✅ 134 tests, 0 failures |
+| **Contract coverage** | ✅ 99.57% lines via cargo-llvm-cov (CI gate: 95%) |
 | **Contract errors** | ✅ 28 error codes (13+9+6 per contract — only returned errors) |
 | **Gas benchmarks** | ✅ 37 benchmarks, hard regression gate in CI |
-| **Dependencies** | ✅ 0 critical npm vulns |
-| **CI/CD** | ✅ 31 workflows, security + quality gates |
+| **Dependencies** | ✅ 0 critical npm vulns (Next.js patched to 16.3.4, Sep 2026) |
+| **CI/CD** | ✅ 30 workflows, security + quality gates |
 | **Dead code** | ✅ 0 orphaned files |
 | **Secrets** | ✅ TruffleHog scanning in CI |
 | **CodeQL** | ✅ JS/TS analysis in CI |
 
-**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 99.77% statements with hard CI thresholds, the Soroban contracts are at 99.51% line coverage with a 95% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 171 Playwright tests.
+**Verdict: Production-grade with strong defenses.** All quality gates pass at zero tolerance. TypeScript coverage sits at 98.74% statements with hard CI thresholds, the Soroban contracts are at 99.57% line coverage with a 95% gate, gas benchmarks are enforced by a failing regression check, and E2E flows are verified with 57 Playwright tests across five suites.
 
 ## 📸 Screenshots
 
@@ -151,22 +151,22 @@ Captured against the live deploy (`tarshishdex.vercel.app`) with Playwright — 
 | <img src="docs/screenshots/balance-displayed.png" width="300" alt="Balance"/> | <img src="docs/screenshots/transaction-result.png" width="300" alt="Price published"/> | <img src="docs/screenshots/ci-pipeline.png" width="300" alt="CI pipeline"/> |
 | Wallet dropdown with live XLM balance | `publish` → `PricePublished` event | GitHub Actions quality + contract gates |
 | <img src="docs/screenshots/wallet-options.png" width="300" alt="Wallet picker"/> | <img src="docs/screenshots/test-output.png" width="300" alt="Coverage report"/> |  |
-| Wallet picker (Freighter + StellarWalletsKit) | Coverage report — 2,083 tests passing |  |
+| Wallet picker (Freighter + StellarWalletsKit) | Coverage report — 2,321 tests passing |  |
 
 ## 🧰 Tech Stack
 
 | Layer | Technology |
 | --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript (4 strict flags) |
+| Framework | Next.js 16.3 (App Router), React 19, TypeScript (4 strict flags) |
 | Styling | Tailwind CSS v4 (custom dark DeFi design system) |
 | Blockchain | `@stellar/stellar-sdk`, `@creit.tech/stellar-wallets-kit` (Freighter + more) |
 | Smart contracts | Soroban SDK v27 (Rust, `#![no_std]`, `wasm32v1-none`) |
 | Data fetching | TanStack Query + Horizon SSE streams |
 | State | zustand |
 | Charts | lightweight-charts + Recharts |
-| Testing | Vitest (2,083 tests) + Playwright E2E (171); Rust `cargo test` (121) + cargo-llvm-cov |
+| Testing | Vitest (2,321 tests) + Playwright E2E (57); Rust `cargo test` (134) + cargo-llvm-cov |
 | Quality | ESLint, Prettier (Tailwind plugin), strict TypeScript, rustfmt + clippy |
-| CI/CD | 31 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression, coverage…) |
+| CI/CD | 30 GitHub Actions workflows (lint, test, E2E, secret scan, gas regression, coverage…) |
 | Deployment | Docker (multi-stage standalone image) + docker-compose + Vercel |
 
 ## 🚀 Getting Started
@@ -186,7 +186,7 @@ npm run dev:prod
 # Quality gates
 npm run lint          # ESLint
 npm run typecheck     # strict TypeScript (4 flags)
-npm test              # Vitest suite (2,083 tests)
+npm test              # Vitest suite (2,321 tests)
 npm run format:check  # Prettier
 
 # Full verification
@@ -281,6 +281,7 @@ Pure logic (routing, simulation, swap execution, assets, prices, account, histor
 ## 🛡️ Security
 
 - **CSP headers** applied via middleware — `script-src` without `unsafe-eval`
+- **Dependency hygiene** — Next.js pinned to 16.3.4 (Sep 2026) to close a critical RCE advisory (CVE-2026-75604); `npm audit` reports **0 critical** vulnerabilities
 - **HSTS** + X-Frame-Options + X-Content-Type-Options
 - **Rate limiting** on all API endpoints with configurable window/limit
 - **Circuit breaker** pattern for Horizon/Soroban RPC calls
@@ -289,7 +290,7 @@ Pure logic (routing, simulation, swap execution, assets, prices, account, histor
 - **Non-root Docker** user in production image
 - **Mainnet safety gates** — deploy script requires confirmation; runtime console warning when on public network
 - **Global API error handler** with correlation IDs for consistent error responses
-- **31 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, cargo-audit/cargo-deny, and contract security audit
+- **30 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, cargo-audit/cargo-deny, and contract security audit
 
 ## 📡 Developer API
 
@@ -301,7 +302,9 @@ TarshishDEX exposes a **read-only REST + SSE API** for developers building on St
 | `GET` | `/api/market/stats?limit=10` | Market stats for the most traded assets (price, volume, 24h change) |
 | `GET` | `/api/market/orderbook?selling=XLM&buying=USDC:ISSUER&limit=20` | Orderbook depth for a pair |
 | `GET` | `/api/market/candles?base=XLM&counter=USDC:ISSUER&resolution=3600000&range=86400000` | OHLCV candles from trade aggregations |
+| `GET` | `/api/market/pools?base=XLM&counter=USDC:ISSUER` | Liquidity pools for a pair |
 | `GET` | `/api/swap/quote?input=XLM&output=USDC:ISSUER&amount=100&slippage=1` | Best-route quote: execution price, price impact, min received, fees |
+| `GET` | `/api/orders` · `POST` `/api/orders` · `DELETE` `/api/orders` | On-chain limit-order registry: global count, user orders, place, cancel/execute |
 | `GET` | `/api/portfolio/:address` | Portfolio valuation, allocation, and balances for an account |
 | `GET` | `/api/trades/:address?limit=40` | Recent trade history for an account |
 | `GET` | `/api/assets?limit=24&code=&issuer=` | Asset discovery with issuer, supply, and trustline stats |

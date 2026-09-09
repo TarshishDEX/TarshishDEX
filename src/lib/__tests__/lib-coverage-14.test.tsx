@@ -17,7 +17,7 @@ vi.mock("@/lib/stellar/orderbook", () => ({
 
 vi.mock("@/lib/stellar/simulation", () => ({
   simulateOrderbookFill: simulateFillMock,
-  computePriceImpact: (_avg: number, _mid: number | null) => 0.5,
+  computePriceImpact: () => 0.5,
   computeMinReceived: (output: string, slippage: number) =>
     (Number(output) * (1 - slippage / 100)).toString(),
   estimateSwapFeeXlm: (hops: number) => (0.01 * hops).toFixed(7),

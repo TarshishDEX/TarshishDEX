@@ -328,11 +328,6 @@ describe("TradeHistory invalid date", () => {
 // =========================================================================
 
 describe("SwapWidget price impact levels", () => {
-  function renderWithAmount() {
-    render(<SwapWidget />);
-    fireEvent.change(screen.getByLabelText("Amount to pay"), { target: { value: "10" } });
-  }
-
   it("classifies impact above 1% as high", () => {
     useSwapQuoteMock.mockReturnValue({
       data: { ...QUOTE, priceImpactPct: 2 },

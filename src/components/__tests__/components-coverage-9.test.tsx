@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
-
-const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
 vi.mock("@/lib/utils", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
@@ -304,7 +302,7 @@ describe("wallet-kit helpers", () => {
 import { logger } from "@/lib/server/logger";
 
 describe("logger", () => {
-  const spies = ["info", "warn", "error", "debug"].map((m) =>
+  ["info", "warn", "error", "debug"].forEach((m) =>
     vi.spyOn(console, m as "info").mockImplementation(() => {})
   );
   afterEach(() => vi.restoreAllMocks());

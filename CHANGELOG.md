@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### 📖 Documentation refresh (September 2026)
+
+- **README badges and scoreboard updated to verified numbers** — 2,321 Vitest
+  tests (134 files), 98.74% statement coverage, 57 Playwright E2E tests,
+  134 Rust tests, 99.57% contract line coverage, and 30 CI workflows.
+  All figures verified locally and against the latest CI runs.
+- **ESLint back to 0 warnings** — removed 30 unused imports/variables across
+  15 test files (and one dead helper in `lib/stellar/catalog.ts`).
+- **Next.js pinned to 16.3.4** — closes a critical unauthenticated RCE
+  advisory (CVE-2026-75604, disclosed Aug 2026) affecting the previously
+  pinned 16.2.12. `npm audit` is back to **0 critical** vulnerabilities;
+  typecheck, lint, build, and all 2,321 tests pass on the new version.
+- **Screenshots regenerated** against the live deploy
+  (`tarshishdex.vercel.app`) with the Playwright capture scripts — all 14
+  product, wallet, transaction, mobile, CI, and coverage shots refreshed.
+- **`docs/API.md` gained the `/api/events` SSE endpoint** documentation;
+  `docs/ARCHITECTURE.md` and `docs/COVERAGE_PROGRESS.md` refreshed with
+  current workflow counts, WASM sizes, and coverage figures.
+
 ### 🚀 Contracts redeployed to Testnet (September 2026)
 
 - **All three contracts redeployed with the latest code** — pause/unpause

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const VALID_ADDRESS = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 

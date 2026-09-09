@@ -19,7 +19,7 @@ const { fetchOrderbookMock, simulateFillMock, strictSendPathsMock } = vi.hoisted
 vi.mock("@/lib/stellar/orderbook", () => ({ fetchOrderbook: fetchOrderbookMock }));
 vi.mock("@/lib/stellar/simulation", () => ({
   simulateOrderbookFill: simulateFillMock,
-  computePriceImpact: (_a: number, _m: number | null) => 0.5,
+  computePriceImpact: () => 0.5,
   computeMinReceived: (o: string, s: number) => (Number(o) * (1 - s / 100)).toString(),
   estimateSwapFeeXlm: (h: number) => (0.01 * h).toFixed(7),
   buildWarnings: () => [] as string[],

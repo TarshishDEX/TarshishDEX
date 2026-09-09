@@ -149,6 +149,25 @@ Fetch liquidity pools for a pair.
 | `base` | string | ✅ | Base asset |
 | `counter` | string | ✅ | Counter asset |
 
+### `GET /api/events` (Server-Sent Events)
+
+Live stream of trades for a trading pair. Returns a `text/event-stream` response.
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `base` | string | ✅ | Base asset (`XLM` or `CODE:ISSUER`) |
+| `counter` | string | ✅ | Counter asset (`XLM` or `CODE:ISSUER`) |
+
+**Stream events**:
+- `event: connected` — sent on connection open.
+- `event: trade` — one event per trade on the pair, with the trade payload as `data`.
+- Heartbeat comment lines are emitted every 30s to keep the connection alive;
+  the stream closes after a 10-minute max duration or on client disconnect.
+
+```bash
+curl -N "http://localhost:3000/api/events?base=XLM&counter=USDC:GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN"
+```
+
 ---
 
 ## Assets

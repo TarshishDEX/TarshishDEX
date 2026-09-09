@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
@@ -54,7 +54,7 @@ describe("debouncePromise", () => {
   });
 
   it("rejects when the function throws and the signal is not aborted", async () => {
-    const fn = vi.fn(async (_signal: AbortSignal) => {
+    const fn = vi.fn(async () => {
       throw new Error("boom");
     });
     const debounced = debouncePromise(fn, 50);
@@ -73,8 +73,6 @@ describe("debouncePromise", () => {
 import { registerSW } from "@/lib/sw-register";
 
 describe("registerSW", () => {
-  const originalNavigator = globalThis.navigator;
-
   it("returns early when serviceWorker is unavailable", () => {
     vi.stubGlobal(
       "navigator",

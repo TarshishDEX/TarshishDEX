@@ -58,7 +58,7 @@ preferences, and market oracle price feeds.
 rather than one monolithic contract.
 
 **Rationale**:
-- Each contract stays well under the 64KB WASM limit (18KB, 27KB, 29KB)
+- Each contract stays well under the 64KB WASM limit (20.6KB, 29.4KB, 30.4KB)
 - Independent deployability — upgrade the oracle without touching limit orders
 - Clean separation of concerns: preferences, orders, oracle
 - Lower per-transaction gas costs (only the relevant contract is invoked)
@@ -153,5 +153,5 @@ across the entire codebase.
 
 - **Contracts**: Deployed via `stellar-cli` to Stellar testnet/public
 - **Frontend**: Deployed to Vercel with automatic previews on PRs
-- **CI**: 15 GitHub Actions workflows covering linting, testing, coverage,
+- **CI**: 30 GitHub Actions workflows covering linting, testing, coverage,
   gas benchmarks, security scanning, and quality scoring
