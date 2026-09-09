@@ -53,7 +53,8 @@ jobs:
           tar xzf /tmp/stellar-cli.tar.gz -C /tmp
           chmod +x /tmp/stellar
           echo "/tmp" >> "$GITHUB_PATH"
-          stellar --version
+          # GITHUB_PATH only affects subsequent steps, so invoke by full path here.
+          /tmp/stellar --version
 
       - name: Build contract wasm
         working-directory: src/contracts
