@@ -52,6 +52,7 @@ The professional decentralized trading terminal built *exclusively* on **Stellar
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [Security](#security)
+- [Branch Protection](#branch-protection)
 - [Developer API](#developer-api)
 - [Environment Variables](#environment-variables)
 - [Docker](#docker)
@@ -355,6 +356,18 @@ Pure logic (routing, simulation, swap execution, assets, prices, account, histor
 - **Mainnet safety gates** — deploy script requires confirmation; runtime console warning when on public network
 - **Global API error handler** with correlation IDs for consistent error responses
 - **30 CI workflows** including secret scanning, code scanning (CodeQL), dependency audit, cargo-audit/cargo-deny, and contract security audit
+
+## 🛡️ Branch Protection
+
+The `main` branch is protected against direct pushes and requires all changes to land via reviewed pull requests:
+
+- **Required pull request review** — at least 1 approving review before merge; stale reviews are dismissed automatically when new commits are pushed
+- **Required status checks** — PRs must pass `Lint, Typecheck & Test`, `Soroban Contracts (fmt, clippy, test, wasm)`, and `Aggregate all gate results` (the CI Fortress badge gate) before merging; the branch must be up to date with `main`
+- **Enforced for administrators** — admins must follow the same review and status-check rules
+- **Linear history** — merge commits are not allowed; only fast-forward/squash merges keep history linear
+- **No force pushes, no deletions** — `main` cannot be force-pushed or deleted
+
+This keeps every merge on `main` reviewed, green, and reproducible. Changes are made through feature branches and pull requests following [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📡 Developer API
 
